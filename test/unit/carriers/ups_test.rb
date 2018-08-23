@@ -235,10 +235,13 @@ class UPSTest < ActiveSupport::TestCase
                                     package_fixtures.values_at(:chocolate_stuff))
 
     date_test = [nil, 3, 2, 1, 1, 1].map do |days|
-      DateTime.now.utc + days + 2 if days
+      if days.nil?
+        nil
+      else
+        DateTime.now.utc + days.day + 2.day
+      end
     end
     Timecop.return
-
     assert_equal date_test, response.rates.map(&:delivery_date)
   end
 
