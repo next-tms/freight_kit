@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class ShipwireTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @carrier = Shipwire.new(:login => 'l', :password => 'p')

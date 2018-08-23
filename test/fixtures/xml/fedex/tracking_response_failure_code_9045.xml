@@ -9,7 +9,7 @@
     <LocalizedMessage>Request was successfully processed.</LocalizedMessage>
   </Notifications>
   <TransactionDetail>
-    <CustomerTransactionId>ActiveShipping</CustomerTransactionId>
+    <CustomerTransactionId>ReactiveShipping</CustomerTransactionId>
   </TransactionDetail>
   <Version>
     <ServiceId>trck</ServiceId>

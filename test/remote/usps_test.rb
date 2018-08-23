@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteUSPSTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Credentials
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Credentials
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @usps_credentials = credentials(:usps)

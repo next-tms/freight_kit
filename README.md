@@ -1,4 +1,4 @@
-# ActiveShipping [![Build status](https://travis-ci.org/Shopify/active_shipping.svg?branch=master)](https://travis-ci.org/Shopify/active_shipping)
+# ReactiveShipping [![Build status](https://travis-ci.org/realsubpop/reactive_shipping.svg?branch=master)](https://travis-ci.org/realsubpop/reactive_shipping)
 
 This library interfaces with the web services of various shipping carriers. The goal is to abstract the features that are most frequently used into a pleasant and consistent Ruby API:
 
@@ -9,6 +9,8 @@ This library interfaces with the web services of various shipping carriers. The 
 
 ## Supported Shipping Carriers
 
+
+* [UPS](http://www.ups.com)
 * [USPS](http://www.usps.com)
 * [USPS Returns](http://returns.usps.com)
 * [FedEx](http://www.fedex.com)
@@ -19,24 +21,18 @@ This library interfaces with the web services of various shipping carriers. The 
 * [Kunaki](http://www.kunaki.com)
 * [Australia Post](http://auspost.com.au/)
 
-
-## Versions
-Note: `2.x` contains breaking changes, please see the [changelog](https://github.com/Shopify/active_shipping/blob/master/CHANGELOG.md). Shopify will not be actively contributing to the `2.x` version of this gem and is looking for maintainers.
-
-[See our releases](https://github.com/Shopify/active_shipping/releases) for past versions.
-
 ## Installation
 
 Using bundler, add to the `Gemfile`:
 
 ```ruby
-gem 'active_shipping'
+gem 'reactive_shipping'
 ```
 
 Or stand alone:
 
 ```
-$ gem install active_shipping
+$ gem install reactive_shipping
 ```
 
 
@@ -45,32 +41,32 @@ $ gem install active_shipping
 ### Compare rates from different carriers
 
 ```ruby
-require 'active_shipping'
+require 'reactive_shipping'
 
 # Package up a poster and a Wii for your nephew.
 packages = [
-  ActiveShipping::Package.new(100,               # 100 grams
+  ReactiveShipping::Package.new(100,               # 100 grams
                               [93,10],           # 93 cm long, 10 cm diameter
                               cylinder: true),   # cylinders have different volume calculations
 
-  ActiveShipping::Package.new(7.5 * 16,          # 7.5 lbs, times 16 oz/lb.
+  ReactiveShipping::Package.new(7.5 * 16,          # 7.5 lbs, times 16 oz/lb.
                               [15, 10, 4.5],     # 15x10x4.5 inches
                               units: :imperial)  # not grams, not centimetres
  ]
 
  # You live in Beverly Hills, he lives in Ottawa
- origin = ActiveShipping::Location.new(country: 'US',
+ origin = ReactiveShipping::Location.new(country: 'US',
                                        state: 'CA',
                                        city: 'Beverly Hills',
                                        zip: '90210')
 
- destination = ActiveShipping::Location.new(country: 'CA',
+ destination = ReactiveShipping::Location.new(country: 'CA',
                                             province: 'ON',
                                             city: 'Ottawa',
                                             postal_code: 'K1P 1J1')
 
  # Find out how much it'll be.
- usps = ActiveShipping::USPS.new(login: 'developer-key')
+ usps = ReactiveShipping::USPS.new(login: 'developer-key')
  response = usps.find_rates(origin, destination, packages)
 
  usps_rates = response.rates.sort_by(&:price).collect {|rate| [rate.service_name, rate.price]}
@@ -87,7 +83,7 @@ Dimensions for packages are in `Height x Width x Length` order.
 ### Track a FedEx package
 
 ```ruby
-fedex = ActiveShipping::FedEx.new(login: '999999999', password: '7777777', key: '1BXXXXXXXXXxrcB', account: '51XXXXX20')
+fedex = ReactiveShipping::FedEx.new(login: '999999999', password: '7777777', key: '1BXXXXXXXXXxrcB', account: '51XXXXX20')
 tracking_info = fedex.find_tracking_info('tracking-number', carrier_code: 'fedex_ground') # Ground package
 
 tracking_info.shipment_events.each do |event|
@@ -106,9 +102,9 @@ end
 
 ### FedEx connection
 
-The `:login` key passed to `ActiveShipping::FedEx.new()` is really the FedEx meter number, not the FedEx login.
+The `:login` key passed to `ReactiveShipping::FedEx.new()` is really the FedEx meter number, not the FedEx login.
 
-When developing with test credentials, be sure to pass `test: true` to `ActiveShipping::FedEx.new()`.
+When developing with test credentials, be sure to pass `test: true` to `ReactiveShipping::FedEx.new()`.
 
 
 ## Tests
@@ -125,25 +121,25 @@ and the remote tests with:
 bundle exec rake test:remote
 ```
 
-The unit tests mock out requests and responses so that everything runs locally, while the remote tests actually hit the carrier servers. For the remote tests, you'll need valid test credentials for any carriers' tests you want to run. The credentials should go in [`~/.active_shipping/credentials.yml`](https://github.com/Shopify/active_shipping/blob/master/test/credentials.yml). For some carriers, we have public credentials you can use for testing in `.travis.yml`. Remote tests missing credentials will be skipped.
+The unit tests mock out requests and responses so that everything runs locally, while the remote tests actually hit the carrier servers. For the remote tests, you'll need valid test credentials for any carriers' tests you want to run. The credentials should go in [`~/.reactive_shipping/credentials.yml`](https://github.com/realsubpop/reactive_shipping/blob/master/test/credentials.yml). For some carriers, we have public credentials you can use for testing in `.travis.yml`. Remote tests missing credentials will be skipped.
 
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Shopify/active_shipping/blob/master/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/realsubpop/reactive_shipping/blob/master/CONTRIBUTING.md).
 
 We love getting pull requests! Anything from new features to documentation clean up.
 
-If you're building a new carrier, a good place to start is in the [`Carrier` base class](https://github.com/Shopify/active_shipping/blob/master/lib/active_shipping/carrier.rb).
+If you're building a new carrier, a good place to start is in the [`Carrier` base class](https://github.com/realsubpop/reactive_shipping/blob/master/lib/reactive_shipping/carrier.rb).
 
-It would also be good to familiarize yourself with [`Location`](https://github.com/Shopify/active_shipping/blob/master/lib/active_shipping/location.rb), [`Package`](https://github.com/Shopify/active_shipping/blob/master/lib/active_shipping/package.rb), and [`Response`](https://github.com/Shopify/active_shipping/blob/master/lib/active_shipping/response.rb).
+It would also be good to familiarize yourself with [`Location`](https://github.com/realsubpop/reactive_shipping/blob/master/lib/reactive_shipping/location.rb), [`Package`](https://github.com/realsubpop/reactive_shipping/blob/master/lib/reactive_shipping/package.rb), and [`Response`](https://github.com/realsubpop/reactive_shipping/blob/master/lib/reactive_shipping/response.rb).
 
-You can use the [`test/console.rb`](https://github.com/Shopify/active_shipping/blob/master/test/console.rb) to do some local testing against real endpoints.
+You can use the [`test/console.rb`](https://github.com/realsubpop/reactive_shipping/blob/master/test/console.rb) to do some local testing against real endpoints.
 
 To log requests and responses, just set the `logger` on your Carrier class to some kind of `Logger` object:
 
 ```ruby
-ActiveShipping::USPS.logger = Logger.new(STDOUT)
+ReactiveShipping::USPS.logger = Logger.new(STDOUT)
 ```
 
 ### Anatomy of a pull request
@@ -155,9 +151,8 @@ When opening a pull request, include description of the feature, why it exists, 
 
 ### How to contribute
 
-1. Fork it ( https://github.com/Shopify/active_shipping/fork )
+1. Fork it ( https://github.com/Shopify/reactive_shipping/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
-

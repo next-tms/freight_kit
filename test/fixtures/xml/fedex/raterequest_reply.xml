@@ -30,7 +30,7 @@ INTERNATIONAL_FIRST; INTERNATIONAL_PRIORITY; INTERNATIONAL_ECONOMY; ; ; ; ; ; ; 
     <v6:LocalizedMessage>Money Back Guarantee is not eligible for this pick up/delivery postal/zip code</v6:LocalizedMessage>
   </v6:Notifications>
   <v6:TransactionDetail>
-    <v6:CustomerTransactionId>ActiveShipping</v6:CustomerTransactionId>
+    <v6:CustomerTransactionId>ReactiveShipping</v6:CustomerTransactionId>
   </v6:TransactionDetail>
   <v6:Version>
     <v6:ServiceId>crs</v6:ServiceId>

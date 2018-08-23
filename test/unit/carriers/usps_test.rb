@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class USPSTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @carrier = USPS.new(:login => 'login')
@@ -62,9 +62,9 @@ class USPSTest < ActiveSupport::TestCase
 
   def test_find_tracking_info_should_return_a_tracking_response
     @carrier.expects(:commit).returns(@tracking_response)
-    assert_instance_of ActiveShipping::TrackingResponse, @carrier.find_tracking_info('9102901000462189604217', :test => true)
+    assert_instance_of ReactiveShipping::TrackingResponse, @carrier.find_tracking_info('9102901000462189604217', :test => true)
     @carrier.expects(:commit).returns(@tracking_response)
-    assert_equal 'ActiveShipping::TrackingResponse', @carrier.find_tracking_info('EJ958083578US').class.name
+    assert_equal 'ReactiveShipping::TrackingResponse', @carrier.find_tracking_info('EJ958083578US').class.name
   end
 
   def test_find_tracking_info_should_have_correct_fields
@@ -195,7 +195,7 @@ class USPSTest < ActiveSupport::TestCase
     @carrier.expects(:commit).returns(@batch_tracking_response)
     responses = @carrier.batch_find_tracking_info(@tracking_infos_array, :test => true)
     assert_equal 4, responses.length
-    assert responses.all? { |x| x.instance_of? ActiveShipping::TrackingResponse}
+    assert responses.all? { |x| x.instance_of? ReactiveShipping::TrackingResponse}
   end
 
   def test_batch_find_tracking_info_should_have_correct_data

@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class CanadaPostTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     login = { login: 'CPC_DEMO_XML' }
@@ -83,7 +83,7 @@ class CanadaPostTest < ActiveSupport::TestCase
   def test_non_success_parse_rate_response
     @carrier.expects(:ssl_post).returns(@bad_response)
 
-    error = assert_raises(ActiveShipping::ResponseError) do
+    error = assert_raises(ReactiveShipping::ResponseError) do
       @carrier.find_rates(@origin, @destination, @line_items)
     end
 

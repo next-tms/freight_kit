@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class RemoteCanadaPostTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Credentials
+  include ReactiveShipping::Test::Credentials
 
   def setup
     @carrier        = CanadaPost.new(credentials(:canada_post))
@@ -47,7 +47,7 @@ class RemoteCanadaPostTest < ActiveSupport::TestCase
   def test_illegal_origin
     @origin = @destination
 
-    assert_raises(ActiveShipping::ResponseError) do
+    assert_raises(ReactiveShipping::ResponseError) do
       rates = @carrier.find_rates(@origin, @destination, @line_items)
       refute rates.success?
     end

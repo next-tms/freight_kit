@@ -11,7 +11,7 @@
     <MeterNumber>100007836</MeterNumber>
   </ClientDetail>
   <TransactionDetail>
-    <CustomerTransactionId>ActiveShipping</CustomerTransactionId>
+    <CustomerTransactionId>ReactiveShipping</CustomerTransactionId>
   </TransactionDetail>
   <Version>
     <ServiceId>trck</ServiceId>

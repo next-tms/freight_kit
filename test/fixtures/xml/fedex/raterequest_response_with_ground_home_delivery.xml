@@ -16,7 +16,7 @@
     <LocalizedMessage>The destination state/province code has been changed.  </LocalizedMessage>
   </Notifications>
   <TransactionDetail>
-    <CustomerTransactionId>ActiveShipping</CustomerTransactionId>
+    <CustomerTransactionId>ReactiveShipping</CustomerTransactionId>
   </TransactionDetail>
   <Version>
     <ServiceId>crs</ServiceId>

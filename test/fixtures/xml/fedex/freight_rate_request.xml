@@ -10,7 +10,7 @@
     <MeterNumber>4444</MeterNumber>
   </ClientDetail>
   <TransactionDetail>
-    <CustomerTransactionId>ActiveShipping</CustomerTransactionId>
+    <CustomerTransactionId>ReactiveShipping</CustomerTransactionId>
   </TransactionDetail>
   <Version>
     <ServiceId>crs</ServiceId>
