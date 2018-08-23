@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class UPSTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @carrier   = UPS.new(
@@ -29,7 +29,7 @@ class UPSTest < ActiveSupport::TestCase
 
   def test_find_tracking_info_should_return_a_tracking_response
     @carrier.expects(:commit).returns(@tracking_response)
-    assert_equal 'ActiveShipping::TrackingResponse', @carrier.find_tracking_info('1Z5FX0076803466397').class.name
+    assert_equal 'ReactiveShipping::TrackingResponse', @carrier.find_tracking_info('1Z5FX0076803466397').class.name
   end
 
   def test_find_tracking_info_should_mark_shipment_as_delivered
@@ -157,7 +157,7 @@ class UPSTest < ActiveSupport::TestCase
     mock_response = xml_fixture('ups/package_exceeds_maximum_length')
     @carrier.expects(:commit).returns(mock_response)
 
-    e = assert_raises(ActiveShipping::ResponseError) do
+    e = assert_raises(ReactiveShipping::ResponseError) do
       @carrier.find_rates(location_fixtures[:beverly_hills],
                           location_fixtures[:real_home_as_residential],
                           package_fixtures.values_at(:chocolate_stuff))
@@ -170,7 +170,7 @@ class UPSTest < ActiveSupport::TestCase
     mock_response = '<RatingServiceSelectionResponse><Response><ResponseStatusCode>0</ResponseStatusCode></Response></RatingServiceSelectionResponse>'
     @carrier.expects(:commit).returns(mock_response)
 
-    e = assert_raises(ActiveShipping::ResponseError) do
+    e = assert_raises(ReactiveShipping::ResponseError) do
       @carrier.find_rates(location_fixtures[:beverly_hills],
                           location_fixtures[:real_home_as_residential],
                           package_fixtures.values_at(:chocolate_stuff))
@@ -487,7 +487,7 @@ class UPSTest < ActiveSupport::TestCase
         :test => true
       }
     )
-    assert response.is_a?(ActiveShipping::DeliveryDateEstimatesResponse)
+    assert response.is_a?(ReactiveShipping::DeliveryDateEstimatesResponse)
     assert_equal 6, response.delivery_estimates.size
     ground_estimate = response.delivery_estimates.select{ |de| de.service_name == "UPS Ground"}.first
     assert_equal Date.parse('2015-02-5'), ground_estimate.date

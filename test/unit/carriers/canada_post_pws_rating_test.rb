@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class CanadaPostPwsRatingTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     # 100 grams, 93 cm long, 10 cm diameter, cylinders have different volume calculations
@@ -85,7 +85,7 @@ class CanadaPostPwsRatingTest < ActiveSupport::TestCase
     response_error = ActiveUtils::ResponseError.new(http_response)
     @cp.expects(:ssl_post).raises(response_error)
 
-    exception = assert_raises ActiveShipping::ResponseError do
+    exception = assert_raises ReactiveShipping::ResponseError do
       @cp.find_rates(@home_params, @dest_params, [@pkg1, @pkg2], @default_options)
     end
 
@@ -315,7 +315,7 @@ class CanadaPostPwsRatingTest < ActiveSupport::TestCase
 
   def test_parse_rates_response_with_invalid_response_raises
     body = xml_fixture('canadapost_pws/rates_info_error')
-    exception = assert_raises ActiveShipping::ResponseError do
+    exception = assert_raises ReactiveShipping::ResponseError do
       @response = @cp.parse_rates_response(body, @home, @dest, false)
     end
     assert_equal "No Quotes", exception.message
@@ -371,7 +371,7 @@ class CanadaPostPwsRatingTest < ActiveSupport::TestCase
 
   def test_error_response_includes_error_code
     response = xml_fixture('canadapost_pws/rates_info_error')
-    e = assert_raises ActiveShipping::ResponseError do
+    e = assert_raises ReactiveShipping::ResponseError do
       @cp.error_response(response, CPPWSRateResponse)
     end
     assert_equal 'AA004', e.response.error_code

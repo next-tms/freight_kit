@@ -1,6 +1,6 @@
 require 'test_helper'
 class CanadaPostPwsShippingTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     # 100 grams, 93 cm long, 10 cm diameter, cylinders have different volume calculations

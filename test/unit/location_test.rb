@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class LocationTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   setup do
     @location = location_fixtures[:ottawa]

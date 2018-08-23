@@ -9,7 +9,7 @@
     <LocalizedMessage>Invalid tracking number.</LocalizedMessage>
   </Notifications>
   <TransactionDetail>
-    <CustomerTransactionId>ActiveShipping</CustomerTransactionId>
+    <CustomerTransactionId>ReactiveShipping</CustomerTransactionId>
   </TransactionDetail>
   <Version>
     <ServiceId>trck</ServiceId>

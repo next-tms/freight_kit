@@ -13,7 +13,7 @@ class ResponseTest < ActiveSupport::TestCase
   end
 
   test "#initialize for a failed response raises ResponseError" do
-    assert_raises(ActiveShipping::ResponseError) do
+    assert_raises(ReactiveShipping::ResponseError) do
       RateResponse.new(
         false,
         "fail!",

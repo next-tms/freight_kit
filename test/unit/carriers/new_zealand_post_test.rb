@@ -1,7 +1,7 @@
 require "test_helper"
 
 class NewZealandPostTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @carrier    = NewZealandPost.new(:key => "4d9dc0f0-dda0-012e-066f-000c29b44ac0")
@@ -67,7 +67,7 @@ class NewZealandPostTest < ActiveSupport::TestCase
   def test_domestic_shipping_container_response_error
     @carrier.expects(:commit).returns([json_fixture("newzealandpost/domestic_error")])
     error = @carrier.find_rates(@wellington, @auckland, package_fixtures[:shipping_container]) rescue $!
-    assert_equal ActiveShipping::ResponseError, error.class
+    assert_equal ReactiveShipping::ResponseError, error.class
     assert_equal "Weight can only be between 0 and 25kg", error.message
     assert_equal [json_fixture("newzealandpost/domestic_error")], error.response.raw_responses
     response_params = { "responses" => [JSON.parse(json_fixture("newzealandpost/domestic_error"))] }
@@ -144,7 +144,7 @@ class NewZealandPostTest < ActiveSupport::TestCase
   def test_international_empty_json_response_error
     @carrier.expects(:commit).returns([""])
     error = @carrier.find_rates(@wellington, @ottawa, package_fixtures[:book]) rescue $!
-    assert_equal ActiveShipping::ResponseError, error.class
+    assert_equal ReactiveShipping::ResponseError, error.class
     assert_equal [""], error.response.raw_responses
     response_params = { "responses" => [] }
     assert_equal response_params, error.response.params
@@ -153,7 +153,7 @@ class NewZealandPostTest < ActiveSupport::TestCase
   def test_international_invalid_json_response_error
     @carrier.expects(:commit).returns(["<>"])
     error = @carrier.find_rates(@wellington, @ottawa, package_fixtures[:book]) rescue $!
-    assert_equal ActiveShipping::ResponseError, error.class
+    assert_equal ReactiveShipping::ResponseError, error.class
     assert error.message.include?("unexpected token")
     assert_equal ["<>"], error.response.raw_responses
     response_params = { "responses" => [] }
@@ -162,7 +162,7 @@ class NewZealandPostTest < ActiveSupport::TestCase
 
   def test_international_invalid_origin_country_response
     error = @carrier.find_rates(@ottawa, @wellington, package_fixtures[:book]) rescue $!
-    assert_equal ActiveShipping::ResponseError, error.class
+    assert_equal ReactiveShipping::ResponseError, error.class
     assert_equal "New Zealand Post packages must originate in New Zealand", error.message
     assert_equal [], error.response.raw_responses
     assert_equal Array, error.response.request.class

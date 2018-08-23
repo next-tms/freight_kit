@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteFedExTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Credentials
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Credentials
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @carrier = FedEx.new(credentials(:fedex).merge(:test => true))
@@ -228,14 +228,14 @@ class RemoteFedExTest < ActiveSupport::TestCase
     assert_nil response.scheduled_delivery_date
     assert_equal Time.parse('2014-01-09 18:31:00 +0000'), response.actual_delivery_date
 
-    origin_address = ActiveShipping::Location.new(
+    origin_address = ReactiveShipping::Location.new(
       city: 'SPOKANE',
       country: 'US',
       state: 'WA'
     )
     assert_equal origin_address.to_hash, response.origin.to_hash
 
-    destination_address = ActiveShipping::Location.new(
+    destination_address = ReactiveShipping::Location.new(
       city: 'NORTON',
       country: 'US',
       state: 'VA'
@@ -278,14 +278,14 @@ class RemoteFedExTest < ActiveSupport::TestCase
     assert_nil response.scheduled_delivery_date
     assert_nil response.actual_delivery_date
 
-    origin_address = ActiveShipping::Location.new(
+    origin_address = ReactiveShipping::Location.new(
       city: 'CAMBRIDGE',
       country: 'US',
       state: 'OH'
     )
     assert_equal origin_address.to_hash, response.origin.to_hash
 
-    destination_address = ActiveShipping::Location.new(
+    destination_address = ReactiveShipping::Location.new(
       city: 'Spokane Valley',
       country: 'US',
       state: 'WA'
@@ -298,20 +298,20 @@ class RemoteFedExTest < ActiveSupport::TestCase
   end
 
   def test_find_tracking_info_with_multiple_matches
-    exception = assert_raises(ActiveShipping::Error) do
+    exception = assert_raises(ReactiveShipping::Error) do
       response = @carrier.find_tracking_info('123456789012')
     end
     assert_match 'Multiple matches were found.', exception.message
   end
 
   def test_find_tracking_info_not_found
-    assert_raises(ActiveShipping::ShipmentNotFound) do
+    assert_raises(ReactiveShipping::ShipmentNotFound) do
       @carrier.find_tracking_info('199997777713')
     end
   end
 
   def test_find_tracking_info_with_invalid_tracking_number
-    assert_raises(ActiveShipping::ResponseError) do
+    assert_raises(ReactiveShipping::ResponseError) do
       @carrier.find_tracking_info('abc')
     end
   end
@@ -319,7 +319,7 @@ class RemoteFedExTest < ActiveSupport::TestCase
   ### create_shipment
 
   def test_cant_obtain_multiple_shipping_labels
-    assert_raises(ActiveShipping::Error,"Multiple packages are not supported yet.") do
+    assert_raises(ReactiveShipping::Error,"Multiple packages are not supported yet.") do
       @carrier.create_shipment(
         location_fixtures[:beverly_hills_with_name],
         location_fixtures[:new_york_with_name],

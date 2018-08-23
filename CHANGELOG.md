@@ -1,4 +1,11 @@
-# ActiveShipping CHANGELOG
+# ReactiveShipping CHANGELOG
+
+### v0.0.1
+
+- Change ActiveShipping name to ReactiveShipping
+- Return UPS support
+
+## (Previous) ActiveShipping
 
 ### v2.2.0
 - Remove UPS integration from ActiveShipping repository as requested by UPS. For information about the UPS APIs see https://www.ups.com/upsdeveloperkit

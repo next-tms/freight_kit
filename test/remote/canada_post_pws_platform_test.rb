@@ -2,8 +2,8 @@ require 'test_helper'
 
 # All remote tests require Canada Post development environment credentials
 class RemoteCanadaPostPWSPlatformTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Credentials
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Credentials
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @login = credentials(:canada_post_pws_platform).merge(endpoint: "https://ct.soa-gw.canadapost.ca/")
@@ -100,8 +100,8 @@ class RemoteCanadaPostPWSPlatformTest < ActiveSupport::TestCase
 
   def test_rates
     rate_response = @cp.find_rates(@home_params, @dom_params, [@pkg1], build_options)
-    assert_kind_of ActiveShipping::RateResponse, rate_response
-    assert_kind_of ActiveShipping::RateEstimate, rate_response.rates.first
+    assert_kind_of ReactiveShipping::RateResponse, rate_response
+    assert_kind_of ReactiveShipping::RateEstimate, rate_response.rates.first
   end
 
   def test_rates_with_insurance_changes_price
@@ -157,7 +157,7 @@ class RemoteCanadaPostPWSPlatformTest < ActiveSupport::TestCase
   def test_merchant_details_empty_details
     register_response = @cp.register_merchant
     details_response = @cp.retrieve_merchant_details(:token_id => register_response.token_id)
-    assert_kind_of ActiveShipping::CPPWSMerchantDetailsResponse, details_response
+    assert_kind_of ReactiveShipping::CPPWSMerchantDetailsResponse, details_response
 
     assert_equal '0000000000', details_response.customer_number
     assert_equal '1234567890', details_response.contract_number

@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class RemoteKunakiTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @carrier = Kunaki.new

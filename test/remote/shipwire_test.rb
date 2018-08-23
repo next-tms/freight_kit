@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteShipwireTest < ActiveSupport::TestCase
-  include ActiveShipping::Test::Credentials
-  include ActiveShipping::Test::Fixtures
+  include ReactiveShipping::Test::Credentials
+  include ReactiveShipping::Test::Fixtures
 
   def setup
     @carrier = Shipwire.new(credentials(:shipwire))
@@ -42,7 +42,7 @@ class RemoteShipwireTest < ActiveSupport::TestCase
   end
 
   def test_successful_international_rates_request_for_single_line_item
-    # skip 'ActiveShipping::ResponseError: No shipping rates could be found for the destination address'
+    # skip 'ReactiveShipping::ResponseError: No shipping rates could be found for the destination address'
     response = @carrier.find_rates(
                  location_fixtures[:ottawa],
                  location_fixtures[:london],
@@ -59,7 +59,7 @@ class RemoteShipwireTest < ActiveSupport::TestCase
   def test_invalid_xml_raises_response_content_error
     @carrier.expects(:ssl_post).returns("")
 
-    assert_raises ActiveShipping::ResponseContentError do
+    assert_raises ReactiveShipping::ResponseContentError do
       @carrier.find_rates(
         location_fixtures[:ottawa],
         location_fixtures[:london],

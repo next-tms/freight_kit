@@ -1,8 +1,8 @@
-# Contributing to ActiveShipping
+# Contributing to ReactiveShipping
 
 We love receiving pull requests! Anything from new carriers to documentation fixes.
 
-Also, we are looking for maintainers for the current version of ActiveShipping 2.0.
+Also, we are looking for maintainers for the current version of ReactiveShipping 2.0.
 
 ## Standards
 
@@ -16,7 +16,7 @@ If you're stuck, ask questions!
 
 ## How to contribute
 
-1. Fork it ( https://github.com/Shopify/active_shipping/fork )
+1. Fork it ( https://github.com/realsubpop/reactive_shipping/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

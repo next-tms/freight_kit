@@ -1,10 +1,10 @@
 require 'pry'
-require 'active_shipping'
+require 'reactive_shipping'
 require 'test_helper'
 
-include ActiveShipping
-include ActiveShipping::Test::Credentials
-include ActiveShipping::Test::Fixtures
+include ReactiveShipping
+include ReactiveShipping::Test::Credentials
+include ReactiveShipping::Test::Fixtures
 
 def create_carrier(klass, creds)
   options = credentials(creds).merge(:test => true)
@@ -23,7 +23,7 @@ def reload!
   warn_level = $VERBOSE
   $VERBOSE = nil
 
-  files = $LOADED_FEATURES.select { |feat| feat =~ /\/active_shipping\// }
+  files = $LOADED_FEATURES.select { |feat| feat =~ /\/reactive_shipping\// }
   files.each { |file| load file }
 
   $VERBOSE = warn_level
@@ -35,5 +35,5 @@ end
 @fedex    = create_carrier(FedEx,:fedex)
 @shipwire = create_carrier(Shipwire,:shipwire)
 @usps     = create_carrier(USPS,:usps)
-# Tips: call reload! to reload all the active_shipping files, use fixtures from test_helpers for parameters
+# Tips: call reload! to reload all the reactive_shipping files, use fixtures from test_helpers for parameters
 binding.pry
