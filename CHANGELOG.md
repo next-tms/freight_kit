@@ -1,6 +1,6 @@
 # ReactiveShipping CHANGELOG
 
-### v0.0.1
+### v3.0.0
 
 - Change ActiveShipping name to ReactiveShipping
 - Return UPS support
