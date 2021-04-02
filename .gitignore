@@ -8,6 +8,7 @@ Gemfile*.lock
 .rvmrc
 test/fixtures/live_credentials.yml
 .rbenv-version
+.ruby-version
 .yardoc/
 doc/
 .idea
