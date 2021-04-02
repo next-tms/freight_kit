@@ -121,20 +121,20 @@ and the remote tests with:
 bundle exec rake test:remote
 ```
 
-The unit tests mock out requests and responses so that everything runs locally, while the remote tests actually hit the carrier servers. For the remote tests, you'll need valid test credentials for any carriers' tests you want to run. The credentials should go in [`~/.hyper_carrier/credentials.yml`](https://github.com/realsubpop/hyper_carrier/blob/master/test/credentials.yml). For some carriers, we have public credentials you can use for testing in `.travis.yml`. Remote tests missing credentials will be skipped.
+The unit tests mock out requests and responses so that everything runs locally, while the remote tests actually hit the carrier servers. For the remote tests, you'll need valid test credentials for any carriers' tests you want to run. The credentials should go in [`~/.hyper_carrier/credentials.yml`](https://github.com/brodyhoskins/hyper_carrier/blob/master/test/credentials.yml). For some carriers, we have public credentials you can use for testing in `.travis.yml`. Remote tests missing credentials will be skipped.
 
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/realsubpop/hyper_carrier/blob/master/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/brodyhoskins/hyper_carrier/blob/master/CONTRIBUTING.md).
 
 We love getting pull requests! Anything from new features to documentation clean up.
 
-If you're building a new carrier, a good place to start is in the [`Carrier` base class](https://github.com/realsubpop/hyper_carrier/blob/master/lib/hyper_carrier/carrier.rb).
+If you're building a new carrier, a good place to start is in the [`Carrier` base class](https://github.com/brodyhoskins/hyper_carrier/blob/master/lib/hyper_carrier/carrier.rb).
 
-It would also be good to familiarize yourself with [`Location`](https://github.com/realsubpop/hyper_carrier/blob/master/lib/hyper_carrier/location.rb), [`Package`](https://github.com/realsubpop/hyper_carrier/blob/master/lib/hyper_carrier/package.rb), and [`Response`](https://github.com/realsubpop/hyper_carrier/blob/master/lib/hyper_carrier/response.rb).
+It would also be good to familiarize yourself with [`Location`](https://github.com/brodyhoskins/hyper_carrier/blob/master/lib/hyper_carrier/location.rb), [`Package`](https://github.com/brodyhoskins/hyper_carrier/blob/master/lib/hyper_carrier/package.rb), and [`Response`](https://github.com/brodyhoskins/hyper_carrier/blob/master/lib/hyper_carrier/response.rb).
 
-You can use the [`test/console.rb`](https://github.com/realsubpop/hyper_carrier/blob/master/test/console.rb) to do some local testing against real endpoints.
+You can use the [`test/console.rb`](https://github.com/brodyhoskins/hyper_carrier/blob/master/test/console.rb) to do some local testing against real endpoints.
 
 To log requests and responses, just set the `logger` on your Carrier class to some kind of `Logger` object:
 
@@ -151,7 +151,7 @@ When opening a pull request, include description of the feature, why it exists, 
 
 ### How to contribute
 
-1. Fork it ( https://github.com/realsubpop/hyper_carrier/fork )
+1. Fork it ( https://github.com/brodyhoskins/hyper_carrier/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
