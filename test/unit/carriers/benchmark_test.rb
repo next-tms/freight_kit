@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class BenchmarkTest < ActiveSupport::TestCase
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Fixtures
 
   def setup
     @carrier = BenchmarkCarrier.new

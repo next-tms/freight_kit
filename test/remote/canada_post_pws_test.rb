@@ -2,8 +2,8 @@ require 'test_helper'
 
 class RemoteCanadaPostPWSTest < ActiveSupport::TestCase
   # All remote tests require Canada Post development environment credentials
-  include ReactiveShipping::Test::Credentials
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Credentials
+  include HyperCarrier::Test::Fixtures
 
   def setup
     @login = credentials(:canada_post_pws)
@@ -90,8 +90,8 @@ class RemoteCanadaPostPWSTest < ActiveSupport::TestCase
   def test_rates
     opts = {:customer_number => @customer_number}
     rate_response = @cp.find_rates(@home_params, @dom_params, [@pkg1], opts)
-    assert_kind_of ReactiveShipping::RateResponse, rate_response
-    assert_kind_of ReactiveShipping::RateEstimate, rate_response.rates.first
+    assert_kind_of HyperCarrier::RateResponse, rate_response
+    assert_kind_of HyperCarrier::RateEstimate, rate_response.rates.first
   end
 
   def test_rates_with_invalid_customer_raises_exception
@@ -113,7 +113,7 @@ class RemoteCanadaPostPWSTest < ActiveSupport::TestCase
   def test_tracking_when_no_tracking_info_raises_exception
     pin = "4442172020196022" # valid pin
 
-    error = assert_raises(ReactiveShipping::ResponseError) do
+    error = assert_raises(HyperCarrier::ResponseError) do
       @cp.find_tracking_info(pin, {})
     end
 

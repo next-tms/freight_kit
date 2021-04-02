@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class ExternalReturnLabelRequestTest < ActiveSupport::TestCase
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Fixtures
 
   setup do
     @external_request_label_req =

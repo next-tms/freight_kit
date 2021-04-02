@@ -1,4 +1,4 @@
-# ReactiveShipping [![Build status](https://travis-ci.org/realsubpop/reactive_shipping.svg?branch=master)](https://travis-ci.org/realsubpop/reactive_shipping)
+# HyperCarrier
 
 This library interfaces with the web services of various shipping carriers. The goal is to abstract the features that are most frequently used into a pleasant and consistent Ruby API:
 
@@ -26,13 +26,13 @@ This library interfaces with the web services of various shipping carriers. The 
 Using bundler, add to the `Gemfile`:
 
 ```ruby
-gem 'reactive_shipping'
+gem 'hyper_carrier'
 ```
 
 Or stand alone:
 
 ```
-$ gem install reactive_shipping
+$ gem install hyper_carrier
 ```
 
 
@@ -41,32 +41,32 @@ $ gem install reactive_shipping
 ### Compare rates from different carriers
 
 ```ruby
-require 'reactive_shipping'
+require 'hyper_carrier'
 
 # Package up a poster and a Wii for your nephew.
 packages = [
-  ReactiveShipping::Package.new(100,               # 100 grams
+  HyperCarrier::Package.new(100,               # 100 grams
                               [93,10],           # 93 cm long, 10 cm diameter
                               cylinder: true),   # cylinders have different volume calculations
 
-  ReactiveShipping::Package.new(7.5 * 16,          # 7.5 lbs, times 16 oz/lb.
+  HyperCarrier::Package.new(7.5 * 16,          # 7.5 lbs, times 16 oz/lb.
                               [15, 10, 4.5],     # 15x10x4.5 inches
                               units: :imperial)  # not grams, not centimetres
  ]
 
  # You live in Beverly Hills, he lives in Ottawa
- origin = ReactiveShipping::Location.new(country: 'US',
+ origin = HyperCarrier::Location.new(country: 'US',
                                        state: 'CA',
                                        city: 'Beverly Hills',
                                        zip: '90210')
 
- destination = ReactiveShipping::Location.new(country: 'CA',
+ destination = HyperCarrier::Location.new(country: 'CA',
                                             province: 'ON',
                                             city: 'Ottawa',
                                             postal_code: 'K1P 1J1')
 
  # Find out how much it'll be.
- usps = ReactiveShipping::USPS.new(login: 'developer-key')
+ usps = HyperCarrier::USPS.new(login: 'developer-key')
  response = usps.find_rates(origin, destination, packages)
 
  usps_rates = response.rates.sort_by(&:price).collect {|rate| [rate.service_name, rate.price]}
@@ -83,7 +83,7 @@ Dimensions for packages are in `Height x Width x Length` order.
 ### Track a FedEx package
 
 ```ruby
-fedex = ReactiveShipping::FedEx.new(login: '999999999', password: '7777777', key: '1BXXXXXXXXXxrcB', account: '51XXXXX20')
+fedex = HyperCarrier::FedEx.new(login: '999999999', password: '7777777', key: '1BXXXXXXXXXxrcB', account: '51XXXXX20')
 tracking_info = fedex.find_tracking_info('tracking-number', carrier_code: 'fedex_ground') # Ground package
 
 tracking_info.shipment_events.each do |event|
@@ -102,9 +102,9 @@ end
 
 ### FedEx connection
 
-The `:login` key passed to `ReactiveShipping::FedEx.new()` is really the FedEx meter number, not the FedEx login.
+The `:login` key passed to `HyperCarrier::FedEx.new()` is really the FedEx meter number, not the FedEx login.
 
-When developing with test credentials, be sure to pass `test: true` to `ReactiveShipping::FedEx.new()`.
+When developing with test credentials, be sure to pass `test: true` to `HyperCarrier::FedEx.new()`.
 
 
 ## Tests
@@ -121,25 +121,25 @@ and the remote tests with:
 bundle exec rake test:remote
 ```
 
-The unit tests mock out requests and responses so that everything runs locally, while the remote tests actually hit the carrier servers. For the remote tests, you'll need valid test credentials for any carriers' tests you want to run. The credentials should go in [`~/.reactive_shipping/credentials.yml`](https://github.com/realsubpop/reactive_shipping/blob/master/test/credentials.yml). For some carriers, we have public credentials you can use for testing in `.travis.yml`. Remote tests missing credentials will be skipped.
+The unit tests mock out requests and responses so that everything runs locally, while the remote tests actually hit the carrier servers. For the remote tests, you'll need valid test credentials for any carriers' tests you want to run. The credentials should go in [`~/.hyper_carrier/credentials.yml`](https://github.com/realsubpop/hyper_carrier/blob/master/test/credentials.yml). For some carriers, we have public credentials you can use for testing in `.travis.yml`. Remote tests missing credentials will be skipped.
 
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/realsubpop/reactive_shipping/blob/master/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/realsubpop/hyper_carrier/blob/master/CONTRIBUTING.md).
 
 We love getting pull requests! Anything from new features to documentation clean up.
 
-If you're building a new carrier, a good place to start is in the [`Carrier` base class](https://github.com/realsubpop/reactive_shipping/blob/master/lib/reactive_shipping/carrier.rb).
+If you're building a new carrier, a good place to start is in the [`Carrier` base class](https://github.com/realsubpop/hyper_carrier/blob/master/lib/hyper_carrier/carrier.rb).
 
-It would also be good to familiarize yourself with [`Location`](https://github.com/realsubpop/reactive_shipping/blob/master/lib/reactive_shipping/location.rb), [`Package`](https://github.com/realsubpop/reactive_shipping/blob/master/lib/reactive_shipping/package.rb), and [`Response`](https://github.com/realsubpop/reactive_shipping/blob/master/lib/reactive_shipping/response.rb).
+It would also be good to familiarize yourself with [`Location`](https://github.com/realsubpop/hyper_carrier/blob/master/lib/hyper_carrier/location.rb), [`Package`](https://github.com/realsubpop/hyper_carrier/blob/master/lib/hyper_carrier/package.rb), and [`Response`](https://github.com/realsubpop/hyper_carrier/blob/master/lib/hyper_carrier/response.rb).
 
-You can use the [`test/console.rb`](https://github.com/realsubpop/reactive_shipping/blob/master/test/console.rb) to do some local testing against real endpoints.
+You can use the [`test/console.rb`](https://github.com/realsubpop/hyper_carrier/blob/master/test/console.rb) to do some local testing against real endpoints.
 
 To log requests and responses, just set the `logger` on your Carrier class to some kind of `Logger` object:
 
 ```ruby
-ReactiveShipping::USPS.logger = Logger.new(STDOUT)
+HyperCarrier::USPS.logger = Logger.new(STDOUT)
 ```
 
 ### Anatomy of a pull request
@@ -151,7 +151,7 @@ When opening a pull request, include description of the feature, why it exists, 
 
 ### How to contribute
 
-1. Fork it ( https://github.com/realsubpop/reactive_shipping/fork )
+1. Fork it ( https://github.com/realsubpop/hyper_carrier/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

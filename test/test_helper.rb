@@ -6,7 +6,7 @@ require 'mocha/mini_test'
 require 'timecop'
 require 'business_time'
 
-require 'reactive_shipping'
+require 'hyper_carrier'
 require 'logger'
 require 'erb'
 require 'pry'
@@ -22,14 +22,14 @@ VCR.configure do |config|
 end
 
 class ActiveSupport::TestCase
-  include ReactiveShipping
+  include HyperCarrier
 
   def logger
     @logger ||= Logger.new(STDERR)
   end
 end
 
-module ReactiveShipping::Test
+module HyperCarrier::Test
   module Credentials
     class NoCredentialsFound < StandardError
       def initialize(key)
@@ -37,7 +37,7 @@ module ReactiveShipping::Test
       end
     end
 
-    LOCAL_CREDENTIALS = ENV['HOME'] + '/.reactive_shipping/credentials.yml'
+    LOCAL_CREDENTIALS = ENV['HOME'] + '/.hyper_carrier/credentials.yml'
     DEFAULT_CREDENTIALS = File.dirname(__FILE__) + '/credentials.yml'
 
     def credentials(key)
@@ -64,7 +64,7 @@ module ReactiveShipping::Test
   end
 
   module Fixtures
-    include ReactiveShipping
+    include HyperCarrier
 
     def xml_fixture(path) # where path is like 'usps/beverly_hills_to_ottawa_response'
       File.read(File.join(File.dirname(__FILE__), 'fixtures', 'xml', "#{path}.xml"))

@@ -1,4 +1,10 @@
-# ReactiveShipping CHANGELOG
+# HyperCarrier CHANGELOG
+
+### v0.0.1
+
+- Change ReactiveShipping name to HyperShipping
+
+## (Previous) ReactiveShipping
 
 ### v3.0.0
 

@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class FedExTest < ActiveSupport::TestCase
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Fixtures
 
   def setup
     @carrier = FedEx.new(:key => '1111', :password => '2222', :account => '3333', :login => '4444')
@@ -49,7 +49,7 @@ class FedExTest < ActiveSupport::TestCase
         parsed_response['RateRequest']['RequestedShipment']['ShipTimestamp'] == timestamp
       end.returns(mock_response)
 
-      destination = ReactiveShipping::Location.from(location_fixtures[:beverly_hills].to_hash, :address_type => :commercial)
+      destination = HyperCarrier::Location.from(location_fixtures[:beverly_hills].to_hash, :address_type => :commercial)
       response = @carrier.find_rates location_fixtures[:ottawa], destination, package_fixtures[:book], :test => true
       assert_equal [delivery_date, delivery_date], response.rates.first.delivery_range
     end
@@ -65,7 +65,7 @@ class FedExTest < ActiveSupport::TestCase
         parsed_response['RateRequest']['RequestedShipment']['ShipTimestamp'] == timestamp
       end.returns(mock_response)
 
-      destination = ReactiveShipping::Location.from(location_fixtures[:beverly_hills].to_hash, :address_type => :commercial)
+      destination = HyperCarrier::Location.from(location_fixtures[:beverly_hills].to_hash, :address_type => :commercial)
       response = @carrier.find_rates location_fixtures[:ottawa], destination, package_fixtures[:book], :turn_around_time => 24, :test => true
 
       assert_equal [delivery_date, delivery_date], response.rates.first.delivery_range
@@ -80,7 +80,7 @@ class FedExTest < ActiveSupport::TestCase
       parsed_request['RateRequest']['TransactionDetail']['CustomerTransactionId'] == transaction_id
     end.returns(xml_fixture('fedex/ottawa_to_beverly_hills_rate_response'))
 
-    destination = ReactiveShipping::Location.from(location_fixtures[:beverly_hills].to_hash, :address_type => :commercial)
+    destination = HyperCarrier::Location.from(location_fixtures[:beverly_hills].to_hash, :address_type => :commercial)
     @carrier.find_rates location_fixtures[:ottawa], destination, package_fixtures[:book], :test => true
   end
 
@@ -90,7 +90,7 @@ class FedExTest < ActiveSupport::TestCase
 
     @carrier.expects(:ship_timestamp).returns(Time.parse("2009-07-20T12:01:55-04:00").in_time_zone('US/Eastern'))
     @carrier.expects(:commit).with { |request, test_mode| Hash.from_xml(request) == Hash.from_xml(expected_request) && test_mode }.returns(mock_response)
-    destination = ReactiveShipping::Location.from(location_fixtures[:beverly_hills].to_hash, :address_type => :commercial)
+    destination = HyperCarrier::Location.from(location_fixtures[:beverly_hills].to_hash, :address_type => :commercial)
     @carrier.find_rates( location_fixtures[:ottawa],
                          destination,
                          package_fixtures.values_at(:book, :wii), test: true, saturday_delivery: true)
@@ -102,7 +102,7 @@ class FedExTest < ActiveSupport::TestCase
 
     @carrier.expects(:ship_timestamp).returns(Time.parse("2009-07-20T12:01:55-04:00").in_time_zone('US/Eastern'))
     @carrier.expects(:commit).with { |request, test_mode| Hash.from_xml(request) == Hash.from_xml(expected_request) && test_mode }.returns(mock_response)
-    destination = ReactiveShipping::Location.from(location_fixtures[:beverly_hills].to_hash)
+    destination = HyperCarrier::Location.from(location_fixtures[:beverly_hills].to_hash)
     @carrier.find_rates( location_fixtures[:ottawa],
                          destination,
                          package_fixtures.values_at(:book, :wii), test: true)
@@ -208,7 +208,7 @@ class FedExTest < ActiveSupport::TestCase
 
     @carrier.expects(:ship_timestamp).returns(Time.parse("2009-07-20T12:01:55-04:00").in_time_zone('US/Eastern'))
     @carrier.expects(:commit).with { |request, test_mode| Hash.from_xml(request) == Hash.from_xml(expected_request) && test_mode }.returns(mock_response)
-    exception = assert_raises(ReactiveShipping::ResponseContentError) do
+    exception = assert_raises(HyperCarrier::ResponseContentError) do
       @carrier.find_rates( location_fixtures[:ottawa],
                            location_fixtures[:beverly_hills],
                            package_fixtures.values_at(:book, :wii), test: true, saturday_delivery: true)
@@ -236,7 +236,7 @@ class FedExTest < ActiveSupport::TestCase
     @carrier.logger = Logger.new(StringIO.new)
     @carrier.logger.expects(:warn).once.with("[FedexParseRateError] Some fields where missing in the response: #{mock_response}")
 
-    exception = assert_raises(ReactiveShipping::ResponseError) do
+    exception = assert_raises(HyperCarrier::ResponseError) do
       @carrier.find_rates( location_fixtures[:ottawa], location_fixtures[:beverly_hills], package_fixtures.values_at(:book, :wii), :test => true)
     end
     message = "The response from the carrier contained errors and could not be treated"
@@ -329,7 +329,7 @@ class FedExTest < ActiveSupport::TestCase
 
     @carrier.expects(:commit).returns(mock_response)
 
-    assert_raises ReactiveShipping::ResponseContentError do
+    assert_raises HyperCarrier::ResponseContentError do
       @carrier.find_rates(
         location_fixtures[:ottawa],
         location_fixtures[:beverly_hills],
@@ -360,7 +360,7 @@ class FedExTest < ActiveSupport::TestCase
     mock_response = xml_fixture('fedex/tracking_response_failure_code_9045')
     @carrier.expects(:commit).returns(mock_response)
 
-    error = assert_raises(ReactiveShipping::ShipmentNotFound) do
+    error = assert_raises(HyperCarrier::ShipmentNotFound) do
       @carrier.find_tracking_info('123456789013')
     end
 
@@ -372,7 +372,7 @@ class FedExTest < ActiveSupport::TestCase
     mock_response = xml_fixture('fedex/tracking_response_failure_code_9080')
     @carrier.expects(:commit).returns(mock_response)
 
-    error = assert_raises(ReactiveShipping::ResponseContentError) do
+    error = assert_raises(HyperCarrier::ResponseContentError) do
       @carrier.find_tracking_info('123456789013')
     end
 
@@ -384,7 +384,7 @@ class FedExTest < ActiveSupport::TestCase
     mock_response = xml_fixture('fedex/tracking_response_unable_to_process')
     @carrier.expects(:commit).returns(mock_response)
 
-    error = assert_raises(ReactiveShipping::ResponseError) do
+    error = assert_raises(HyperCarrier::ResponseError) do
       @carrier.find_tracking_info('123456789013')
     end
 
@@ -406,14 +406,14 @@ class FedExTest < ActiveSupport::TestCase
     assert_nil response.scheduled_delivery_date
     assert_equal Time.parse('2014-01-02T18:23:29Z'), response.actual_delivery_date
 
-    origin_address = ReactiveShipping::Location.new(
+    origin_address = HyperCarrier::Location.new(
       city: 'JEFFERSONVILLE',
       country: 'US',
       state: 'IN'
     )
     assert_equal origin_address.to_hash, response.origin.to_hash
 
-    destination_address = ReactiveShipping::Location.new(
+    destination_address = HyperCarrier::Location.new(
       city: 'Miami',
       country: 'US',
       state: 'FL'
@@ -450,7 +450,7 @@ class FedExTest < ActiveSupport::TestCase
 
     response = @carrier.find_tracking_info('798701052354')
 
-    destination_address = ReactiveShipping::Location.new(
+    destination_address = HyperCarrier::Location.new(
       city: 'SAITAMA',
       country: 'Japan',
       state: 'unknown'
@@ -481,7 +481,7 @@ class FedExTest < ActiveSupport::TestCase
 
     assert_nil response.origin
 
-    destination_address = ReactiveShipping::Location.new(
+    destination_address = HyperCarrier::Location.new(
       city: 'GRAFTON',
       country: 'AU',
       state: 'ON'
@@ -508,14 +508,14 @@ class FedExTest < ActiveSupport::TestCase
     assert_nil response.scheduled_delivery_date
     assert_nil response.actual_delivery_date
 
-    origin_address = ReactiveShipping::Location.new(
+    origin_address = HyperCarrier::Location.new(
       city: 'AUSTIN',
       country: 'US',
       state: 'TX'
     )
     assert_equal origin_address.to_hash, response.origin.to_hash
 
-    destination_address = ReactiveShipping::Location.new(
+    destination_address = HyperCarrier::Location.new(
       city: 'GOOSE CREEK',
       country: 'US',
       state: 'SC'
@@ -531,7 +531,7 @@ class FedExTest < ActiveSupport::TestCase
     mock_response = xml_fixture('fedex/tracking_response_multiple_results')
     @carrier.expects(:commit).returns(mock_response)
 
-    error = assert_raises(ReactiveShipping::ResponseError) do
+    error = assert_raises(HyperCarrier::ResponseError) do
       @carrier.find_tracking_info('123456789012')
     end
 
@@ -543,7 +543,7 @@ class FedExTest < ActiveSupport::TestCase
     mock_response = xml_fixture('fedex/tracking_response_not_found')
     @carrier.expects(:commit).returns(mock_response)
 
-    error = assert_raises(ReactiveShipping::ShipmentNotFound) do
+    error = assert_raises(HyperCarrier::ShipmentNotFound) do
       @carrier.find_tracking_info('123456789013')
     end
 
@@ -555,7 +555,7 @@ class FedExTest < ActiveSupport::TestCase
     mock_response = xml_fixture('fedex/tracking_response_bad_tracking_number')
     @carrier.expects(:commit).returns(mock_response)
 
-    assert_raises(ReactiveShipping::ResponseError) do
+    assert_raises(HyperCarrier::ResponseError) do
       @carrier.find_tracking_info('abc')
     end
   end
@@ -564,7 +564,7 @@ class FedExTest < ActiveSupport::TestCase
     mock_response = xml_fixture('fedex/tracking_response_invalid_tracking_number')
     @carrier.expects(:commit).returns(mock_response)
 
-    error = assert_raises(ReactiveShipping::ResponseContentError) do
+    error = assert_raises(HyperCarrier::ResponseContentError) do
       @carrier.find_tracking_info('123456789013')
     end
 

@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class CanadaPostPwsTrackingTest < ActiveSupport::TestCase
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Fixtures
 
   def setup
     # 100 grams, 93 cm long, 10 cm diameter, cylinders have different volume calculations
@@ -61,7 +61,7 @@ class CanadaPostPwsTrackingTest < ActiveSupport::TestCase
     response_error = ActiveUtils::ResponseError.new(http_response)
     @cp.expects(:ssl_get).raises(response_error)
 
-    exception = assert_raises ReactiveShipping::ResponseError do
+    exception = assert_raises HyperCarrier::ResponseError do
       @cp.find_tracking_info(pin)
     end
 
@@ -72,7 +72,7 @@ class CanadaPostPwsTrackingTest < ActiveSupport::TestCase
     pin = '123'
     @cp.expects(:ssl_get).never
 
-    exception = assert_raises ReactiveShipping::ResponseError do
+    exception = assert_raises HyperCarrier::ResponseError do
       @cp.find_tracking_info(pin)
     end
     assert_equal "Invalid Pin Format", exception.message

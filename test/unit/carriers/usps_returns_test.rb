@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class USPSReturnsTest < ActiveSupport::TestCase
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Fixtures
 
   attr_reader :carrier
 

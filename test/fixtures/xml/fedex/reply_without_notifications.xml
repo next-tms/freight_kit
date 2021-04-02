@@ -2,7 +2,7 @@
 <v6:RateReply xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:v6="http://fedex.com/ws/rate/v6">
   <v6:HighestSeverity>WARNING</v6:HighestSeverity>
   <v6:TransactionDetail>
-    <v6:CustomerTransactionId>ReactiveShipping</v6:CustomerTransactionId>
+    <v6:CustomerTransactionId>HyperCarrier</v6:CustomerTransactionId>
   </v6:TransactionDetail>
   <v6:Version>
     <v6:ServiceId>crs</v6:ServiceId>

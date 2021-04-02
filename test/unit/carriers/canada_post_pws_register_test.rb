@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class CanadaPostPwsRegisterTest < ActiveSupport::TestCase
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Fixtures
 
   def setup
     @cp = CanadaPostPWS.new(platform_id: 123, api_key: '456', secret: '789')
@@ -26,7 +26,7 @@ class CanadaPostPwsRegisterTest < ActiveSupport::TestCase
     response_error = ActiveUtils::ResponseError.new(http_response)
     @cp.expects(:ssl_post).with(endpoint, anything, anything).raises(response_error)
 
-    exception = assert_raises ReactiveShipping::ResponseError do
+    exception = assert_raises HyperCarrier::ResponseError do
       @cp.register_merchant
     end
 
@@ -67,7 +67,7 @@ class CanadaPostPwsRegisterTest < ActiveSupport::TestCase
     response_error = ActiveUtils::ResponseError.new(http_response)
     @cp.expects(:ssl_get).with(endpoint, anything).raises(response_error)
 
-    exception = assert_raises ReactiveShipping::ResponseError do
+    exception = assert_raises HyperCarrier::ResponseError do
       @cp.retrieve_merchant_details(:token_id => '1234567890')
     end
 

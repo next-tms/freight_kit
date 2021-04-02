@@ -9,7 +9,7 @@
     <v13:LocalizedMessage>Request was successfully processed. </v13:LocalizedMessage>
   </v13:Notifications>
   <v13:TransactionDetail>
-    <v13:CustomerTransactionId>ReactiveShipping</v13:CustomerTransactionId>
+    <v13:CustomerTransactionId>HyperCarrier</v13:CustomerTransactionId>
   </v13:TransactionDetail>
   <v13:Version>
     <v13:ServiceId>crs</v13:ServiceId>

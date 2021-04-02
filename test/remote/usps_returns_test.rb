@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteUSPSReturnsTest < ActiveSupport::TestCase
-  include ReactiveShipping::Test::Credentials
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Credentials
+  include HyperCarrier::Test::Fixtures
 
   def setup
     begin

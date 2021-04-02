@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteStampsTest < ActiveSupport::TestCase
-  include ReactiveShipping::Test::Credentials
-  include ReactiveShipping::Test::Fixtures
+  include HyperCarrier::Test::Credentials
+  include HyperCarrier::Test::Fixtures
 
   def setup
     @carrier = Stamps.new(credentials(:stamps).merge(test: true))
@@ -15,14 +15,14 @@ class RemoteStampsTest < ActiveSupport::TestCase
   end
 
   def test_account_info
-    skip 'ReactiveShipping::ResponseError: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host.'
+    skip 'HyperCarrier::ResponseError: Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host.'
     @account_info = @carrier.account_info
 
-    assert_equal 'ReactiveShipping::StampsAccountInfoResponse', @account_info.class.name
+    assert_equal 'HyperCarrier::StampsAccountInfoResponse', @account_info.class.name
   end
 
   def test_purchase_postage
-    skip '<#<ReactiveShipping::ResponseError: Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.>>.'
+    skip '<#<HyperCarrier::ResponseError: Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host.>>.'
     purchase_amount = 10.62 # Based on the amount used in the track shipment tests
 
     account = @carrier.account_info
@@ -178,7 +178,7 @@ class RemoteStampsTest < ActiveSupport::TestCase
   end
 
   def test_track_shipment
-    skip '<#<ReactiveShipping::ResponseError: Insufficient Postage>>.'
+    skip '<#<HyperCarrier::ResponseError: Insufficient Postage>>.'
 
     # Tracking is not available for sample only shipments
     shipment = @carrier.create_shipment(
@@ -209,7 +209,7 @@ class RemoteStampsTest < ActiveSupport::TestCase
   end
 
   def test_track_with_stamps_tx_id
-    skip '<#<ReactiveShipping::ResponseError: Insufficient Postage>>.'
+    skip '<#<HyperCarrier::ResponseError: Insufficient Postage>>.'
     # Tracking is not available for sample only shipments
     shipment = @carrier.create_shipment(
       location_fixtures[:beverly_hills],

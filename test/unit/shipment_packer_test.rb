@@ -147,7 +147,7 @@ class ShipmentPackerTest < ActiveSupport::TestCase
   end
 
   test "excess packages raised over threshold before packing begins" do
-    ReactiveShipping::Package.expects(:new).never
+    HyperCarrier::Package.expects(:new).never
     items = [{ grams: 1, quantity: ShipmentPacker::EXCESS_PACKAGE_QUANTITY_THRESHOLD + 1, price: 1.0 }]
 
     assert_raises(ShipmentPacker::ExcessPackageQuantity) do
