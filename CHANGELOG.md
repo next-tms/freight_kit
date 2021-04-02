@@ -3,15 +3,22 @@
 ### v0.0.1
 
 - Change ReactiveShipping name to HyperShipping
+- Change version to v0.0.1
 
-## (Previous) ReactiveShipping
+## From ReactiveShipping
+
+### v3.0.1 *Unofficial*
+
+From pull request #2 [realsubpop/reactive_shipping/pull/2](https://github.com/realsubpop/reactive_shipping/pull/2)
+
+- Add support for ActiveSupport 6.1
 
 ### v3.0.0
 
 - Change ActiveShipping name to ReactiveShipping
 - Return UPS support
 
-## (Previous) ActiveShipping
+## From ActiveShipping
 
 ### v2.2.0
 - Remove UPS integration from ActiveShipping repository as requested by UPS. For information about the UPS APIs see https://www.ups.com/upsdeveloperkit
