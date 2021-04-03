@@ -1,38 +1,57 @@
-lib = File.expand_path("../lib/", __FILE__)
+# frozen_string_literal: true
+
+lib = File.expand_path('../lib/', __FILE__)
 $:.unshift(lib) unless $:.include?(lib)
 
-require "hyper_carrier/version"
+require 'hyper_carrier/version'
 
-Gem::Specification.new do |s|
-  s.name          = "hyper_carrier"
-  s.version       = HyperCarrier::VERSION
-  s.platform      = Gem::Platform::RUBY
-  s.authors       = ["Brody Hoskins", "Sub Pop Records", "Shopify"]
-  s.email         = ["webmaster@subpop.com"]
-  s.homepage      = "http://github.com/brodyhoskins/hyper_carrier"
-  s.summary       = "Simple shipping abstraction library"
-  s.description   = "Get rates and tracking info from various shipping carriers. A fork of Shopify's original ActiveShipping gem."
-  s.license       = "MIT"
-  s.files         = `git ls-files`.split($/)
-  s.executables   = s.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
-  s.test_files    = s.files.grep(%r{^(test|spec|features)/})
-  s.require_path  = "lib"
-  s.post_install_message = "Thanks for installing HyperCarrier! https://github.com/brodyhoskins/hyper_carrier/blob/master/CHANGELOG.md."
+Gem::Specification.new do |spec|
+  spec.name = 'hyper_carrier'
+  spec.license = 'MIT'
+  spec.version = HyperCarrier::VERSION
+  spec.date = '2021-04-02'
 
+  spec.authors = [
+    'Brody Hoskins',
+    'Sub Pop Records',
+    'Shopify'
+  ]
+  spec.email = [
+    'brody@brody.digital',
+    'webmaster@subpop.com',
+    'integrations-team@shopify.com'
+  ]
 
-  s.add_dependency("measured", ">= 2.0")
-  s.add_dependency("activesupport", ">= 4.2", "< 6.2")
-  s.add_dependency("active_utils", "~> 3.3.1")
-  s.add_dependency("nokogiri", ">= 1.6")
+  spec.summary = 'Shipping API abstraction layer for package and freight carriers'
+  spec.description = <<~DESC.gsub(/\n/, ' ').strip
+    Hypercarrier is a shipping API abstraction layer for package and freight
+    carriers. It's based on ReactiveFreight, ReactiveShipping and ActiveShipping.
+  DESC
+  spec.homepage = 'https://github.com/brodyhoskins/hyper_shipping'
 
-  s.add_development_dependency("minitest")
-  s.add_development_dependency("minitest-reporters")
-  s.add_development_dependency("rake")
-  s.add_development_dependency("mocha", "~> 1")
-  s.add_development_dependency("timecop")
-  s.add_development_dependency("business_time")
-  s.add_development_dependency("pry")
-  s.add_development_dependency("pry-byebug")
-  s.add_development_dependency("vcr")
-  s.add_development_dependency("webmock")
+  spec.files = Dir['lib/**/*']
+  spec.files += Dir['[A-Z]*'] + Dir['test/**/*']
+  spec.files.reject! { |fn| fn.include? 'CVS' }
+  spec.require_paths = ['lib']
+
+  spec.add_development_dependency 'business_time', '~> 0.10.0'
+  spec.add_development_dependency 'minitest-reporters', '~> 1.4.3'
+  spec.add_development_dependency 'minitest', '~> 5.14.4'
+  spec.add_development_dependency 'mocha', '~> 1.12.0'
+  spec.add_development_dependency 'pry-byebug', '~> 3.9.0'
+  spec.add_development_dependency 'pry', '~> 0.13.1'
+  spec.add_development_dependency 'rake', '~> 13.0.3'
+  spec.add_development_dependency 'timecop', '~> 0.9.4'
+  spec.add_development_dependency 'vcr', '~> 6.0.0'
+  spec.add_development_dependency 'webmock', '~> 3.12.2'
+
+  spec.add_dependency 'active_utils', '~> 3.3.1'
+  spec.add_dependency 'activesupport', '>= 4.2', '< 6.2'
+  spec.add_dependency 'httparty', '~> 0.10'
+  spec.add_dependency 'measured', '>= 2.0'
+  spec.add_dependency 'nokogiri', '>= 1.6'
+  spec.add_dependency 'rmagick', '>= 4.1', '< 4.3'
+  spec.add_dependency 'savon', '>= 2.0', '< 2.13'
+  spec.add_dependency 'watir', '>= 6.1', '< 6.20'
+  spec.add_dependency 'webdrivers', '>= 4.0', '< 4.7'
 end

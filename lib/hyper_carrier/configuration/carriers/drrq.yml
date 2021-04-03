@@ -1,0 +1,115 @@
+:accessorials:
+  :mappable:
+    :airport_delivery: LADAIRP
+    :airport_pickup: LAPAIRP
+    :amusement_park_delivery: LADFAIR
+    :amusement_park_pickup: LAPFAIR
+    :appointment_delivery: APPT
+    :athletic_facility_delivery: LADRECR
+    :athletic_facility_pickup: LAPRECR
+    :brewery_delivery: LADWINE
+    :brewery_pickup: LAPWINE
+    :church_delivery: LADCHUR
+    :church_pickup: LAPCHUR
+    :construction_delivery: CONSL
+    :construction_pickup: LAPCONS
+    :convention_delivery: CONV1
+    :convention_pickup: CONV2
+    :fair_delivery: LADFAIR
+    :fair_pickup: LAPFAIR
+    :farm_delivery: LADFARM
+    :farm_pickup: LAPFARM
+    :fitness_center_delivery: LADRECR
+    :fitness_center_pickup: LAPRECR
+    :golf_course_delivery: LADGOLF
+    :golf_course_pickup: LAPGOLF
+    :government_delivery: LADGOVE
+    :government_pickup: LAPGOVE
+    :grocery_warehouse_delivery: LADGROC
+    :grocery_warehouse_pickup: LAPGROC
+    :guaranteed_delivery_am: GSAM
+    :guaranteed_delivery_pm: GSPM
+    :guaranteed_delivery: GLTL
+    :hospital_delivery: LADHOSP
+    :hospital_pickup: LAPHOSP
+    :hotel_delivery: LADRESO
+    :hotel_pickup: LAPRESO
+    :inside_delivery: IDL
+    :inside_pickup: IPU
+    :inspection_site_delivery: LADINSP
+    :inspection_site_pickup: LAPINSP
+    :jobsite_delivery: LADCONS
+    :jobsite_pickup: LAPCONS
+    :liftgate_delivery: LG1
+    :liftgate_pickup: LG2
+    :mall_delivery: LADMALL
+    :mall_pickup: LAPMALL
+    :military_site_delivery: LADMILI
+    :military_site_pickup: LAPMILI
+    :mine_site_delivery: LADMINE
+    :mine_site_pickup: LAPMINE
+    :motel_delivery: LADRESO
+    :motel_pickup: LAPRESO
+    :nursing_home_delivery: LADNURS
+    :nursing_home_pickup: LAPNURS
+    :park_delivery: LADPARK
+    :park_pickup: LAPPARK
+    :prison_delivery: LADPRIS
+    :prison_pickup: LAPPRIS
+    :ranch_delivery: LADRANC
+    :ranch_pickup: LAPRANC
+    :reservation_delivery: LADRESE
+    :reservation_pickup: LAPRESE
+    :residential_delivery: RES1
+    :residential_pickup: RES2
+    :resort_delivery: LADRESO
+    :resort_pickup: LAPRESO
+    :restaurant_delivery: LADREST
+    :restaurant_pickup: LAPREST
+    :school_delivery: LADSCHO
+    :school_pickup: LAPSCHO
+    :steel_mill_delivery: LADSTEE
+    :steel_mill_pickup: LAPSTEE
+    :storage_facility_delivery: LADMINI
+    :storage_facility_pickup: LAPMINI
+    :university_delivery: LADSCHO
+    :university_pickup: LAPSCHO
+    :utility_site_delivery: LADUTLI
+    :utility_site_pickup: LAPUTLI
+    :winery_delivery: LADWINE
+    :winery_pickup: LAPWINE
+  # May be inaccurate
+  :unquotable:
+    - :afterhours_delivery
+    - :afterhours_pickup
+    - :cemetery_delivery
+    - :cemetery_pickup
+    - :dock_dropoff
+    - :dock_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
+  # May be inaccurate
+  :unserviceable:
+    - :appointment_pickup
+    - :customs_brokerage
+    - :early_morning_delivery
+    - :early_morning_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :marina_delivery
+    - :marina_pickup
+:api:
+  :domains:
+    :pod: rrd.mercurygate.net
+    :quote: dlsworldwideproxy.rrd.com
+  :endpoints:
+    :pod: /MercuryGate/login/mgLogin.jsp?inline=true
+    :quote: /services/api/v1/RateShop/RateRequest
+  :methods:
+    :quote: :post
+  :use_ssl:
+    :pod: true
+    :quote: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true

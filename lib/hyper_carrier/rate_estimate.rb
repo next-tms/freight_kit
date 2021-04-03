@@ -80,39 +80,45 @@ module HyperCarrier
   #   @return [Array<{ group: String, code: String, name: String, description: String, amount: Integer }>]
   #
   class RateEstimate
-    attr_accessor :origin, :destination, :package_rates,
-                :carrier, :service_name, :service_code, :description,
-                :shipping_date, :delivery_date, :delivery_range,
-                :currency, :negotiated_rate, :insurance_price,
-                :estimate_reference, :expires_at, :pickup_time,
-                :compare_price, :phone_required, :delivery_category,
-                :shipment_options, :charge_items, :messages
+    attr_accessor :carrier, :charge_items, :compare_price, :currency,
+                  :delivery_category, :delivery_date, :delivery_range,
+                  :description, :destination, :estimate_reference, :expires_at,
+                  :insurance_price, :messages, :negotiated_rate, :origin,
+                  :package_rates, :phone_required, :pickup_time, :service_code,
+                  :service_name, :shipment_options, :shipping_date, :transit_days,
+                  :with_excessive_length_fees
 
     def initialize(origin, destination, carrier, service_name, options = {})
-      self.origin, self.destination, self.carrier, self.service_name = origin, destination, carrier, service_name
-      self.service_code = options[:service_code]
+      self.charge_items = options[:charge_items] || []
+      self.compare_price = options[:compare_price]
+      self.currency = options[:currency]
+      self.delivery_category = options[:delivery_category]
+      self.delivery_range = options[:delivery_range]
       self.description = options[:description]
       self.estimate_reference = options[:estimate_reference]
-      self.pickup_time = options[:pickup_time]
       self.expires_at = options[:expires_at]
-      if options[:package_rates]
-        self.package_rates = options[:package_rates].map { |p| p.update(:rate => Package.cents_from(p[:rate])) }
-      else
-        self.package_rates = Array(options[:packages]).map { |p| {:package => p} }
-      end
-      self.total_price = options[:total_price]
-      self.negotiated_rate = options[:negotiated_rate]
-      self.compare_price = options[:compare_price]
-      self.phone_required = options[:phone_required]
-      self.currency = options[:currency]
-      self.delivery_range = options[:delivery_range]
-      self.shipping_date = options[:shipping_date]
-      self.delivery_date = @delivery_range.last
       self.insurance_price = options[:insurance_price]
-      self.delivery_category = options[:delivery_category]
-      self.shipment_options = options[:shipment_options] || []
-      self.charge_items = options[:charge_items] || []
       self.messages = options[:messages] || []
+      self.negotiated_rate = options[:negotiated_rate]
+      self.origin = origin
+      self.destination = destination
+      self.carrier = carrier
+      self.service_name = service_name
+      self.package_rates = if options[:package_rates]
+                             options[:package_rates].map { |p| p.update(rate: Package.cents_from(p[:rate])) }
+                           else
+                             Array(options[:packages]).map { |p| { package: p } }
+                           end
+      self.phone_required = options[:phone_required]
+      self.pickup_time = options[:pickup_time]
+      self.service_code = options[:service_code]
+      self.shipment_options = options[:shipment_options] || []
+      self.shipping_date = options[:shipping_date]
+      self.transit_days = options[:transit_days]
+      self.total_price = options[:total_price]
+      self.with_excessive_length_fees = options.dig(:with_excessive_length_fees)
+
+      self.delivery_date = @delivery_range.last
     end
 
     # The total price of the shipments in cents.
@@ -120,9 +126,9 @@ module HyperCarrier
     def total_price
       @total_price || @package_rates.sum { |pr| pr[:rate] }
     rescue NoMethodError
-      raise ArgumentError.new("RateEstimate must have a total_price set, or have a full set of valid package rates.")
+      raise ArgumentError, 'RateEstimate must have a total_price set, or have a full set of valid package rates.'
     end
-    alias_method :price, :total_price
+    alias price total_price
 
     # Adds a package to this rate estimate
     # @param package [HyperCarrier::Package] The package to add.
@@ -131,8 +137,11 @@ module HyperCarrier
     # @return [self]
     def add(package, rate = nil)
       cents = Package.cents_from(rate)
-      raise ArgumentError.new("New packages must have valid rate information since this RateEstimate has no total_price set.") if cents.nil? and total_price.nil?
-      @package_rates << {:package => package, :rate => cents}
+      if cents.nil? && total_price.nil?
+        raise ArgumentError, 'New packages must have valid rate information since this RateEstimate has no total_price set.'
+      end
+
+      @package_rates << { package: package, rate: cents }
       self
     end
 
@@ -189,7 +198,7 @@ module HyperCarrier
     # @return [Date, nil] The Date object absed on the input, or `nil` if no date
     #   could be determined.
     def date_for(date)
-      date && Date.strptime(date.to_s, "%Y-%m-%d")
+      date && Date.strptime(date.to_s, '%Y-%m-%d')
     rescue ArgumentError
       nil
     end

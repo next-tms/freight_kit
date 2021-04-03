@@ -1,0 +1,25 @@
+:api:
+  :domain: tracking.carrierlogistics.com
+  :endpoints:
+    :bol: /scripts/@CARRIER_CODE@.pol/web-login.htm?
+    :pod: /scripts/@CARRIER_CODE@.pol/web-login.htm?
+    :rates: /scripts/@CARRIER_CODE@.pol/ratequote.xml?
+    :track: /scripts/@CARRIER_CODE@.pol/boldetail.htm?
+  :use_ssl:
+    :bol: true
+    :pod: true
+    :rates: true
+    :track: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: false
+:events:
+  :types:
+    :arrived_at_terminal: trailer arrived
+    :delivered: delivered
+    :departed: trailer departed
+    :out_for_delivery: out for delivery
+    :picked_up: picked up
+    :pickup_scheduled: pickup request received
+    :trailer_closed: loaded on trailer
+    :trailer_unloaded: undisp

@@ -1,0 +1,124 @@
+:accessorials:
+  :mappable:
+    :amusement_park_delivery: LMD
+    :amusement_park_pickup: LMP
+    :appointment_delivery: NTD
+    :appointment_pickup: NTP
+    :athletic_facility_delivery: LMD
+    :athletic_facility_pickup: LMP
+    :cemetery_delivery: LMD
+    :cemetery_pickup: LMP
+    :church_delivery: LMD
+    :church_pickup: LMP
+    :construction_delivery: LMT
+    :construction_pickup: LMT
+    :farm_delivery: LMD
+    :farm_pickup: LMP
+    :fitness_center_delivery: LMD
+    :fitness_center_pickup: LMP
+    :golf_course_delivery: LMD
+    :golf_course_pickup: LMP
+    :grocery_store_delivery: LMD
+    :grocery_store_pickup: LMP
+    :hospital_delivery: LMD
+    :hospital_pickup: LMP
+    :hotel_delivery: LMD
+    :hotel_pickup: LMP
+    :inside_delivery: IND
+    :inside_pickup: INP
+    :jobsite_delivery: LMT
+    :jobsite_pickup: LMT
+    :liftgate_delivery: LGD
+    :liftgate_pickup: LGP
+    :mall_delivery: LMD
+    :mall_pickup: LMP
+    :marina_delivery: LMD
+    :marina_pickup: LMP
+    :military_site_delivery: LMD
+    :military_site_pickup: LMP
+    :mine_site_delivery: LMD
+    :mine_site_pickup: LMP
+    :motel_delivery: LMD
+    :motel_pickup: LMP
+    :nursing_home_delivery: LMD
+    :nursing_home_pickup: LMP
+    :park_delivery: LMD
+    :park_pickup: LMP
+    :prison_delivery: LMD
+    :prison_pickup: LMP
+    :ranch_delivery: LMD
+    :ranch_pickup: LMP
+    :reservation_delivery: LMD
+    :reservation_pickup: LMP
+    :residential_delivery: RDS
+    :residential_pickup: RSP
+    :resort_delivery: LMD
+    :resort_pickup: LMP
+    :restaurant_delivery: LMD
+    :restaurant_pickup: LMP
+    :school_delivery: LMD
+    :school_pickup: LMP
+    :steel_mill_delivery: LMD
+    :steel_mill_pickup: LMP
+    :storage_facility_delivery: LMD
+    :storage_facility_pickup: LMP
+    :university_delivery: LMD
+    :university_pickup: LMP
+  # May be inaccurate
+  :unquotable:
+    - :dock_dropoff
+    - :dock_pickup
+  # May be inaccurate
+  :unserviceable:
+    - :afterhours_delivery
+    - :afterhours_pickup
+    - :airport_delivery
+    - :airport_pickup
+    - :brewery_delivery
+    - :brewery_pickup
+    - :convention_delivery
+    - :convention_pickup
+    - :customs_brokerage
+    - :driver_assist
+    - :early_morning_delivery
+    - :fair_delivery
+    - :fair_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :government_delivery
+    - :government_pickup
+    - :grocery_warehouse_delivery
+    - :grocery_warehouse_pickup
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm
+    - :guaranteed_delivery
+    - :inspection_site_delivery
+    - :inspection_site_pickup
+    - :utility_site_delivery
+    - :utility_site_pickup
+    - :winery_delivery
+    - :winery_pickup
+:api:
+  :actions:
+    :rates: :get_rates
+    :track: :get_tracking
+  :domain: www.godependable.com
+  :endpoints:
+    :rates: /services/rates.asmx?WSDL
+    :track: /services/track.asmx?WSDL
+  :use_ssl:
+    :rates: false
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
+:events:
+  :types:
+    :arrived_at_terminal: linehaul arrived
+    :delivered: completed.  signed by # "delivery" used often to mean arrived at terminal
+    :departed: linehaul departed
+    :out_for_delivery: out for delivery
+    :trailer_closed: terminal load
+    :trailer_unloaded: terminal unload
+:services:
+  :types:
+    - :standard

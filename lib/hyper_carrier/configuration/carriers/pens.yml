@@ -1,0 +1,22 @@
+:accessorials:
+:api:
+  :actions:
+    :rates: :create_pens_rate_quote
+  :domains:
+    :rates: www.peninsulatruck.com
+  :endpoints:
+    :rates: /webservices/pensrater.asmx?wsdl
+  :soap:
+    :namespaces:
+      :rates: http://peninsulatruck.com/WebServices # even over non-encrypted HTTP
+  :use_ssl:
+    :rates: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: false
+:services:
+  :mappable:
+    :next_day_ltl: next business day
+  :types:
+    - :next_day_ltl
+    - :standard

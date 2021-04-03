@@ -1,0 +1,4 @@
+:standard
+:guaranteed_delivery
+:guaranteed_delivery_am
+:guaranteed_delivery_pm

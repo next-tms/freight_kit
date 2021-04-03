@@ -1,0 +1,117 @@
+:accessorials:
+  :mappable:
+    :airport_delivery: LimitedAccessLocation
+    :airport_pickup: LimitedAccessLocationPU
+    :amusement_park_delivery: LimitedAccessLocation
+    :amusement_park_pickup: LimitedAccessLocationPU
+    :appointment_delivery: ArrivalNotice/Appointment
+    :cemetery_delivery: LimitedAccessLocation
+    :cemetery_pickup: LimitedAccessLocationPU
+    :church_delivery: LimitedAccessLocation
+    :church_pickup: LimitedAccessLocationPU
+    :construction_delivery: LimitedAccessLocation
+    :construction_pickup: LimitedAccessLocationPU
+    :convention_delivery: TradeShowDelivery
+    :convention_pickup: TradeShowPickup
+    :driver_assist: WhiteGlove
+    :fair_delivery: LimitedAccessLocation
+    :fair_pickup: LimitedAccessLocationPU
+    :government_delivery: LimitedAccessLocation
+    :government_pickup: LimitedAccessLocationPU
+    :inside_delivery: InsideDelivery
+    :inside_pickup: InsidePickup
+    :jobsite_delivery: LimitedAccessLocation
+    :jobsite_pickup: LimitedAccessLocationPU
+    :liftgate_delivery: LiftgateService
+    :liftgate_pickup: LiftgateServicePU
+    :marina_delivery: LimitedAccessLocation
+    :marina_pickup: LimitedAccessLocationPU
+    :military_site_delivery: LimitedAccessLocation
+    :military_site_pickup: LimitedAccessLocationPU
+    :mine_site_delivery: LimitedAccessLocation
+    :mine_site_pickup: LimitedAccessLocationPU
+    :prison_delivery: LimitedAccessLocation
+    :prison_pickup: LimitedAccessLocationPU
+    :residential_delivery: ResidentialDelivery
+    :residential_pickup: ResidentialPickup
+    :school_delivery: LimitedAccessLocation
+    :school_pickup: LimitedAccessLocationPU
+    :steel_mill_delivery: LimitedAccessLocation
+    :steel_mill_pickup: LimitedAccessLocationPU
+    :storage_facility_delivery: LimitedAccessLocation
+    :storage_facility_pickup: LimitedAccessLocationPU
+    :university_delivery: LimitedAccessLocation
+    :university_pickup: LimitedAccessLocationPU
+    :utility_site_delivery: LimitedAccessLocation
+    :utility_site_pickup: LimitedAccessLocationPU
+  # May be inaccurate
+  :unquotable:
+    - :athletic_facility_delivery
+    - :athletic_facility_pickup
+    - :brewery_delivery
+    - :brewery_pickup
+    - :dock_dropoff
+    - :dock_pickup
+    - :farm_delivery
+    - :farm_pickup
+    - :fitness_center_delivery
+    - :fitness_center_pickup
+    - :golf_course_delivery
+    - :golf_course_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
+    - :grocery_warehouse_delivery
+    - :grocery_warehouse_pickup
+    - :hospital_delivery
+    - :hospital_pickup
+    - :hotel_delivery
+    - :hotel_pickup
+    - :inspection_site_delivery
+    - :inspection_site_pickup
+    - :mall_delivery
+    - :mall_pickup
+    - :motel_delivery
+    - :motel_pickup
+    - :nursing_home_delivery
+    - :nursing_home_pickup
+    - :park_delivery
+    - :park_pickup
+    - :ranch_delivery
+    - :ranch_pickup
+    - :reservation_delivery
+    - :reservation_pickup
+    - :resort_delivery
+    - :resort_pickup
+    - :restaurant_delivery
+    - :restaurant_pickup
+    - :winery_delivery
+    - :winery_pickup
+  # May be inaccurate
+  :unserviceable:
+    - :afterhours_delivery
+    - :afterhours_pickup
+    - :appointment_pickup
+    - :customs_brokerage
+    - :early_morning_delivery
+    - :early_morning_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :guaranteed_delivery
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm
+:api:
+  :actions:
+    :rates: :create
+  :domain: www.saiasecure.com
+  :endpoints:
+    :rates: /webservice/ratequote/soap.asmx?wsdl
+  :use_ssl: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
+:services:
+  :types:
+    - :standard
+    - :guaranteed_delivery
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm

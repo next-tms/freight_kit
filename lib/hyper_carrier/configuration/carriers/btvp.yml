@@ -1,0 +1,139 @@
+:accessorials:
+  :mappable:
+    :appointment_delivery: NOTFEE
+    :inside_delivery: INSDEL
+    :liftgate_delivery: LIFDEL
+    :liftgate_pickup: LIFPIC
+    :residential_delivery: RESDEL
+    :residential_pickup: RESPIC
+  # May be inaccurate
+  :unquotable:
+    - :athletic_facility_delivery
+    - :athletic_facility_pickup
+    - :cemetery_delivery
+    - :cemetery_pickup
+    - :church_delivery
+    - :church_pickup
+    - :construction_delivery
+    - :construction_pickup
+    - :dock_dropoff
+    - :dock_pickup
+    - :farm_delivery
+    - :farm_pickup
+    - :fitness_center_delivery
+    - :fitness_center_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :golf_course_delivery
+    - :golf_course_pickup
+    - :government_delivery
+    - :government_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
+    - :holiday_delivery
+    - :holiday_pickup
+    - :hospital_delivery
+    - :hospital_pickup
+    - :hotel_delivery
+    - :hotel_pickup
+    - :inspection_site_delivery
+    - :inspection_site_pickup
+    - :jobsite_delivery
+    - :jobsite_pickup
+    - :mall_delivery
+    - :mall_pickup
+    - :military_site_delivery
+    - :military_site_pickup
+    - :mine_site_delivery
+    - :mine_site_pickup
+    - :motel_delivery
+    - :motel_pickup
+    - :nursing_home_delivery
+    - :nursing_home_pickup
+    - :park_delivery
+    - :park_pickup
+    - :prison_delivery
+    - :prison_pickup
+    - :ranch_delivery
+    - :ranch_pickup
+    - :reservation_delivery
+    - :reservation_pickup
+    - :resort_delivery
+    - :resort_pickup
+    - :restaurant_delivery
+    - :restaurant_pickup
+    - :school_delivery
+    - :school_pickup
+    - :steel_mill_delivery
+    - :steel_mill_pickup
+    - :storage_facility_delivery
+    - :storage_facility_pickup
+    - :university_delivery
+    - :university_pickup
+    - :utility_site_delivery
+    - :utility_site_pickup
+  # May be inaccurate
+  :unserviceable:
+    - :afterhours_delivery
+    - :airport_delivery
+    - :airport_pickup
+    - :amusement_park_delivery
+    - :amusement_park_pickup
+    - :appointment_pickup
+    - :brewery_delivery
+    - :brewery_pickup
+    - :convention_delivery
+    - :convention_pickup
+    - :customs_brokerage
+    - :driver_assist
+    - :early_morning_delivery
+    - :fair_delivery
+    - :fair_pickup
+    - :grocery_warehouse_delivery
+    - :grocery_warehouse_pickup
+    - :guaranteed_delivery
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm
+    - :inside_pickup
+    - :marina_delivery
+    - :marina_pickup
+    - :saturday_delivery
+    - :saturday_pickup
+    - :sunday_delivery
+    - :sunday_pickup
+    - :winery_delivery
+    - :winery_pickup
+:api:
+  :actions:
+    :rates: :getquote
+    :track: :tracktrace
+  :domain: tgif1.bestovernite.com
+  :endpoints:
+    :bol: /xr0001.pgm
+    :pod: /xr0001.pgm
+    :rates: /web/services/TQUOTEAPIService/TQUOTEAPI?wsdl
+    :track: /web/services/TTRACKAPIService/TTRACKAPI?wsdl
+  :ports:
+    :bol: 8090
+    :pod: 8090
+    :rates: 10032
+    :track: 10032
+  :use_ssl:
+    :rates: false
+    :track: false
+:attributes:
+  :rates:
+    :with_excessive_length_fees: false
+:documents:
+  :types:
+    :bol: Bill of Lading
+    :pod: Proof of Delivery
+:events:
+  :types:
+    :arrived_at_terminal: arrived
+    :delivered: delivered
+    :departed: departed
+    :out_for_delivery: out for delvry
+:services:
+  :types:
+    - :standard
