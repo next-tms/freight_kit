@@ -63,7 +63,7 @@ module HyperCarrier #:nodoc:
     end
 
     def self.from(object, options = {})
-      return object if object.is_a?(HyperCarrier::Location)
+      return object if object.is_a?(Location)
 
       attributes = {}
 

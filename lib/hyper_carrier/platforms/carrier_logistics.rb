@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module ReactiveShipping
-  class CarrierLogistics < ReactiveShipping::Platform
+module HyperCarrier
+  class CarrierLogistics < Platform
     REACTIVE_FREIGHT_CARRIER = true
 
     # Documents
@@ -76,7 +76,7 @@ module ReactiveShipping
           element.click
         else
           browser.close
-          raise ReactiveShipping::ResponseError, "API Error: #{self.class.name}: Document not found"
+          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found"
         end
       else
         element = browser.frameset.frames[1].button(value: 'View Delivery Receipt Image')
@@ -84,7 +84,7 @@ module ReactiveShipping
           element.click
         else
           browser.close
-          raise ReactiveShipping::ResponseError, "API Error: #{self.class.name}: Document not found"
+          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found"
         end
       end
 
@@ -93,7 +93,7 @@ module ReactiveShipping
         url = browser.url
         if url.include?('viewdoc.php')
           browser.close
-          raise ReactiveShipping::ResponseError, "API Error: #{self.class.name}: Documnent cannot be downloaded"
+          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Documnent cannot be downloaded"
         end
       end
 
@@ -111,7 +111,7 @@ module ReactiveShipping
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise ReactiveShipping::ResponseError, "API Error: #{self.class.name}: Document not found"
+        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found"
       end
 
       File.exist?(path) ? path : false
@@ -150,14 +150,14 @@ module ReactiveShipping
       begin
         response = HTTParty.get(url)
         if !response.code == 200
-          raise ReactiveShipping::ResponseError, "API Error: #{self.class.name}: HTTP #{response.code}"
+          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: HTTP #{response.code}"
         end
       rescue StandardError
-        raise ReactiveShipping::ResponseError, "API Error: #{self.class.name}: Unknown response:\n#{response.inspect}"
+        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Unknown response:\n#{response.inspect}"
       end
 
       if response.body.downcase.include?('please enter a valid pro')
-        raise ReactiveShipping::ResponseError, "API Error: #{self.class.name}: Invalid tracking number"
+        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Invalid tracking number"
       end
 
       html = Nokogiri::HTML(response.body)

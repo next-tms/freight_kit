@@ -13,7 +13,13 @@ module HyperCarrier #:nodoc:
       options.symbolize_keys!
       @options = options
 
-      @dimensions = [dimensions].flatten.reject(&:nil?)
+      # For backward compatibility
+      if dimensions.is_a?(Array)
+        @dimensions = [dimensions].flatten.reject(&:nil?)
+      else
+        @dimensions = [dimensions.dig(:height), dimensions.dig(:width), dimensions.dig(:length)]
+        @dimensions = [@dimensions].flatten.reject(&:nil?)
+      end
 
       imperial = (options[:units] == :imperial)
 
@@ -36,7 +42,16 @@ module HyperCarrier #:nodoc:
         zero_length = Measured::Length.new(0, (dimensions_imperial ? :inches : :centimetres))
         @dimensions = [zero_length] * 3
       else
-        process_dimensions
+        # Overriding ReactiveShipping's protected process_dimensions which sorts
+        # them making it confusing for ReactiveFreight carrier API's that expect
+        # the H x W x L order. Since H x W x L is nonstandard in the freight
+        # industry ReactiveFreight introduces explicit functions for each
+        @dimensions = @dimensions.map do |l|
+          attribute_from_metric_or_imperial(l, Measured::Length, @dimensions_unit_system, :centimetres, :inches)
+        end
+        2.downto(@dimensions.length) do |_n|
+          @dimensions.unshift(@dimensions[0])
+        end
       end
 
       @value = Package.cents_from(options[:value])
