@@ -3,7 +3,8 @@ module HyperCarrier #:nodoc:
     VALID_FREIGHT_CLASSES = [55, 60, 65, 70, 77.5, 85, 92.5, 100, 110, 125, 150, 175, 200, 250, 300, 400].freeze
 
     cattr_accessor :default_options
-    attr_reader :currency, :declared_freight_class, :options, :value
+    attr_reader :currency, :options, :value
+    attr_writer :declared_freight_class
 
     # Package.new(100, [10, 20, 30], :units => :metric)
     # Package.new(Measured::Weight.new(100, :g), [10, 20, 30].map {|m| Length.new(m, :centimetres)})
