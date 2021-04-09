@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module ReactiveShipping
+module HyperCarrier
   class RDFS < Carrier
     REACTIVE_FREIGHT_CARRIER = true
 
@@ -85,7 +85,7 @@ module ReactiveShipping
       begin
         doc = Nokogiri::HTML(URI.parse(url).open)
       rescue OpenURI::HTTPError
-        raise ReactiveShipping::ResponseError, "API Error: #{@@name}: Document not found"
+        raise HyperCarrier::ResponseError, "API Error: #{@@name}: Document not found"
       end
 
       data = Base64.decode64(doc.css('img').first['src'].split('data:image/jpg;base64,').last)
