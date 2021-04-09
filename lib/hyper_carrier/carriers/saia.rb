@@ -228,8 +228,11 @@ module HyperCarrier
     end
 
     def parse_location(comment, delimiters)
-      city = comment.split(delimiters[0])[0].split(delimiters[1])[1].split(', ')[0].titleize
-      state = comment.split(delimiters[0])[0].split(delimiters[1])[1].split(', ')[1].upcase
+      return nil if comment.blank? || !comment.include?(delimiters[0]) || !comment.include?(delimiters[1])
+      parts = comment.split(delimiters[0])[0].split(delimiters[1])[1].split(',')
+
+      city = parts[0].squeeze.strip.titleize
+      state = parts[1].squeeze.strip.upcase
 
       Location.new(
         city: city,
