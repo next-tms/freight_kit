@@ -3,6 +3,7 @@
 module HyperCarrier
   class Platform < HyperCarrier::Carrier
     attr_accessor :conf
+    attr_reader :rates_with_excessive_length_fees
 
     def initialize(options = {})
       requirements.each { |key| requires!(options, key) }
