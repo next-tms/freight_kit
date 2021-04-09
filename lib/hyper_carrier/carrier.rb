@@ -18,8 +18,9 @@ module HyperCarrier
   #   The last request performed against the carrier's API.
   #   @see #save_request
   class Carrier
+    attr_accessor :conf, :rates_with_excessive_length_fees, :test_mode
     attr_reader :last_request
-    attr_accessor :test_mode
+
     alias_method :test_mode?, :test_mode
 
     # Credentials should be in options hash under keys :login, :password and/or :key.
