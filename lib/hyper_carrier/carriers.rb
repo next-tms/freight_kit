@@ -13,7 +13,7 @@ module HyperCarrier
     end
 
     def all
-      HyperCarrier::Carriers.registered.map { |name| ReactiveShipping.const_get(name) }
+      HyperCarrier::Carriers.registered.map { |name| HyperShipping.const_get(name) }
     end
 
     def find(name)

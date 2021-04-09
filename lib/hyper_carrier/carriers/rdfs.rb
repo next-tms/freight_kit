@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module ReactiveShipping
-  class RDFS < ReactiveShipping::Carrier
+  class RDFS < Carrier
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
