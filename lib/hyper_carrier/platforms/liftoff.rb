@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module HyperCarrier
-  class HyperCarrier < Platform
+  class Liftoff < Platform
     REACTIVE_FREIGHT_CARRIER = true
 
     JSON_HEADERS = {
