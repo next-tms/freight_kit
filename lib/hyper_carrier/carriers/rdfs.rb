@@ -239,7 +239,7 @@ module HyperCarrier
     def parse_tracking_response(response)
       json = JSON.parse(response.read)
 
-      if (response.status[0] != '200') || !json.dig('SearchResults')
+      if (response.status[0] != '200') || json.dig('SearchResults').blank?
         status = json.dig('error') || "API Error: HTTP #{response.status[0]}"
         return TrackingResponse.new(false, status, json, carrier: "#{@@scac}, #{@@name}", json: json, response: response, request: last_request)
       end
