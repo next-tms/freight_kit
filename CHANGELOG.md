@@ -2,7 +2,7 @@
 
 ### v0.0.1
 
-- Change ReactiveShipping name to HyperShipping
+- Change ReactiveShipping name to HyperCarrier
 - Change version to v0.0.1
 
 ## From ReactiveShipping
