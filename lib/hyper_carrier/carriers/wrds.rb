@@ -91,7 +91,7 @@ module HyperCarrier
       browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[16]/td[2]/a').click
 
       image_url = nil
-      browser.windows.last.use do
+      browser.switch_window.use do
         page_count = browser.element(xpath: '/html/body/form/div[3]/b/span').text.strip.to_i
         (page_count - 1).times do
           browser.element(xpath: '/html/body/form/div[3]/input[2]').click

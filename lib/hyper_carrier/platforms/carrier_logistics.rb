@@ -89,7 +89,7 @@ module HyperCarrier
       end
 
       url = nil
-      browser.windows.last.use do
+      browser.switch_window.use do
         url = browser.url
         if url.include?('viewdoc.php')
           browser.close
