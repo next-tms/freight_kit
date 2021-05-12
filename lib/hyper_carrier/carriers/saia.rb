@@ -53,7 +53,7 @@ module HyperCarrier
       options = @options.merge(options)
 
       accessorials = [
-        { 'AccessorialItem': { 'Code': 'SingleShipment' }
+        { 'AccessorialItem': { 'Code': 'SingleShipment' } }
       ]
       unless options[:accessorials].blank?
         serviceable_accessorials?(options[:accessorials])
