@@ -52,7 +52,9 @@ module HyperCarrier
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 
-      accessorials = []
+      accessorials = [
+        { 'AccessorialItem': { 'Code': 'SingleShipment' }
+      ]
       unless options[:accessorials].blank?
         serviceable_accessorials?(options[:accessorials])
         options[:accessorials].each do |a|
