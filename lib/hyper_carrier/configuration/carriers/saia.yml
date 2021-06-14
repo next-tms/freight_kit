@@ -102,13 +102,25 @@
 :api:
   :actions:
     :rates: :create
+    :track: :get_by_pro_number
   :domain: www.saiasecure.com
   :endpoints:
     :rates: /webservice/ratequote/soap.asmx?wsdl
+    :track: /webservice/shipment/soap.asmx?wsdl 
   :use_ssl: true
 :attributes:
   :rates:
     :with_excessive_length_fees: true
+:events:
+  :types:
+    :arrived_at_terminal: arrived
+    :delivered: delivered
+    :departed: departed from terminal
+    :located: arrived at breakbulk terminal
+    :out_for_delivery: dispatched for delivery
+    :picked_up: pickup from customer
+    :trailer_unloaded: unload trailer # must be before :trailer_closed
+    :trailer_closed: load trailer
 :services:
   :types:
     - :standard
