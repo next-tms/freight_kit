@@ -43,7 +43,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 13.0.3'
   spec.add_development_dependency 'timecop', '~> 0.9.4'
   spec.add_development_dependency 'vcr', '~> 6.0.0'
-  spec.add_development_dependency 'webmock', '~> 3.13.0'
+  spec.add_development_dependency 'webmock', '~> 3.14.0'
 
   spec.add_dependency 'active_utils', '~> 3.3.1'
   spec.add_dependency 'activesupport', '>= 4.2', '< 6.2'
