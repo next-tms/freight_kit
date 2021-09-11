@@ -163,6 +163,32 @@ module HyperCarrier
       html = Nokogiri::HTML(response.body)
       tracking_table = html.css('.newtables2')[0]
 
+      if tracking_table.blank?
+        status = "API Error: #{self.class.name}: Unknown response (missing tracking table):\n#{response.inspect}"
+        warn status
+
+        return TrackingResponse.new(
+          true,
+          nil,
+          { html: html.to_s },
+          carrier: "#{self.class.scac}, #{self.class.name}",
+          html: html,
+          response: html.to_s,
+          status: status,
+          type_code: nil,
+          ship_time: nil,
+          scheduled_delivery_date: nil,
+          actual_delivery_date: nil,
+          delivery_signature: nil,
+          shipment_events: [],
+          shipper_address: nil,
+          origin: nil,
+          destination: nil,
+          tracking_number: tracking_number,
+          request: last_request
+        )
+      end
+
       actual_delivery_date = nil
       receiver_address = nil
       ship_time = nil
