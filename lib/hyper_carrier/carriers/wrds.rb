@@ -61,7 +61,7 @@ module HyperCarrier
              else
                options[:path]
              end
-      file = Tempfile.new
+      file = Tempfile.new(binmode: true)
 
       File.open(file.path, 'wb') do |file|
         URI.parse(url).open do |input|

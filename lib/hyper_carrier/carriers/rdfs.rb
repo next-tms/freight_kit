@@ -95,7 +95,7 @@ module HyperCarrier
                options[:path]
              end
 
-      file = Tempfile.new
+      file = Tempfile.new(binmode: true)
       file.write(data)
       file = Magick::ImageList.new(file.path)
       file.write(path)
