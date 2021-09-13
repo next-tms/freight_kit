@@ -107,7 +107,8 @@ module HyperCarrier
       options = @options.merge(options)
 
       service_delivery_options = [
-        service_options: { service_code: 'SS' }
+        # API calls this invalid now
+        # service_options: { service_code: 'SS' }
       ]
 
       unless options[:accessorials].blank?
