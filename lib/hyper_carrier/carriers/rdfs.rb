@@ -308,7 +308,7 @@ module HyperCarrier
         carrier: "#{@@scac}, #{@@name}",
         json: json,
         response: response,
-        status: status,
+        status: shipment_events.last&.status,
         type_code: shipment_events.last&.status,
         ship_time: parse_date(search_result.dig('Shipment', 'ProDateTime')),
         scheduled_delivery_date: scheduled_delivery_date,
