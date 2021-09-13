@@ -228,9 +228,7 @@ module HyperCarrier
         error = response.dig(:get_by_pro_number_response, :get_by_pro_number_result, :code)
       end
 
-      if error
-        return TrackingResponse.new(false, status, response, carrier: "#{@@scac}, #{@@name}", json: response, response: response, request: last_request)
-      end
+      raise HyperCarrier::ShipmentNotFound if error
 
       search_result = response.dig(:get_by_pro_number_response, :get_by_pro_number_result)
 

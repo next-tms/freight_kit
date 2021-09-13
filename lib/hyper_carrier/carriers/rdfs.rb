@@ -240,15 +240,11 @@ module HyperCarrier
     def parse_tracking_response(response)
       json = JSON.parse(response&.read || '{}')
 
-      if json.dig('SearchResults').blank? || response.status[0] != '200'
-        status = json.dig('error') || "API Error: HTTP #{response.status[0]}"
-        return TrackingResponse.new(false, status, json, carrier: "#{@@scac}, #{@@name}", json: json, response: response, request: last_request)
-      end
+      raise HyperCarrier::ShipmentNotFound if json.dig('SearchResults').blank? || response.status[0] != '200'
 
       search_result = json.dig('SearchResults')[0]
       if search_result.dig('Shipment', 'ProNumber').downcase.include?('not available')
-        status = "API Error: #{@@name} tracking number not found"
-        return TrackingResponse.new(false, status, json, carrier: "#{@@scac}, #{@@name}", json: json, response: response, request: last_request)
+        raise HyperCarrier::DocumentNotFound
       end
 
       receiver_address = Location.new(

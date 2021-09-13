@@ -150,15 +150,17 @@ module HyperCarrier
       begin
         response = HTTParty.get(url)
         if !response.code == 200
-          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: HTTP #{response.code}"
+          if response.code == 404
+            raise HyperCarrier::ShipmentNotFound
+          else
+            raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: HTTP #{response.code}"
+          end
         end
       rescue StandardError
         raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Unknown response:\n#{response.inspect}"
       end
 
-      if response.body.downcase.include?('please enter a valid pro')
-        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Invalid tracking number"
-      end
+      raise HyperCarrier::ShipmentNotFound if response.body.downcase.include?('please enter a valid pro')
 
       html = Nokogiri::HTML(response.body)
       tracking_table = html.css('.newtables2')[0]
