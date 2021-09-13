@@ -106,27 +106,27 @@ module HyperCarrier
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 
-      service_deliveryoptions = [
-        serviceoptions: { service_code: 'SS' }
+      service_delivery_options = [
+        service_options: { service_code: 'SS' }
       ]
 
       unless options[:accessorials].blank?
         serviceable_accessorials?(options[:accessorials])
         options[:accessorials].each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            service_deliveryoptions << { serviceoptions: { service_code: @conf.dig(:accessorials, :mappable)[a] } }
+            service_delivery_options << { service_options: { service_code: @conf.dig(:accessorials, :mappable)[a] } }
           end
         end
       end
 
       longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
       if longest_dimension > 144
-        service_deliveryoptions << { serviceoptions: { service_code: 'EXL' } }
+        service_delivery_options << { service_options: { service_code: 'EXL' } }
       elsif longest_dimension > 96
-        service_deliveryoptions << { serviceoptions: { service_code: 'EXM' } }
+        service_delivery_options << { service_options: { service_code: 'EXM' } }
       end
 
-      service_deliveryoptions = service_deliveryoptions.uniq.to_a
+      service_delivery_options = service_delivery_options.uniq.to_a
 
       request = {
         'request' => {
@@ -140,7 +140,7 @@ module HyperCarrier
               }
             end
           },
-          service_deliveryoptions: service_deliveryoptions,
+          service_delivery_options: service_delivery_options,
           origin_type: options[:origin_type] || 'B', # O for shipper, I for consignee, B for third party
           payment_type: options[:payment_type] || 'P', # Prepaid
           pallet_count: packages.size,
