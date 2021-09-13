@@ -21,11 +21,10 @@ module HyperCarrier
     end
   end
 
-  class ShipmentNotFound < HyperCarrier::Error
-  end
+  class DocumentNotFound < HyperCarrier::Error; end
+  class ShipmentNotFound < HyperCarrier::Error; end
 
-  class USPSValidationError < StandardError
-  end
+  class USPSValidationError < StandardError; end
 
   class USPSMissingRequiredTagError < StandardError
     def initialize(tag, prop)
