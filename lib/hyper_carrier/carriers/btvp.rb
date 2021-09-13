@@ -301,6 +301,55 @@ module HyperCarrier
 
     def parse_location(code)
       case code
+      when '31'
+        Location.new(
+          city: 'Las Vegas',
+          province: 'NV',
+          state: 'NV',
+          country: ActiveUtils::Country.find('USA')
+        )
+      when '50'
+        Location.new(
+          city: 'Phoenix',
+          province: 'AZ',
+          state: 'AZ',
+          country: ActiveUtils::Country.find('USA')
+        )
+      when '62'
+        Location.new(
+          city: 'Denver',
+          province: 'CO',
+          state: 'CO',
+          country: ActiveUtils::Country.find('USA')
+        )
+      when 'BEN'
+        Location.new(
+          city: 'Benicia',
+          province: 'CA',
+          state: 'CA',
+          country: ActiveUtils::Country.find('USA')
+        )
+      when 'DAL'
+        Location.new(
+          city: 'Dallas',
+          province: 'TX',
+          state: 'TX',
+          country: ActiveUtils::Country.find('USA')
+        )
+      when 'FRES'
+        Location.new(
+          city: 'Fresno',
+          province: 'CA',
+          state: 'CA',
+          country: ActiveUtils::Country.find('USA')
+        )
+      when 'DENT'
+        Location.new(
+          city: 'Kent',
+          province: 'WA',
+          state: 'WA',
+          country: ActiveUtils::Country.find('USA')
+        )
       when 'LA'
         Location.new(
           city: 'Los Angeles',
@@ -318,6 +367,13 @@ module HyperCarrier
       when 'SAC'
         Location.new(
           city: 'Sacramento',
+          province: 'CA',
+          state: 'CA',
+          country: ActiveUtils::Country.find('USA')
+        )
+      when 'SJ'
+        Location.new(
+          city: 'San Jose',
           province: 'CA',
           state: 'CA',
           country: ActiveUtils::Country.find('USA')
