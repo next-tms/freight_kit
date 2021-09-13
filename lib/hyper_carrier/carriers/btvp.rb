@@ -308,6 +308,13 @@ module HyperCarrier
           state: 'CA',
           country: ActiveUtils::Country.find('USA')
         )
+      when 'PDX'
+        Location.new(
+          city: 'Portland',
+          province: 'OR',
+          state: 'OR',
+          country: ActiveUtils::Country.find('USA')
+        )
       when 'SAC'
         Location.new(
           city: 'Sacramento',
@@ -370,7 +377,10 @@ module HyperCarrier
         next if event.blank?
 
         datetime_without_time_zone = parse_datetime("#{api_event.dig(:date)} #{api_event.dig(:time)}")
+
         location = parse_location(api_event.dig(:location))
+        location = receiver_address if location.state.blank? && %i[delivered out_for_delivery].include?(event)
+
         status = event
 
         shipment_events << ShipmentEvent.new(event, datetime_without_time_zone, location)
