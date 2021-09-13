@@ -203,10 +203,7 @@ module HyperCarrier
     end
 
     def parse_tracking_response(response)
-      unless response.dig(:get_tracking_response, :get_tracking_result, :tracking_status_response)
-        status = json.dig('error') || "API Error: HTTP #{response.status[0]}"
-        return TrackingResponse.new(false, status, json, carrier: "#{@@scac}, #{@@name}", json: json, response: response, request: last_request)
-      end
+      raise HyperCarrier::ShipmentNotFound if response.dig(:get_tracking_response, :get_tracking_result, :tracking_status_response).blank?
 
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 

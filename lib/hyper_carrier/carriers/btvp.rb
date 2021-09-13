@@ -389,10 +389,7 @@ module HyperCarrier
     end
 
     def parse_tracking_response(response)
-      unless response.dig(:tracktrace_response, :return, :currentstatus, :errorcode).blank?
-        status = response.dig(:tracktrace_response, :return, :currentstatus, :errorcode)
-        return TrackingResponse.new(false, status, response, carrier: "#{@@scac}, #{@@name}", xml: response, response: response, request: last_request)
-      end
+      raise HyperCarrier::ShipmentNotFound unless response.dig(:tracktrace_response, :return, :currentstatus, :errorcode).blank?
 
       receiver_address = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :city).titleize,
