@@ -76,7 +76,7 @@ module HyperCarrier
           element.click
         else
           browser.close
-          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found"
+          raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
         end
       else
         element = browser.frameset.frames[1].button(value: 'View Delivery Receipt Image')
@@ -84,7 +84,7 @@ module HyperCarrier
           element.click
         else
           browser.close
-          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found"
+          raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
         end
       end
 
@@ -111,7 +111,7 @@ module HyperCarrier
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found"
+        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
       end
 
       File.exist?(path) ? path : false

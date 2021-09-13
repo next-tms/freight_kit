@@ -68,7 +68,7 @@ module HyperCarrier
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise HyperCarrier::ResponseError, "API Error: #{@@name}: Document not found"
+        raise HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found"
       end
 
       file = Magick::ImageList.new(file.path)

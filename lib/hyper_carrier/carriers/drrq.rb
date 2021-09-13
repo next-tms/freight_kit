@@ -89,7 +89,7 @@ module HyperCarrier
     def parse_document_response(type, tracking_number, url, options = {})
       options = @options.merge(options)
 
-      raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found" if url.blank?
+      raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found" if url.blank?
 
       path = if options[:path].blank?
                File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{type.to_s.upcase}.pdf")
@@ -103,7 +103,7 @@ module HyperCarrier
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found"
+        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
       end
 
       unless url.end_with?('.pdf')
@@ -141,7 +141,7 @@ module HyperCarrier
                .click
       rescue StandardError
         # POD not yet available
-        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document not found"
+        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
       end
 
       browser.iframe(name: 'AppBody').frame(id: 'Detail')

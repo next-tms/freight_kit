@@ -85,7 +85,7 @@ module HyperCarrier
       begin
         doc = Nokogiri::HTML(URI.parse(url).open)
       rescue OpenURI::HTTPError
-        raise HyperCarrier::ResponseError, "API Error: #{@@name}: Document not found"
+        raise HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found"
       end
 
       data = Base64.decode64(doc.css('img').first['src'].split('data:image/jpg;base64,').last)
