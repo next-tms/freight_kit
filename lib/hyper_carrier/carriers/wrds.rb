@@ -186,7 +186,7 @@ module HyperCarrier
       end
 
       scheduled_delivery_date = nil
-      status = shipment_events.last.status
+      status = shipment_events.last&.status
 
       actual_delivery_date = browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[9]/td[2]/span').text
       actual_delivery_date = actual_delivery_date ? Date.strptime(actual_delivery_date, '%m/%d/%Y').to_s(:db) : nil

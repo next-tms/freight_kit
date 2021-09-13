@@ -231,7 +231,7 @@ module HyperCarrier
       end
 
       scheduled_delivery_date = nil
-      status = shipment_events.last.status
+      status = shipment_events.last&.status
 
       shipment_events = shipment_events.sort_by(&:time)
 

@@ -276,13 +276,13 @@ module HyperCarrier
 
       TrackingResponse.new(
         true,
-        shipment_events.last.status,
+        shipment_events.last&.status,
         response,
         carrier: "#{@@scac}, #{@@name}",
         hash: response,
         response: response,
         status: status,
-        type_code: shipment_events.last.status,
+        type_code: shipment_events.last&.status,
         ship_time: parse_date(search_result.dig('Shipment', 'ProDateTime')),
         scheduled_delivery_date: scheduled_delivery_date,
         actual_delivery_date: actual_delivery_date,

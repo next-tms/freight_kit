@@ -454,11 +454,11 @@ module HyperCarrier
         status = :delivered unless delivery_event.blank?
       end
 
-      status = shipment_events.last.status if status.blank?
+      status = shipment_events.last&.status if status.blank?
 
       TrackingResponse.new(
         true,
-        shipment_events.last.status,
+        shipment_events.last&.status,
         response,
         carrier: "#{@@scac}, #{@@name}",
         xml: response,
