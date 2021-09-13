@@ -308,6 +308,13 @@ module HyperCarrier
           state: 'CA',
           country: ActiveUtils::Country.find('USA')
         )
+      when 'SAC'
+        Location.new(
+          city: 'Sacramento',
+          province: 'CA',
+          state: 'CA',
+          country: ActiveUtils::Country.find('USA')
+        )
       else
         Location.new(
           city: code,
