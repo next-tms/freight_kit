@@ -351,6 +351,7 @@ module HyperCarrier
       tracking_number = response.dig(:tracktrace_response, :return, :pronumber)
 
       shipment_events = []
+      status = nil
       response.dig(:tracktrace_response, :return, :history).each do |api_event|
         event = nil
         @conf.dig(:events, :types).each do |key, val|
@@ -363,12 +364,24 @@ module HyperCarrier
 
         datetime_without_time_zone = parse_datetime("#{api_event.dig(:date)} #{api_event.dig(:time)}")
         location = parse_location(api_event.dig(:location))
+        status = event
 
-        # status and type_code set automatically by ActiveFreight based on event
         shipment_events << ShipmentEvent.new(event, datetime_without_time_zone, location)
       end
 
       shipment_events = shipment_events.sort_by(&:time)
+
+      # Workaround for false status on certain events when timestamps are in wrong order
+      if !status == :out_for_delivery
+        out_for_delivery_event = shipment_events.select { |shipment_event| shipment_event.status == :out_for_delivery }
+        status = :out_for_delivery unless out_for_delivery_event.blank?
+      end
+      if !status == :delivered
+        delivery_event = shipment_events.select { |shipment_event| shipment_event.status == :delivered }
+        status = :delivered unless delivery_event.blank?
+      end
+
+      status = shipment_events.last.status if status.blank?
 
       TrackingResponse.new(
         true,
@@ -378,7 +391,7 @@ module HyperCarrier
         xml: response,
         response: response,
         status: status,
-        type_code: shipment_events.last.status,
+        type_code: status,
         ship_time: ship_time,
         scheduled_delivery_date: scheduled_delivery_date,
         actual_delivery_date: actual_delivery_date,
