@@ -181,11 +181,7 @@ module HyperCarrier
             'quote_number'
           )
           if cost
-            cost = if cost.include?('.')
-                     cost.to_f.to_s.delete('.').to_i
-                   else
-                      cost.to_i
-                   end
+            cost = (cost.to_f * 100).to_i
             rate_estimates = [
               RateEstimate.new(
                 origin,
