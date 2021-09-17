@@ -203,7 +203,7 @@ module HyperCarrier
     end
 
     def parse_tracking_response(response)
-      raise HyperCarrier::ShipmentNotFound if response.dig(:get_tracking_response, :get_tracking_result, :tracking_status_response).blank?
+      return HyperCarrier::ShipmentNotFound if response.dig(:get_tracking_response, :get_tracking_result, :tracking_status_response).blank?
 
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 

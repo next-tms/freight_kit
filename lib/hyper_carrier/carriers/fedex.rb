@@ -633,7 +633,7 @@ module HyperCarrier
           code = first_notification.at('Code').try(:text)
           case code
           when *TRANSIENT_TRACK_RESPONSE_CODES
-            raise HyperCarrier::ShipmentNotFound, first_notification.at('Message').text
+            return HyperCarrier::ShipmentNotFound, first_notification.at('Message').text
           else
             raise HyperCarrier::ResponseContentError, StandardError.new(first_notification.at('Message').text)
           end

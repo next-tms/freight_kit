@@ -108,7 +108,7 @@ module HyperCarrier
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found"
+        return HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found"
       end
 
       File.exist?(path) ? path : false
@@ -147,7 +147,7 @@ module HyperCarrier
 
       browser.close
 
-      raise HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found" if url.blank?
+      return HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found" if url.blank?
 
       download_document(type, tracking_number, url, options)
     end
@@ -389,7 +389,7 @@ module HyperCarrier
     end
 
     def parse_tracking_response(response)
-      raise HyperCarrier::ShipmentNotFound unless response.dig(:tracktrace_response, :return, :currentstatus, :errorcode).blank?
+      return HyperCarrier::ShipmentNotFound unless response.dig(:tracktrace_response, :return, :currentstatus, :errorcode).blank?
 
       receiver_address = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :city).titleize,

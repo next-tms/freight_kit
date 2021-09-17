@@ -85,7 +85,7 @@ module HyperCarrier
       begin
         doc = Nokogiri::HTML(URI.parse(url).open)
       rescue OpenURI::HTTPError
-        raise HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found"
+        return HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found"
       end
 
       data = Base64.decode64(doc.css('img').first['src'].split('data:image/jpg;base64,').last)
@@ -236,11 +236,11 @@ module HyperCarrier
     def parse_tracking_response(response)
       json = JSON.parse(response&.read || '{}')
 
-      raise HyperCarrier::ShipmentNotFound if json.dig('SearchResults').blank? || response.status[0] != '200'
+      return HyperCarrier::ShipmentNotFound if json.dig('SearchResults').blank? || response.status[0] != '200'
 
       search_result = json.dig('SearchResults')[0]
       if search_result.dig('Shipment', 'ProNumber').downcase.include?('not available')
-        raise HyperCarrier::DocumentNotFound
+        return HyperCarrier::DocumentNotFound
       end
 
       receiver_address = Location.new(

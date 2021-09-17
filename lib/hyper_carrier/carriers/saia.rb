@@ -228,7 +228,7 @@ module HyperCarrier
         error = response.dig(:get_by_pro_number_response, :get_by_pro_number_result, :code)
       end
 
-      raise HyperCarrier::ShipmentNotFound if error
+      return HyperCarrier::ShipmentNotFound if error
 
       search_result = response.dig(:get_by_pro_number_response, :get_by_pro_number_result)
 

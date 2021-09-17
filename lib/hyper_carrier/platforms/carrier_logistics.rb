@@ -76,7 +76,7 @@ module HyperCarrier
           element.click
         else
           browser.close
-          raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+          return HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
         end
       else
         element = browser.frameset.frames[1].button(value: 'View Delivery Receipt Image')
@@ -84,7 +84,7 @@ module HyperCarrier
           element.click
         else
           browser.close
-          raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+          return HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
         end
       end
 
@@ -93,7 +93,7 @@ module HyperCarrier
         url = browser.url
         if url.include?('viewdoc.php')
           browser.close
-          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Documnent cannot be downloaded"
+          return HyperCarrier::ResponseError, "API Error: #{self.class.name}: Documnent cannot be downloaded"
         end
       end
 
@@ -111,7 +111,7 @@ module HyperCarrier
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+        return HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
       end
 
       File.exist?(path) ? path : false
@@ -151,16 +151,16 @@ module HyperCarrier
         response = HTTParty.get(url)
         if !response.code == 200
           if response.code == 404
-            raise HyperCarrier::ShipmentNotFound
+            return HyperCarrier::ShipmentNotFound
           else
-            raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: HTTP #{response.code}"
+            return HyperCarrier::ResponseError, "API Error: #{self.class.name}: HTTP #{response.code}"
           end
         end
       rescue StandardError
-        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Unknown response:\n#{response.inspect}"
+        return HyperCarrier::ResponseError, "API Error: #{self.class.name}: Unknown response:\n#{response.inspect}"
       end
 
-      raise HyperCarrier::ShipmentNotFound if response.body.downcase.include?('please enter a valid pro')
+      return HyperCarrier::ShipmentNotFound if response.body.downcase.include?('please enter a valid pro')
 
       html = Nokogiri::HTML(response.body)
       tracking_table = html.css('.newtables2')[0]
