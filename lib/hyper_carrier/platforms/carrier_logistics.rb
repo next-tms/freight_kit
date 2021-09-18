@@ -225,7 +225,12 @@ module HyperCarrier
         next if tr.text.include?('shipment status')
         next if tr.css('td').blank?
 
-        datetime_without_time_zone = "#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squeeze
+        # Some carriers do not provide times 👎
+        datetime_without_time_zone = if tr.css('td')[3].blank?
+                                       "#{tr.css('td')[2].text} 12:00 AM".squeeze
+                                     else
+                                       "#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squeeze
+                                     end
         event = tr.css('td')[0].text
         location = tr.css('td')[1].text
 
