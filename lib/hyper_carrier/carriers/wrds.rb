@@ -103,6 +103,7 @@ module HyperCarrier
         end
         image_url = browser.element(css: '#cphMain_imgImage').attribute_value('src')
       end
+      browser.close
 
       parse_document_response(:pod, tracking_number, image_url, options)
     end
