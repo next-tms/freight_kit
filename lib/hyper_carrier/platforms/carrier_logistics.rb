@@ -4,6 +4,13 @@ module HyperCarrier
   class CarrierLogistics < Platform
     REACTIVE_FREIGHT_CARRIER = true
 
+    EXPIRED_CREDENTIALS_MESSAGES = [
+      'Your password has expired'
+    ]
+    INVALID_CREDENTIALS_MESSAGES = [
+      'Your Username or Password is Incorrect'
+    ]
+
     # Documents
     def find_bol(tracking_number, options = {})
       options = @options.merge(options)
@@ -66,6 +73,22 @@ module HyperCarrier
       browser.text_field(name: 'wlogin').set(@options[:username])
       browser.text_field(name: 'wpword').set(@options[:password])
       browser.button(name: 'BtnAction1').click
+
+      downcase_html = browser.html.downcase
+
+      EXPIRED_CREDENTIALS_MESSAGES.each do |expired_credentials_message|
+        if downcase_html.include?(expired_credentials_message.downcase)
+          browser.close
+          raise ExpiredCredentialsError
+        end
+      end
+
+      INVALID_CREDENTIALS_MESSAGES.each do |invalid_credentials_message|
+        if downcase_html.include?(invalid_credentials_message.downcase)
+          browser.close
+          raise InvalidCredentialsError
+        end
+      end
 
       browser.frameset.frames[1].text_field(id: 'menuquicktrack').set(tracking_number)
       browser.browser.frameset.frames[1].button(id: 'menusubmit').click
