@@ -5,6 +5,7 @@ module HyperCarrier
     REACTIVE_FREIGHT_CARRIER = true
 
     EXPIRED_CREDENTIALS_MESSAGES = [
+      'Unable to log in',
       'Your password has expired'
     ]
     INVALID_CREDENTIALS_MESSAGES = [
