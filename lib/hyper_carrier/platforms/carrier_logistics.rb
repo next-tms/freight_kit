@@ -118,6 +118,9 @@ module HyperCarrier
         if url.include?('viewdoc.php')
           browser.close
           raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Documnent cannot be downloaded"
+        elsif url == 'about:blank'
+          browser.close
+          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document cannot be downloaded - link leads to about:blank"
         end
       end
 
