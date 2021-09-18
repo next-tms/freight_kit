@@ -147,8 +147,6 @@ module HyperCarrier
       html = browser.table(id: 'cphMain_grvLogNotes').inner_html
       html = Nokogiri::HTML(html)
 
-      browser.close
-
       shipper_address = parse_city_state_zip(
         browser.element(
           xpath: '/html/body/form/div[3]/table[2]/tbody/tr[14]/td[1]/span'
@@ -199,6 +197,8 @@ module HyperCarrier
 
       actual_delivery_date = browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[9]/td[2]/span').text
       actual_delivery_date = actual_delivery_date ? Date.strptime(actual_delivery_date, '%m/%d/%Y').to_s(:db) : nil
+
+      browser.close
 
       shipment_events = shipment_events.sort_by(&:time)
 
