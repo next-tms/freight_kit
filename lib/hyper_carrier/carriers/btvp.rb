@@ -123,6 +123,11 @@ module HyperCarrier
       browser.text_field(name: 'password').set(@options[:password])
       browser.button(name: 'btnLogin').click
 
+      if browser.html.include?('You are not enrolled in any application environments on this server')
+        browser.close
+        raise InvalidCredentialsError
+      end
+
       browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/img').click
       browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li').click
       browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li[6]/span[2]').click
