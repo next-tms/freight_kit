@@ -143,8 +143,11 @@ module HyperCarrier
       browser.text_field(name: 'ctl00$cphMain$txtProNumber').set(tracking_number)
       browser.button(name: 'ctl00$cphMain$btnSearchProNumber').click
       browser.element(xpath: '/html/body/form/div[3]/div/div/table/tbody/tr[2]/td[1]/a').click
+
       html = browser.table(id: 'cphMain_grvLogNotes').inner_html
       html = Nokogiri::HTML(html)
+
+      browser.close
 
       shipper_address = parse_city_state_zip(
         browser.element(
