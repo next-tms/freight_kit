@@ -115,16 +115,15 @@ module HyperCarrier
       url = nil
       browser.switch_window.use do
         url = browser.url
-        if url.include?('viewdoc.php')
-          browser.close
-          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Documnent cannot be downloaded"
-        elsif url == 'about:blank'
-          browser.close
-          raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document cannot be downloaded - link leads to about:blank"
-        end
       end
 
       browser.close
+
+      if url.include?('viewdoc.php')
+        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Documnent cannot be downloaded"
+      elsif url == 'about:blank'
+        raise HyperCarrier::ResponseError, "API Error: #{self.class.name}: Document cannot be downloaded - link leads to about:blank"
+      end
 
       path = if options[:path].blank?
                File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{action.to_s.upcase}.pdf")
