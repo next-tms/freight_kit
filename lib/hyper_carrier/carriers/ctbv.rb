@@ -26,6 +26,11 @@ module HyperCarrier
 
     # Tracking
 
+    # Even though this is Carrier Logistics this website doesn't play well with our bot
+    def find_tracking_info(tracking_number, options = {})
+      raise NotImplementedError, "#find_tracking_info is not supported by #{@@name}."
+    end
+
     # protected
 
     # Documents
