@@ -85,6 +85,11 @@ module HyperCarrier
       browser.text_field(name: 'ctl00$cphMain$txtPassword').set(@options[:password])
       browser.button(name: 'ctl00$cphMain$btnLogIn').click
 
+      if browser.html.include?('Username or password is invalid.')
+        browser.close
+        raise InvalidCredentialsError
+      end
+
       browser.text_field(name: 'ctl00$cphMain$txtProNumber').set(tracking_number)
       browser.button(name: 'ctl00$cphMain$btnSearchProNumber').click
       browser.element(xpath: '/html/body/form/div[3]/div/div/table/tbody/tr[2]/td[1]/a').click
