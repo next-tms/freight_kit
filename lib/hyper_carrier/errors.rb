@@ -22,6 +22,7 @@ module HyperCarrier
   end
 
   class InvalidCredentialsError < HyperCarrier::ResponseError; end
+  class ExpiredCredentialsError < HyperCarrier::InvalidCredentialsError; end
 
   class DocumentNotFound < HyperCarrier::Error; end
   class ShipmentNotFound < HyperCarrier::Error; end
