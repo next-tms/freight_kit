@@ -81,7 +81,7 @@ module HyperCarrier
                    HTTParty.get(url, headers: headers)
                  end
 
-      JSON.parse(response.body) if response&.body
+      response
     end
 
     # Documents
@@ -172,49 +172,58 @@ module HyperCarrier
       success = true
       message = ''
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      elsif !response.dig('errorMessage').blank?
-        success = false
-        message = response.dig('errorMessage')
+      if response.body.blank?
+        if response.code == 401
+          raise HyperCarrier::InvalidCredentialsError
+        else
+          success = false
+          message = 'API Error: Unknown response'
+        end
       else
+        response = JSON.parse(response.body)
         sleep(5) # TODO: Maybe improve this?
         url = response.dig('detailQuoteLocation').gsub('\\', '')
         request = build_request(:get_rate, url: url)
         save_request(request)
         response = commit(request)
 
-        if !response
-          success = false
-          message = 'API Error: Unknown response'
-        elsif !response.dig('errorMessage').blank?
-          success = false
-          message = response.dig('errorMessage')
-        else
-          cost = response.dig('rateQuote')
-          if cost
-            cost = cost.sub('.', '').to_i
-            estimate_reference = response.dig('quoteNumber')
-            transit_days = response.dig('transitTime').to_i
-
-            rate_estimates = [
-              RateEstimate.new(
-                origin,
-                destination,
-                { scac: self.class.scac.upcase, name: self.class.name },
-                :standard,
-                transit_days: transit_days,
-                estimate_reference: estimate_reference,
-                total_cost: cost,
-                total_price: cost,
-                currency: 'USD',
-                with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-              )
-            ]
+        if response.body.blank?
+          if response.code == 401
+            raise HyperCarrier::InvalidCredentialsError
           else
             success = false
-            message = 'API Error: Cost is emtpy'
+            message = 'API Error: Unknown response'
+          end
+        else
+          response = JSON.parse(body.response)
+          if response.dig('errorMessage').blank?
+            cost = response.dig('rateQuote')
+            if cost
+              cost = cost.sub('.', '').to_i
+              estimate_reference = response.dig('quoteNumber')
+              transit_days = response.dig('transitTime').to_i
+  
+              rate_estimates = [
+                RateEstimate.new(
+                  origin,
+                  destination,
+                  { scac: self.class.scac.upcase, name: self.class.name },
+                  :standard,
+                  transit_days: transit_days,
+                  estimate_reference: estimate_reference,
+                  total_cost: cost,
+                  total_price: cost,
+                  currency: 'USD',
+                  with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+                )
+              ]
+            else
+              success = false
+              message = 'API Error: Cost is emtpy'
+            end
+          else
+            success = false
+            message = response.dig('errorMessage')
           end
         end
       end
