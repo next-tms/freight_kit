@@ -195,7 +195,7 @@ module HyperCarrier
             message = 'API Error: Unknown response'
           end
         else
-          response = JSON.parse(body.response)
+          response = JSON.parse(response.body)
           if response.dig('errorMessage').blank?
             cost = response.dig('rateQuote')
             if cost
