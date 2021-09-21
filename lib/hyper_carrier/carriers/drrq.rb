@@ -119,9 +119,14 @@ module HyperCarrier
       browser = Watir::Browser.new(:chrome, headless: !@debug)
       browser.goto(build_url(:pod))
 
+      credentials = {
+        username: options[:website_username] || options[:username],
+        password: options[:website_password] || options[:website_password]
+      }
+
       begin
-        browser.text_field(name: 'UserId').set(options[:username])
-        browser.text_field(name: 'Password').set(options[:password])
+        browser.text_field(name: 'UserId').set(credentials[:username])
+        browser.text_field(name: 'Password').set(credentials[:password])
         browser.button(name: 'submitbutton').click
       rescue StandardError # Selenium::WebDriver::Error::UnexpectedAlertOpenError
         browser.close
