@@ -249,7 +249,7 @@ module HyperCarrier
 
           # Calculate real transit time based on information we have about the destination service days
           %i[mon tue wed thu fri].each do |weekday|
-            days += 1 if response.dig(:getquote_response, :return, :service, :destination, weekday) == 'N'
+            transit_days += 1 if response.dig(:getquote_response, :return, :service, :destination, weekday) == 'N'
           end
 
           estimate_reference = response.dig(
