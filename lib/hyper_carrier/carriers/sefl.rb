@@ -180,8 +180,13 @@ module HyperCarrier
           message = 'API Error: Unknown response'
         end
       else
-        response = JSON.parse(response.body)
-        sleep(5) # TODO: Maybe improve this?
+        begin
+          response = JSON.parse(response.body)
+          sleep(10) # TODO: Maybe improve this?
+        rescue JSON::ParserError
+          raise HyperCarrier::ResponseError
+        end
+
         url = response.dig('detailQuoteLocation').gsub('\\', '')
         request = build_request(:get_rate, url: url)
         save_request(request)
@@ -195,7 +200,11 @@ module HyperCarrier
             message = 'API Error: Unknown response'
           end
         else
-          response = JSON.parse(response.body)
+          begin
+            response = JSON.parse(response.body)
+          rescue JSON::ParserError
+            raise HyperCarrier::ResponseError
+          end
           if response.dig('errorMessage').blank?
             cost = response.dig('rateQuote')
             if cost
