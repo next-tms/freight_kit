@@ -23,12 +23,15 @@ module HyperCarrier
     end
 
     # Documents
-    def find_pod(tracking_number, options = {})
+
+    def find_bol(tracking_number, options = {})
       options = @options.merge(options)
-      parse_pod_response(tracking_number, options)
+      request = build_document_request(:bol, tracking_number, options)
+      parse_document_response(commit(request), :bol, options)
     end
 
     # Rates
+
     def find_rates(origin, destination, packages, options = {})
       options = @options.merge(options)
       origin = Location.from(origin)
@@ -43,24 +46,15 @@ module HyperCarrier
 
     protected
 
-    def build_headers(action, options = {})
+    def build_headers(_action, options = {})
       options = @options.merge(options)
 
-      case action
-      when :quote
-        JSON_HEADERS.merge(
-          {
-            'UserName' => options[:username],
-            'ApiKey' => options[:password]
-          }
-        )
-      else
-        {}
-      end
-    end
-
-    def build_url(action)
-      "#{@conf.dig(:api, :use_ssl, action) ? 'https' : 'http'}://#{@conf.dig(:api, :domains, action)}#{@conf.dig(:api, :endpoints, action)}"
+      JSON_HEADERS.merge(
+        {
+          'UserName' => options[:username],
+          'ApiKey' => options[:password]
+        }
+      )
     end
 
     def commit(request)
@@ -75,111 +69,61 @@ module HyperCarrier
                  else
                    HTTParty.get(url, headers: headers)
                  end
+    end
 
-      JSON.parse(response.body) if response&.body
+    def parse_response(response)
+      case response.code
+      when 400
+        raise HyperCarrier::InvalidCredentialsError
+      end
+
+      raise HyperCarrier::ResponseError if response.code != 200
+
+      response = begin
+                   JSON.parse(response.body)
+                 rescue JSON::ParserError => e
+                   raise HyperCarrier::ResponseError
+                 end
+
+      response
     end
 
     def request_url(action)
-      scheme = @conf.dig(:api, :use_ssl, action) ? 'https://' : 'http://'
-      "#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
+      url = "#{@conf.dig(:api, :use_ssl, action) ? 'https' : 'http'}://#{@conf.dig(:api, :domains, action)}#{@conf.dig(:api, :endpoints, action)}"
+      url
     end
 
     # Documents
 
-    def parse_document_response(type, tracking_number, url, options = {})
+    def build_document_request(type, tracking_number, options = {})
+      request = {
+        url: request_url(type).sub('%TRACKING_NUMBER%', tracking_number),
+        headers: build_headers(type, options),
+        method: @conf.dig(:api, :methods, type)
+      }
+
+      save_request(request)
+      request
+    end
+
+    def parse_document_response(response, type, options = {})
       options = @options.merge(options)
+      response = parse_response(response)
 
-      raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found" if url.blank?
-
+      data = Base64.decode64(response.dig('FileBytes'))
       path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{type.to_s.upcase}.pdf")
+               File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
              else
                options[:path]
              end
-      file = File.new(path, 'w')
-
-      File.open(file.path, 'wb') do |file|
-        URI.parse(url).open do |input|
-          file.write(input.read)
-        end
-      rescue OpenURI::HTTPError
-        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
-      end
-
-      unless url.end_with?('.pdf')
-        file = Magick::ImageList.new(file.path)
-        file.write(path)
-      end
-
-      File.exist?(path) ? path : false
-    end
-
-    def parse_pod_response(tracking_number, options = {})
-      options = @options.merge(options)
-      browser = Watir::Browser.new(:chrome, headless: !@debug)
-      browser.goto(build_url(:pod))
-
-      credentials = {
-        username: options[:website_username] || options[:username],
-        password: options[:website_password] || options[:website_password]
+      
+      File.open(path, 'w') {
+        |f| f.write(data)
       }
-
-      begin
-        browser.text_field(name: 'UserId').set(credentials[:username])
-        browser.text_field(name: 'Password').set(credentials[:password])
-        browser.button(name: 'submitbutton').click
-      rescue StandardError # Selenium::WebDriver::Error::UnexpectedAlertOpenError
-        browser.close
-        raise InvalidCredentialsError
-      end
-
-      browser
-        .element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
-        .click
-
-      browser.iframes(src: '../mainframe/MainFrame.jsp?bRedirect=true')
-      browser.iframe(name: 'AppBody').frame(id: 'Header')
-             .text_field(name: 'filter')
-             .set(tracking_number)
-      browser.iframe(name: 'AppBody').frame(id: 'Header').button(value: 'Find')
-             .click
-
-      begin
-        browser.iframe(name: 'AppBody').frame(id: 'Detail')
-               .iframe(id: 'transportsWin')
-               .element(xpath: '/html/body/div/table/tbody/tr[2]/td[1]/span/a[2]')
-               .click
-      rescue StandardError
-        # POD not yet available
-        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
-      end
-
-      browser.iframe(name: 'AppBody').frame(id: 'Detail')
-             .element(xpath: '/html/body/div[1]/div/div/div[1]/div[1]/div[2]/div/a[5]')
-             .click
-
-      html = browser.iframe(name: 'AppBody').frame(id: 'Detail').iframes[1]
-                    .element(xpath: '/html/body/table[3]')
-                    .html
-      html = Nokogiri::HTML(html)
-
-      browser.close
-
-      url = nil
-      html.css('tr').each do |tr|
-        tds = tr.css('td')
-        next if tds.size <= 1 || tds.blank?
-
-        text = tds[1].text
-        next unless text&.include?('http')
-
-        url = text if url.blank? || !url.include?('hubtran') # Prefer HubTran
-      end
-
-      parse_document_response(:pod, tracking_number, url, options)
     end
 
     # Rates
+
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 
@@ -243,7 +187,7 @@ module HyperCarrier
       }.to_json
 
       request = {
-        url: build_url(:quote),
+        url: request_url(:quote),
         headers: build_headers(:quote, options),
         method: @conf.dig(:api, :methods, :quote),
         body: body
@@ -254,47 +198,44 @@ module HyperCarrier
     end
 
     def parse_rate_response(origin, destination, response)
+      response = parse_response(response)
+
       success = true
       message = ''
       rate_estimates = []
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      else
-        response.each do |response_line|
-          next if response_line.dig('Message') # Signifies error
+      response.each do |response_line|
+        next if response_line.dig('Message') # Signifies error
 
-          cost = response_line.dig('Total')
-          if cost
-            cost = (cost.to_f * 100).to_i
-            service = response_line.dig('Charges').map { |charges| charges.dig('Description') }
-            service = case service
-                      when service.any?('Standard LTL Guarantee')
-                        :guaranteed
-                      when service.any?('Guaranteed LTL Service AM')
-                        :guaranteed_am
-                      when service.any?('Guaranteed LTL Service PM')
-                        :guaranteed_pm
-                      else
-                        :standard
-                      end
-            transit_days = response_line.dig('ServiceDays').to_i
-            rate_estimates << RateEstimate.new(
-              origin,
-              destination,
-              { scac: response_line.dig('Scac'), name: response_line.dig('CarrierName') },
-              service,
-              transit_days: transit_days,
-              estimate_reference: nil,
-              total_cost: cost,
-              total_price: cost,
-              currency: 'USD',
-              with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-            )
-          else
-            next
-          end
+        cost = response_line.dig('Total')
+        if cost
+          cost = (cost.to_f * 100).to_i
+          service = response_line.dig('Charges').map { |charges| charges.dig('Description') }
+          service = case service
+                    when service.any?('Standard LTL Guarantee')
+                      :guaranteed
+                    when service.any?('Guaranteed LTL Service AM')
+                      :guaranteed_am
+                    when service.any?('Guaranteed LTL Service PM')
+                      :guaranteed_pm
+                    else
+                      :standard
+                    end
+          transit_days = response_line.dig('ServiceDays').to_i
+          rate_estimates << RateEstimate.new(
+            origin,
+            destination,
+            { scac: response_line.dig('Scac'), name: response_line.dig('CarrierName') },
+            service,
+            transit_days: transit_days,
+            estimate_reference: nil,
+            total_cost: cost,
+            total_price: cost,
+            currency: 'USD',
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        else
+          next
         end
       end
 
@@ -310,4 +251,6 @@ module HyperCarrier
 
     # Tracking
   end
+
+  private
 end

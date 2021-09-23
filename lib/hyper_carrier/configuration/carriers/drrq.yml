@@ -100,15 +100,16 @@
     - :marina_pickup
 :api:
   :domains:
-    :pod: rrd.mercurygate.net
+    :bol: connectapi.tfwwi.com
     :quote: dlsworldwideproxy.rrd.com
   :endpoints:
-    :pod: /MercuryGate/login/mgLogin.jsp?inline=true
+    :bol: /services/api/v1/Shipment/documentExtract?primaryReferenceBol=%TRACKING_NUMBER%
     :quote: /services/api/v1/RateShop/RateRequest
   :methods:
+    :bol: :get
     :quote: :post
   :use_ssl:
-    :pod: true
+    :bol: true
     :quote: true
 :attributes:
   :rates:
