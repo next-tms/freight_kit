@@ -27,7 +27,7 @@ module HyperCarrier
     def find_bol(tracking_number, options = {})
       options = @options.merge(options)
       request = build_document_request(:bol, tracking_number, options)
-      parse_document_response(commit(request), :bol, options)
+      parse_document_response(commit(request), :bol, tracking_number, options)
     end
 
     # Rates
@@ -106,7 +106,7 @@ module HyperCarrier
       request
     end
 
-    def parse_document_response(response, type, options = {})
+    def parse_document_response(response, type, tracking_number, options = {})
       options = @options.merge(options)
       response = parse_response(response)
 
