@@ -123,6 +123,8 @@ module HyperCarrier
       File.open(path, 'w') {
         |f| f.write(data)
       }
+
+      path
     end
 
     # Rates
