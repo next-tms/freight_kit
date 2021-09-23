@@ -110,7 +110,10 @@ module HyperCarrier
       options = @options.merge(options)
       response = parse_response(response)
 
-      data = Base64.decode64(response.dig('FileBytes'))
+      file_bytes = response.dig('FileBytes')
+      return HyperCarrier::DocumentNotFound if file_bytes.blank?
+
+      data = Base64.decode64(file_bytes)
       path = if options[:path].blank?
                File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
              else
