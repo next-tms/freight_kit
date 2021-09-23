@@ -39,7 +39,7 @@ Carriers differ from platforms in that they have unique web services whereas pla
 |Roadrunner Transportation Services |✓  |✓  |✓    |✓       |
 |Saia                               |   |   |✓    |✓       |
 |Southeastern Freight Lines         |   |   |✓    |        |
-|Tforce Worldwide                   |   |✓  |✓    |        |
+|Tforce Worldwide                   |✓  |   |✓    |        |
 |Total Transportation & Distribution|✓  |✓  |✓    |✓       |
 |Western Regional Delivery Service  |   |✓  |     |✓       |
 
