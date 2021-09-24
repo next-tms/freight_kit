@@ -3,7 +3,7 @@ require 'active_utils'
 
 require 'httparty'
 require 'measured'
-require 'nokogiri'
+require 'mimemagic'
 require 'nokogiri'
 require 'open-uri'
 require 'rmagick'

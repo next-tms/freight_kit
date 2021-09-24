@@ -49,6 +49,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'activesupport', '>= 4.2', '< 6.2'
   spec.add_dependency 'httparty', '~> 0.10'
   spec.add_dependency 'measured', '>= 2.0'
+  spec.add_dependency 'mimemagic', '~> 0.4.3'
   spec.add_dependency 'nokogiri', '>= 1.6'
   spec.add_dependency 'rmagick', '>= 4.1', '< 4.3'
   spec.add_dependency 'savon', '>= 2.0', '< 2.13'
