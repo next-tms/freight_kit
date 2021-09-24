@@ -27,7 +27,12 @@ module HyperCarrier
     def find_bol(tracking_number, options = {})
       options = @options.merge(options)
       request = build_document_request(:bol, tracking_number, options)
-      parse_document_response(commit(request), :bol, tracking_number, options)
+      parse_bol_response(commit(request), :bol, tracking_number, options)
+    end
+
+    def find_pod(tracking_number, options = {})
+      options = @options.merge(options)
+      parse_pod_response(tracking_number, options)
     end
 
     # Rates
@@ -98,15 +103,16 @@ module HyperCarrier
     def build_document_request(type, tracking_number, options = {})
       request = {
         url: request_url(type).sub('%TRACKING_NUMBER%', tracking_number),
-        headers: build_headers(type, options),
         method: @conf.dig(:api, :methods, type)
       }
+
+      request[:headers] = build_headers(type, options) if type == :bol
 
       save_request(request)
       request
     end
 
-    def parse_document_response(response, type, tracking_number, options = {})
+    def parse_bol_response(response, type, tracking_number, options = {})
       options = @options.merge(options)
       response = parse_response(response)
 
@@ -125,6 +131,100 @@ module HyperCarrier
       }
 
       path
+    end
+
+    def parse_pod_response(tracking_number, options = {})
+      options = @options.merge(options)
+
+      request = build_document_request(:pod, tracking_number, options)
+      browser = Watir::Browser.new(:chrome, headless: !@debug)
+      browser.goto(request[:url])
+
+      credentials = {
+        username: options[:website_username] || options[:username],
+        password: options[:website_password] || options[:password]
+      }
+
+      begin
+        browser.text_field(name: 'UserId').set(credentials[:username])
+        browser.text_field(name: 'Password').set(credentials[:password])
+        browser.button(name: 'submitbutton').click
+      rescue StandardError # Selenium::WebDriver::Error::UnexpectedAlertOpenError
+        browser.close
+        raise InvalidCredentialsError
+      end
+
+      logout_url = 'https://rrd.mercurygate.net/MercuryGate/login/urlRedirect.jsp?Logout=true'
+
+      browser
+        .element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
+        .click
+
+      browser.iframes(src: '../mainframe/MainFrame.jsp?bRedirect=true')
+      browser.iframe(name: 'AppBody').frame(id: 'Header')
+             .text_field(name: 'filter')
+             .set(tracking_number)
+      browser.iframe(name: 'AppBody').frame(id: 'Header').button(value: 'Find')
+             .click
+
+      begin
+        browser.iframe(name: 'AppBody').frame(id: 'Detail')
+               .iframe(id: 'transportsWin')
+               .element(xpath: '/html/body/div/table/tbody/tr[2]/td[1]/span/a[2]')
+               .click
+      rescue StandardError
+        # POD not yet available
+        browser.close
+        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+      end
+
+      browser.iframe(name: 'AppBody').frame(id: 'Detail')
+             .element(xpath: '/html/body/div[1]/div/div/div[1]/div[1]/div[2]/div/a[5]')
+             .click
+
+      html = browser.iframe(name: 'AppBody').frame(id: 'Detail').iframes[1]
+                    .element(xpath: '/html/body/table[3]')
+                    .html
+      html = Nokogiri::HTML(html)
+
+      browser.close
+
+      url = nil
+      html.css('tr').each do |tr|
+        tds = tr.css('td')
+        next if tds.size <= 1 || tds.blank?
+
+        text = tds[1].text
+        next unless text&.include?('http')
+
+        url = text if url.blank? || !url.include?('hubtran') # Prefer HubTran
+      end
+
+      if url.blank?
+        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+      end
+
+      path = if options[:path].blank?
+               File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{type.to_s.upcase}.pdf")
+             else
+               options[:path]
+             end
+      file = File.new(path, 'w')
+
+      File.open(file.path, 'wb') do |file|
+        URI.parse(url).open do |input|
+          file.write(input.read)
+        end
+      rescue OpenURI::HTTPError
+        raise HyperCarrier::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+      end
+
+      unless MimeMagic.by_magic(File.open(path)).type == 'application/pdf'
+        file = Magick::ImageList.new(file.path)
+        file.write(path)
+      end
+
+      File.exist?(path) ? path : false
     end
 
     # Rates
