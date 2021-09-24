@@ -120,7 +120,7 @@ module HyperCarrier
                options[:path]
              end
       
-      File.open(path, 'w') {
+      File.open(path, 'wb') {
         |f| f.write(data)
       }
 
