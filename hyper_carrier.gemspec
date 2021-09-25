@@ -53,6 +53,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'nokogiri', '>= 1.6'
   spec.add_dependency 'rmagick', '>= 4.1', '< 4.3'
   spec.add_dependency 'savon', '>= 2.0', '< 2.13'
-  spec.add_dependency 'watir', '>= 6.1', '< 6.20'
+  spec.add_dependency 'watir', '7.0.0.beta5'
   spec.add_dependency 'webdrivers', '>= 4.0', '< 4.7'
 end
