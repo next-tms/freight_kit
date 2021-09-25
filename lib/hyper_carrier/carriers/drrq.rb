@@ -205,7 +205,7 @@ module HyperCarrier
       end
 
       path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{type.to_s.upcase}.pdf")
+               File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} POD.pdf")
              else
                options[:path]
              end
