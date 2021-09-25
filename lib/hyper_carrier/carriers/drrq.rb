@@ -149,7 +149,7 @@ module HyperCarrier
         browser.text_field(name: 'UserId').set(credentials[:username])
         browser.text_field(name: 'Password').set(credentials[:password])
         browser.button(name: 'submitbutton').click
-      rescue StandardError # Selenium::WebDriver::Error::UnexpectedAlertOpenError
+      rescue Selenium::WebDriver::Error::UnexpectedAlertOpenError
         browser.close
         raise InvalidCredentialsError
       end
