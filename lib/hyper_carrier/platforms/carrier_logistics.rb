@@ -68,7 +68,7 @@ module HyperCarrier
     # Documents
     def parse_document_response(action, tracking_number, options = {})
       options = @options.merge(options)
-      browser = Watir::Browser.new(:chrome, headless: !debug?)
+      browser = Watir::Browser.new(*options[:watir_args])
       browser.goto(build_url(action))
 
       browser.text_field(name: 'wlogin').set(@options[:username])

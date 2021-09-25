@@ -78,7 +78,7 @@ module HyperCarrier
 
     def parse_pod_response(tracking_number, options = {})
       options = @options.merge(options)
-      browser = Watir::Browser.new(:chrome, headless: !@debug)
+      browser = Watir::Browser.new(*options[:watir_args])
       browser.goto(build_url(:pod))
 
       browser.text_field(name: 'ctl00$cphMain$txtUserName').set(@options[:username])
@@ -137,7 +137,7 @@ module HyperCarrier
     end
 
     def parse_tracking_response(tracking_number)
-      browser = Watir::Browser.new(:chrome, headless: !@debug)
+      browser = Watir::Browser.new(*options[:watir_args])
       browser.goto build_url(:track)
 
       browser.text_field(name: 'ctl00$cphMain$txtProNumber').set(tracking_number)

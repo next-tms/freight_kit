@@ -116,7 +116,7 @@ module HyperCarrier
 
     def parse_document_response(type, tracking_number, options = {})
       options = @options.merge(options)
-      browser = Watir::Browser.new(:chrome, headless: !@debug)
+      browser = Watir::Browser.new(*options[:watir_args])
       browser.goto(build_url(:pod))
 
       browser.text_field(name: 'userid').set(@options[:username])

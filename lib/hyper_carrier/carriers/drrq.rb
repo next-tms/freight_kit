@@ -137,7 +137,7 @@ module HyperCarrier
       options = @options.merge(options)
 
       request = build_document_request(:pod, tracking_number, options)
-      browser = Watir::Browser.new(:chrome, headless: !@debug)
+      browser = Watir::Browser.new(*options[:watir_args])
       browser.goto(request[:url])
 
       credentials = {
@@ -161,6 +161,12 @@ module HyperCarrier
         .click
 
       browser.iframes(src: '../mainframe/MainFrame.jsp?bRedirect=true')
+      browser.iframe(name: 'AppBody').frame(id: 'Header')
+             .select(name: 'column')
+             .select('Primary Reference')
+      browser.iframe(name: 'AppBody').frame(id: 'Header')
+             .select(name: 'condition')
+             .select('=')
       browser.iframe(name: 'AppBody').frame(id: 'Header')
              .text_field(name: 'filter')
              .set(tracking_number)
