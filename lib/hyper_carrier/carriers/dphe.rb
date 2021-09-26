@@ -10,7 +10,18 @@ module HyperCarrier
 
     # Documents
 
+    def find_bol(tracking_number, options = {})
+      options = @options.merge(options)
+      parse_document_response(:bol, tracking_number, options)
+    end
+
+    def find_pod(tracking_number, options = {})
+      options = @options.merge(options)
+      parse_document_response(:pod, tracking_number, options)
+    end
+
     # Rates
+
     def find_rates(origin, destination, packages, options = {})
       options = @options.merge(options)
       origin = Location.from(origin)
@@ -22,6 +33,7 @@ module HyperCarrier
     end
 
     # Tracking
+
     def find_tracking_info(tracking_number)
       request = build_tracking_request(tracking_number)
       parse_tracking_response(commit_soap(:track, request))
@@ -52,12 +64,88 @@ module HyperCarrier
 
     def request_url(action)
       scheme = @conf.dig(:api, :use_ssl, action) ? 'https://' : 'http://'
-      "#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
+      "#{scheme}#{@conf.dig(:api, :domains, action)}#{@conf.dig(:api, :endpoints, action)}"
     end
 
     # Documents
 
+    def parse_document_response(action, tracking_number, options = {})
+      options = @options.merge(options)
+
+      raise ArgumentError if !action || !tracking_number
+
+      tmpdir = Dir.tmpdir
+
+      options[:watir_args] = [:chrome, options: { prefs: {} }] if !options[:watir_args]
+      options[:watir_args].each do |h|
+        if h.is_a?(Hash)
+          h.merge!(options: {prefs: {}}) unless h.dig(:options, :prefs)
+          h[:options][:prefs].merge!(
+            download: {
+              prompt_for_download: false,
+              default_directory: tmpdir
+            }
+          )
+        end
+        h
+      end
+
+      url = request_url(action)
+      browser = Watir::Browser.new(*options[:watir_args])
+      
+      browser.goto(url)
+
+      credentials = {
+        username: options[:username],
+        password: options[:password]
+      }
+
+      browser.text_field(name: 'dnn$ctr1914$View$TextBox1').set(credentials[:username])
+      browser.text_field(name: 'dnn$ctr1914$View$TextBox2').set(credentials[:password])
+      browser.button(name: 'dnn$ctr1914$View$Button1').click
+
+      if browser.html.downcase.include?('invalid username or password')
+        browser.close
+        raise InvalidCredentialsError
+      end
+
+      browser.text_field(name: 'ctl00$ContentPlaceHolder1$txtProNumber').set(tracking_number)
+      browser.button(name: 'ctl00$ContentPlaceHolder1$btnSubmit').click
+      
+      browser
+        .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
+        .click
+      
+      browser.switch_window      
+      case action
+      when :bol
+        browser
+        .element(xpath: '//*[@id="ContentPlaceHolder1_btnDocs"]')
+        .click
+      when :pod
+        browser
+        .element(xpath: '//*[@id="ContentPlaceHolder1_btnPOD"]')
+        .click
+      end
+      browser.close
+      
+      tif_path = Dir.glob("#{tmpdir}/*.tif").max_by {|f| File.mtime(f)}
+
+      path = if options[:path].blank?
+               File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{action.to_s.upcase}.pdf")
+             else
+               options[:path]
+             end
+      file = File.new(path, 'w')
+
+      file = Magick::ImageList.new(tif_path)
+      file.write(path)
+
+      File.exist?(path) ? path : false
+    end
+
     # Rates
+
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 
@@ -157,6 +245,7 @@ module HyperCarrier
     end
 
     # Tracking
+
     def build_tracking_request(tracking_number)
       request = { pro_number: tracking_number }
       save_request(request)
