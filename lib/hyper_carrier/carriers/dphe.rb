@@ -73,6 +73,7 @@ module HyperCarrier
       options = @options.merge(options)
 
       raise ArgumentError if !action || !tracking_number
+      raise ArgumentError if options[:url] && !options[:selenoid]
 
       tmpdir = Dir.tmpdir
 
@@ -80,12 +81,21 @@ module HyperCarrier
       options[:watir_args].each do |h|
         if h.is_a?(Hash)
           h.merge!(options: {prefs: {}}) unless h.dig(:options, :prefs)
-          h[:options][:prefs].merge!(
-            download: {
-              prompt_for_download: false,
-              default_directory: tmpdir
-            }
-          )
+          if !options[:selenoid_options]
+            h[:options][:prefs].merge!(
+              download: {
+                prompt_for_download: false,
+                default_directory: tmpdir
+              }
+            )
+          else
+            h[:options][:prefs].merge!(
+              download: {
+                directory_upgrade: true,
+                prompt_for_download: false
+              }
+            )
+          end
         end
         h
       end
@@ -127,9 +137,28 @@ module HyperCarrier
         .element(xpath: '//*[@id="ContentPlaceHolder1_btnPOD"]')
         .click
       end
+
+      sleep(10) # so Chrome can finish downloading
+
+      tif_path = nil
+      if !options.dig(:selenoid_options, :download_url)
+        tif_path = Dir.glob("#{tmpdir}/*.tif").max_by {|f| File.mtime(f)}
+      else
+        download_url = "#{options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
+        response = HTTParty.get("#{download_url}/?json")
+        tif_url = "#{download_url}/#{JSON.parse(response.body)&.last}"
+        tif_path = File.join(tmpdir, "#{tracking_number}_#{DateTime.current.to_s}.tif")
+
+        File.open(tif_path, 'wb') do |file|
+          HTTParty.get(tif_url, stream_body: true) do |fragment|
+            file.write(fragment)
+          end
+        end
+      end
+
       browser.close
-      
-      tif_path = Dir.glob("#{tmpdir}/*.tif").max_by {|f| File.mtime(f)}
+
+      return HyperCarrier::ResponseError if !File.exist?(tif_path)
 
       path = if options[:path].blank?
                File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{action.to_s.upcase}.pdf")
@@ -137,11 +166,11 @@ module HyperCarrier
                options[:path]
              end
       file = File.new(path, 'w')
-
+      
       file = Magick::ImageList.new(tif_path)
       file.write(path)
 
-      File.exist?(path) ? path : false
+      return File.exist?(path) ? path : false
     end
 
     # Rates
