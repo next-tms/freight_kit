@@ -32,7 +32,7 @@ Carriers differ from platforms in that they have unique web services whereas pla
 |Best Overnite Express              |✓  |✓  |✓    |✓       |
 |Clear Lane Freight Systems         |✓  |✓  |✓    |✓       |
 |The Custom Companies               |   |   |✓    |✓       |
-|Dependable Highway Express         |   |   |✓    |✓       |
+|Dependable Highway Express         |✓  |✓  |✓    |✓       |
 |Forward Air                        |   |✓  |✓    |✓       |
 |Frontline Freight                  |✓  |✓  |✓    |✓       |
 |Peninsula Truck Lines              |   |   |✓    |        |
