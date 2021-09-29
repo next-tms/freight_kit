@@ -125,7 +125,12 @@ module HyperCarrier
 
       if browser.html.include?('You are not enrolled in any application environments on this server')
         browser.close
-        raise InvalidCredentialsError
+        raise HyperCarrier::InvalidCredentialsError.new('You are not enrolled in any application environments on this server')
+      end
+
+      if browser.html.include?('You already have the maximum permitted application sessions open')
+        browser.close
+        raise HyperCarrier::ResponseError.new('You already have the maximum permitted application sessions open')
       end
 
       browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/img').click
