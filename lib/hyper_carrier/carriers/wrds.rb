@@ -25,8 +25,9 @@ module HyperCarrier
     # Rates
 
     # Tracking
-    def find_tracking_info(tracking_number)
-      parse_tracking_response(tracking_number)
+    def find_tracking_info(tracking_number, options = {})
+      options = @options.merge(options)
+      parse_tracking_response(tracking_number, options)
     end
 
     protected
@@ -56,6 +57,7 @@ module HyperCarrier
     # Documents
     def parse_document_response(type, tracking_number, url, options = {})
       options = @options.merge(options)
+
       path = if options[:path].blank?
                File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
              else
@@ -78,6 +80,7 @@ module HyperCarrier
 
     def parse_pod_response(tracking_number, options = {})
       options = @options.merge(options)
+
       browser = Watir::Browser.new(*options[:watir_args])
       browser.goto(build_url(:pod))
 
@@ -136,7 +139,9 @@ module HyperCarrier
       date ? DateTime.strptime(date, '%m/%d/%Y %l:%M:%S %p').to_s(:db) : nil
     end
 
-    def parse_tracking_response(tracking_number)
+    def parse_tracking_response(tracking_number, options = {})
+      options = @options.merge(options)
+
       browser = Watir::Browser.new(*options[:watir_args])
       browser.goto build_url(:track)
 
