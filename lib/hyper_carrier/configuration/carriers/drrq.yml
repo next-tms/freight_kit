@@ -101,7 +101,7 @@
 :api:
   :domains:
     :bol: connectapi.tfwwi.com
-    :quote: dlsworldwideproxy.rrd.com
+    :quote: connectapi.tfwwi.com
     :pod: rrd.mercurygate.net
   :endpoints:
     :bol: /services/api/v1/Shipment/documentExtract?primaryReferenceBol=%TRACKING_NUMBER%
