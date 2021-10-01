@@ -133,9 +133,9 @@ module HyperCarrier
         raise HyperCarrier::ResponseError.new('You already have the maximum permitted application sessions open')
       end
 
-      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/img').click
-      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li').click
-      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li[6]/span[2]').click
+      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/img').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li[6]/span[2]').wait_until(&:present?).click
       browser.select_list(name: 'TATIWT').select('S')
 
       browser.textarea(name: 'TATFB').set(tracking_number)
@@ -155,6 +155,8 @@ module HyperCarrier
         url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
       end
 
+      browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').click
+      browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
       browser.close
 
       raise HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found" if url.blank?
