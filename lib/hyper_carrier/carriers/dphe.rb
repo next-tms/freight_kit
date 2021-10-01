@@ -121,10 +121,14 @@ module HyperCarrier
 
       browser.text_field(name: 'ctl00$ContentPlaceHolder1$txtProNumber').set(tracking_number)
       browser.button(name: 'ctl00$ContentPlaceHolder1$btnSubmit').click
-      
-      browser
-        .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
-        .click
+
+      begin
+        browser
+          .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
+          .click
+      rescue Watir::Exception::UnknownObjectException
+        raise HyperCarrier::DocumentNotFound, "API Error: #{@@name}: Document not found"
+      end
       
       browser.switch_window      
       case action
