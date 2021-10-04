@@ -134,6 +134,7 @@
     :delivered: delivered
     :departed: departed
     :out_for_delivery: out for delvry
+    :pickup_information_sent_to_carrier: p/u dispatched
 :services:
   :types:
     - :standard
