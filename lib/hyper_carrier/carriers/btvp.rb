@@ -431,7 +431,11 @@ module HyperCarrier
 
       shipment_events = []
       status = nil
-      response.dig(:tracktrace_response, :return, :history).each do |api_event|
+
+      api_events = response.dig(:tracktrace_response, :return, :history)
+      api_events = [ api_events ] if api_events.is_a?(Hash)
+
+      api_events.each do |api_event|
         event = nil
         @conf.dig(:events, :types).each do |key, val|
           if api_event.dig(:description).downcase.include? val
