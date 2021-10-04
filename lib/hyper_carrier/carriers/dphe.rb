@@ -131,15 +131,23 @@ module HyperCarrier
       end
       
       browser.switch_window      
-      case action
-      when :bol
-        browser
-        .element(xpath: '//*[@id="ContentPlaceHolder1_btnDocs"]')
-        .click
-      when :pod
-        browser
-        .element(xpath: '//*[@id="ContentPlaceHolder1_btnPOD"]')
-        .click
+      button_xpath = case action
+                     when :bol then '//*[@id="ContentPlaceHolder1_btnDocs"]'
+                     when :pod then '//*[@id="ContentPlaceHolder1_btnPOD"]'
+                     else
+                       nil
+                     end
+
+      if !button_xpath || !browser.element(xpath: button_xpath).exists?
+        browser.close
+        raise HyperCarrier::DocumentNotFound
+      end
+
+      browser.element(xpath: button_xpath).click
+
+      if !button_xpath || browser.element(xpath: button_xpath).innertext.downcase.include?('unavailable')
+        browser.close
+        raise HyperCarrier::DocumentNotFound
       end
 
       sleep(10) # so Chrome can finish downloading
