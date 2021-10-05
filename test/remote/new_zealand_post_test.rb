@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteNewZealandPostTest < ActiveSupport::TestCase
-  include HyperCarrier::Test::Credentials
-  include HyperCarrier::Test::Fixtures
+  include Interstellar::Test::Credentials
+  include Interstellar::Test::Fixtures
 
   def setup
     @carrier   = NewZealandPost.new(credentials(:new_zealand_post).merge(:test => true))
@@ -48,8 +48,8 @@ class RemoteNewZealandPostTest < ActiveSupport::TestCase
   end
 
   def test_domestic_failed_response_raises
-    skip 'HyperCarrier::ResponseError expected but nothing was raised.'
-    assert_raises HyperCarrier::ResponseError do
+    skip 'Interstellar::ResponseError expected but nothing was raised.'
+    assert_raises Interstellar::ResponseError do
       @carrier.find_rates(@wellington, @auckland, package_fixtures[:shipping_container])
     end
   end

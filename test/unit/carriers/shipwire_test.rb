@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class ShipwireTest < ActiveSupport::TestCase
-  include HyperCarrier::Test::Fixtures
+  include Interstellar::Test::Fixtures
 
   def setup
     @carrier = Shipwire.new(:login => 'l', :password => 'p')

@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class KunakiTest < ActiveSupport::TestCase
-  include HyperCarrier::Test::Fixtures
+  include Interstellar::Test::Fixtures
 
   def setup
     @carrier   = Kunaki.new

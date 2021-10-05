@@ -6,7 +6,7 @@ require 'mocha/mini_test'
 require 'timecop'
 require 'business_time'
 
-require 'hyper_carrier'
+require 'interstellar'
 require 'logger'
 require 'erb'
 require 'pry'
@@ -22,14 +22,14 @@ VCR.configure do |config|
 end
 
 class ActiveSupport::TestCase
-  include HyperCarrier
+  include Interstellar
 
   def logger
     @logger ||= Logger.new(STDERR)
   end
 end
 
-module HyperCarrier::Test
+module Interstellar::Test
   module Credentials
     class NoCredentialsFound < StandardError
       def initialize(key)
@@ -37,7 +37,7 @@ module HyperCarrier::Test
       end
     end
 
-    LOCAL_CREDENTIALS = ENV['HOME'] + '/.hyper_carrier/credentials.yml'
+    LOCAL_CREDENTIALS = ENV['HOME'] + '/.interstellar/credentials.yml'
     DEFAULT_CREDENTIALS = File.dirname(__FILE__) + '/credentials.yml'
 
     def credentials(key)
@@ -64,7 +64,7 @@ module HyperCarrier::Test
   end
 
   module Fixtures
-    include HyperCarrier
+    include Interstellar
 
     def xml_fixture(path) # where path is like 'usps/beverly_hills_to_ottawa_response'
       File.read(File.join(File.dirname(__FILE__), 'fixtures', 'xml', "#{path}.xml"))

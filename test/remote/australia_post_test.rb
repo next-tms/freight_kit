@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteAustraliaPostTest < ActiveSupport::TestCase
-  include HyperCarrier::Test::Credentials
-  include HyperCarrier::Test::Fixtures
+  include Interstellar::Test::Credentials
+  include Interstellar::Test::Fixtures
 
   def setup
     @carrier    = AustraliaPost.new(credentials(:australia_post))
@@ -62,7 +62,7 @@ class RemoteAustraliaPostTest < ActiveSupport::TestCase
   end
 
   def test_service_domestic_response_error
-    error = assert_raises(HyperCarrier::ResponseError) do
+    error = assert_raises(Interstellar::ResponseError) do
       @carrier.find_rates(@sydney, @melbourne, package_fixtures[:largest_gold_bar])
     end
 
@@ -70,7 +70,7 @@ class RemoteAustraliaPostTest < ActiveSupport::TestCase
   end
 
   def test_service_international_response_error
-    error = assert_raises(HyperCarrier::ResponseError) do
+    error = assert_raises(Interstellar::ResponseError) do
       @carrier.find_rates(@sydney, @ottawa, package_fixtures[:largest_gold_bar])
     end
 
@@ -122,7 +122,7 @@ class RemoteAustraliaPostTest < ActiveSupport::TestCase
   end
 
   def test_calculate_domestic_response_error
-    error = assert_raises(HyperCarrier::ResponseError) do
+    error = assert_raises(Interstellar::ResponseError) do
       @carrier.calculate_rates(@sydney, @melbourne, package_fixtures[:wii], 'INT_PARCEL_COR_OWN_PACKAGING')
     end
 
@@ -130,7 +130,7 @@ class RemoteAustraliaPostTest < ActiveSupport::TestCase
   end
 
   def test_calculate_international_response_error
-    error = assert_raises(HyperCarrier::ResponseError) do
+    error = assert_raises(Interstellar::ResponseError) do
       @carrier.calculate_rates(@sydney, @ottawa, package_fixtures[:wii], 'AUS_PARCEL_EXPRESS')
     end
 

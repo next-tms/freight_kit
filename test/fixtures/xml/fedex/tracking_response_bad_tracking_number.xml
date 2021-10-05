@@ -9,7 +9,7 @@
     <LocalizedMessage>Invalid tracking number.</LocalizedMessage>
   </Notifications>
   <TransactionDetail>
-    <CustomerTransactionId>HyperCarrier</CustomerTransactionId>
+    <CustomerTransactionId>Interstellar</CustomerTransactionId>
   </TransactionDetail>
   <Version>
     <ServiceId>trck</ServiceId>

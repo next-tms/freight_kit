@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class AustraliaPostTest < ActiveSupport::TestCase
-  include HyperCarrier::Test::Fixtures
+  include Interstellar::Test::Fixtures
 
   def setup
     @carrier    = AustraliaPost.new(api_key: '4d9dc0f0-dda0-012e-066f-000c29b44ac0')
@@ -85,8 +85,8 @@ class AustraliaPostTest < ActiveSupport::TestCase
   end
 
   def test_service_response_error
-    error = assert_raises(HyperCarrier::ResponseError) do
-      raise_error = HyperCarrier::ResponseError.new
+    error = assert_raises(Interstellar::ResponseError) do
+      raise_error = Interstellar::ResponseError.new
       raise_error.expects(:response).returns(OpenStruct.new(body: json_fixture('australia_post/error_message')))
       @carrier.expects(:ssl_get).raises raise_error
       @carrier.find_rates(@sydney, @melbourne, package_fixtures[:book])
@@ -169,8 +169,8 @@ class AustraliaPostTest < ActiveSupport::TestCase
   end
 
   def test_calculate_response_error
-    error = assert_raises(HyperCarrier::ResponseError) do
-      raise_error = HyperCarrier::ResponseError.new
+    error = assert_raises(Interstellar::ResponseError) do
+      raise_error = Interstellar::ResponseError.new
       raise_error.expects(:response).returns(OpenStruct.new(body: json_fixture('australia_post/error_message')))
       @carrier.expects(:ssl_get).raises raise_error
       @carrier.calculate_rates(@sydney, @melbourne, package_fixtures[:book], 'AUS_PARCEL_EXPRESS')

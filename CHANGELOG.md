@@ -1,4 +1,10 @@
-# HyperCarrier CHANGELOG
+# Interstellar CHANGELOG
+
+### v0.0.1
+
+- Change HyperCarrier name to Interstellar
+
+## From HyperCarrier
 
 ### v0.0.1
 

@@ -13,7 +13,7 @@ class ResponseTest < ActiveSupport::TestCase
   end
 
   test "#initialize for a failed response raises ResponseError" do
-    assert_raises(HyperCarrier::ResponseError) do
+    assert_raises(Interstellar::ResponseError) do
       RateResponse.new(
         false,
         "fail!",

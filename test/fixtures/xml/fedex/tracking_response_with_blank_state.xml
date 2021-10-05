@@ -9,7 +9,7 @@
     <LocalizedMessage>Request was successfully processed.</LocalizedMessage>
 </Notifications>
 <TransactionDetail>
-    <CustomerTransactionId>HyperCarrier</CustomerTransactionId>
+    <CustomerTransactionId>Interstellar</CustomerTransactionId>
 </TransactionDetail>
 <Version>
     <ServiceId>trck</ServiceId>

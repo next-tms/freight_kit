@@ -1,10 +1,8 @@
-# HyperCarrier
+# Interstellar
 
 This library interfaces with the web services of various shipping carriers. The goal is to abstract the features that are most frequently used into a pleasant and consistent Ruby API.
 
-It is based on [ReactiveFreight](https://github.com/brodyhoskins/reactive_freight) which depends on [ReactiveShipping](https://github.com/realsubpop/reactive_shipping), which in turn is based on [ActiveShipping](https://github.com/Shopify/active_shipping).
-
-HyperCarrier supports:
+Interstellar supports:
 
 - Download scanned documents including bill of lading and/or proof of delivery where supported
 - Finding shipping rates
@@ -65,13 +63,13 @@ Carriers differ from platforms in that they have unique web services whereas pla
 Using bundler, add to the `Gemfile`:
 
 ```ruby
-gem 'hyper_carrier'
+gem 'interstellar'
 ```
 
 Or stand alone:
 
 ```
-$ gem install hyper_carrier
+$ gem install interstellar
 ```
 
 ## Sample Usage
@@ -79,8 +77,8 @@ $ gem install hyper_carrier
 Start off by initializing the carrier:
 
 ```ruby
-require 'hyper_carrier'
-carrier = HyperCarrier::BTVP.new(
+require 'interstellar'
+carrier = Interstellar::BTVP.new(
   account: 'account_number',
   username: 'username',
   password: 'password'
@@ -113,7 +111,7 @@ end
 
 ```ruby
 packages = [
-  HyperFreight::Package.new(
+  Interstellar::Package.new(
     371 * 16, # 371 lbs
     {
       length: 40, # inches
@@ -122,7 +120,7 @@ packages = [
     },
     units: :imperial
   ),
-  HyperCarrier::Package.new(
+  Interstellar::Package.new(
     371 * 16, # 371 lbs
     {
       length: 40, # inches
@@ -134,14 +132,14 @@ packages = [
   )
 ]
 
-origin = HyperCarrier::Location.new(
+origin = Interstellar::Location.new(
   country: 'US',
   state: 'CA',
   city: 'Los Angeles',
   zip: '90001'
 )
 
-destination = HyperCarrier::Location.new(
+destination = Interstellar::Location.new(
   country: 'US',
   state: 'IL',
   city: 'Chicago',

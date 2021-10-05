@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteUSPSTest < ActiveSupport::TestCase
-  include HyperCarrier::Test::Credentials
-  include HyperCarrier::Test::Fixtures
+  include Interstellar::Test::Credentials
+  include Interstellar::Test::Fixtures
 
   def setup
     @usps_credentials = credentials(:usps)

@@ -16,7 +16,7 @@
     <LocalizedMessage>The destination state/province code has been changed.  </LocalizedMessage>
   </Notifications>
   <TransactionDetail>
-    <CustomerTransactionId>HyperCarrier</CustomerTransactionId>
+    <CustomerTransactionId>Interstellar</CustomerTransactionId>
   </TransactionDetail>
   <Version>
     <ServiceId>crs</ServiceId>

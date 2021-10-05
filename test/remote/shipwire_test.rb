@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class RemoteShipwireTest < ActiveSupport::TestCase
-  include HyperCarrier::Test::Credentials
-  include HyperCarrier::Test::Fixtures
+  include Interstellar::Test::Credentials
+  include Interstellar::Test::Fixtures
 
   def setup
     @carrier = Shipwire.new(credentials(:shipwire))
@@ -42,7 +42,7 @@ class RemoteShipwireTest < ActiveSupport::TestCase
   end
 
   def test_successful_international_rates_request_for_single_line_item
-    # skip 'HyperCarrier::ResponseError: No shipping rates could be found for the destination address'
+    # skip 'Interstellar::ResponseError: No shipping rates could be found for the destination address'
     response = @carrier.find_rates(
                  location_fixtures[:ottawa],
                  location_fixtures[:london],
@@ -59,7 +59,7 @@ class RemoteShipwireTest < ActiveSupport::TestCase
   def test_invalid_xml_raises_response_content_error
     @carrier.expects(:ssl_post).returns("")
 
-    assert_raises HyperCarrier::ResponseContentError do
+    assert_raises Interstellar::ResponseContentError do
       @carrier.find_rates(
         location_fixtures[:ottawa],
         location_fixtures[:london],
