@@ -4,59 +4,28 @@ This library interfaces with the web services of various shipping carriers. The 
 
 Interstellar supports:
 
-- Download scanned documents including bill of lading and/or proof of delivery where supported
+- Downloading scanned documents
 - Finding shipping rates
-- Registering shipments
 - Tracking shipments
-- Purchasing shipping labels
 
-It also includes the following features:
+On a technical level it supports:
 
 - Abstracted accessorials
 - Abstracted tracking events
 - Cubic feet and density calculations
 - Freight class calculations (and manual overriding)
 
-## Supported Freight Carriers & Platforms
+## Definitions
 
-*This list varies day to day as this the project is a work in progress*
+Carrier: Has unique web services pertaining to whatever real-world services they provide.
 
-Carriers differ from platforms in that they have unique web services whereas platforms host several carriers' web services on a single service (platform). Carriers however may extend platforms and override them for carrier-specific functionality.
+Platform: Provides web-accessible services for many carriers at once.
 
-### Freight Carriers
+__Note:__ `Carrier`s may extend `Platform`s and override them when their behavior differs from the `Platform`.
 
-|Carrier                            |BOL|POD|Rates|Tracking|
-|-----------------------------------|---|---|-----|--------|
-|Best Overnite Express              |✓  |✓  |✓    |✓       |
-|Clear Lane Freight Systems         |✓  |✓  |✓    |✓       |
-|The Custom Companies               |   |   |✓    |✓       |
-|Dependable Highway Express         |✓  |✓  |✓    |✓       |
-|Forward Air                        |   |✓  |✓    |✓       |
-|Frontline Freight                  |✓  |✓  |✓    |✓       |
-|Peninsula Truck Lines              |   |   |✓    |        |
-|Roadrunner Transportation Services |✓  |✓  |✓    |✓       |
-|Saia                               |   |   |✓    |✓       |
-|Southeastern Freight Lines         |   |   |✓    |        |
-|Tforce Worldwide                   |✓  |✓  |✓    |        |
-|Total Transportation & Distribution|✓  |✓  |✓    |✓       |
-|Western Regional Delivery Service  |   |✓  |     |✓       |
+## Plug-in System
 
-### Package Carriers
-
-* [UPS](http://www.ups.com)
-* [USPS](http://www.usps.com)
-* [USPS Returns](http://returns.usps.com)
-* [FedEx](http://www.fedex.com)
-* [Canada Post](http://www.canadapost.ca)
-* [New Zealand Post](http://www.nzpost.co.nz)
-* [Shipwire](http://www.shipwire.com)
-* [Stamps](http://www.stamps.com)
-* [Kunaki](http://www.kunaki.com)
-* [Australia Post](http://auspost.com.au/)
-
-### Platforms
-
-* [Carrier Logistics](https://carrierlogistics.com)
+Interstellar relies on plug-ins (gems) to define how it connects to individual `Carrier`s and `Platform`s.
 
 ## Installation
 
@@ -66,18 +35,21 @@ Using bundler, add to the `Gemfile`:
 gem 'interstellar'
 ```
 
-Or stand alone:
+Or standalone:
 
 ```
 $ gem install interstellar
 ```
 
-## Sample Usage
+__Note__: Plug-ins are required to connect to `Carrier`s and `Platforms` (see above).
 
-Start off by initializing the carrier:
+## Standard Usage
+
+Start off by initializing the `Carrier` provided by a `Carrier` plug-in:
 
 ```ruby
 require 'interstellar'
+
 carrier = Interstellar::BTVP.new(
   account: 'account_number',
   username: 'username',

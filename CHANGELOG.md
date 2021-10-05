@@ -1,8 +1,10 @@
 # Interstellar CHANGELOG
 
-### v0.0.1
+### v0.1.pre1
 
 - Change HyperCarrier name to Interstellar
+- Change version to 0.0.1_beta1
+- Remove all carriers and platforms
 
 ## From HyperCarrier
 
