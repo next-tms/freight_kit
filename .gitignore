@@ -14,3 +14,4 @@ doc/
 .idea
 .bundle
 .byebug_history
+*.gem
