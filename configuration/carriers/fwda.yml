@@ -1,0 +1,117 @@
+:accessorials:
+  :mappable:
+    :delivery:
+      :afterhours_delivery: XPD
+      :airport_delivery: ALD
+      :amusement_park_delivery: CCD
+      :appointment_delivery: ADE
+      :convention_delivery: CCD
+      :early_morning_delivery: XPD
+      :fair_delivery: CCD
+      :hospital_delivery: HDC
+      :hotel_delivery: HOD
+      :inside_delivery: IDE
+      :liftgate_delivery: LGD
+      :mall_delivery: MDC
+      :military_site_delivery: MBD
+      :motel_delivery: HOD
+      :residential_delivery: RDE
+      :resort_delivery: HOD
+      :school_delivery: UND
+      :university_delivery: UND
+    :pickup:
+      :afterhours_pickup: XPU
+      :airport_pickup: ALP
+      :amusement_park_pickup: CCP
+      :appointment_pickup: APP
+      :convention_pickup: CCP
+      :early_morning_pickup: XPU
+      :fair_pickup: CCP
+      :hospital_pickup: HPC
+      :hotel_pickup: HOT
+      :inside_pickup: IPU
+      :liftgate_pickup: LGP
+      :mall_pickup: MPC
+      :military_site_pickup: MBP
+      :motel_pickup: HOT
+      :residential_pickup: RPU
+      :resort_pickup: HOP
+
+  # May be inaccurate
+  :unquotable:
+    - :athletic_facility_delivery
+    - :athletic_facility_pickup
+    - :cemetery_delivery
+    - :cemetery_pickup
+    - :church_delivery
+    - :church_pickup
+    - :construction_delivery
+    - :construction_pickup
+    - :dock_dropoff
+    - :dock_pickup
+    - :driver_assist
+    - :farm_delivery
+    - :farm_pickup
+    - :fitness_center_delivery
+    - :fitness_center_pickup
+    - :golf_course_delivery
+    - :golf_course_pickup
+    - :government_delivery
+    - :government_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
+    - :jobsite_delivery
+    - :jobsite_pickup
+    - :marina_delivery
+    - :marina_pickup
+    - :mine_site_delivery
+    - :mine_site_pickup
+    - :nursing_home_delivery
+    - :nursing_home_pickup
+    - :park_delivery
+    - :park_pickup
+    - :prison_delivery
+    - :prison_pickup
+    - :ranch_delivery
+    - :ranch_pickup
+    - :reservation_delivery
+    - :reservation_pickup
+    - :restaurant_delivery
+    - :restaurant_pickup
+    - :school_pickup
+    - :steel_mill_delivery
+    - :steel_mill_pickup
+    - :storage_facility_delivery
+    - :storage_facility_pickup
+    - :university_pickup
+    - :utility_site_delivery
+    - :utility_site_pickup
+  # May be inaccurate
+  :unserviceable:
+    - :brewery_delivery
+    - :brewery_pickup
+    - :customs_brokerage
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :grocery_warehouse_delivery
+    - :grocery_warehouse_pickup
+    - :guaranteed_delivery
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm
+    - :inspection_site_delivery
+    - :inspection_site_pickup
+    - :winery_delivery
+    - :winery_pickup
+:api:
+  :domain: api.forwardair.com
+  :endpoints:
+    :rates: /ltlservices/v2/rest/waybills/quote/json
+  :methods:
+    :rates: :post
+  :use_ssl: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: false
+:services:
+  :types:
+    - :standard_ltl

@@ -1,0 +1,117 @@
+:accessorials:
+  :mappable:
+    :airport_delivery: '&LA=yes'
+    :airport_pickup: '&LA=yes'
+    :amusement_park_delivery: '&LA=yes'
+    :amusement_park_pickup: '&LA=yes'
+    :appointment_delivery: '&NOTIFY=yes'
+    :cemetery_delivery: '&LA=yes'
+    :cemetery_pickup: '&LA=yes'
+    :church_delivery: '&LA=yes'
+    :church_pickup: '&LA=yes'
+    :construction_delivery: '&CS=yes'
+    :construction_pickup: '&CS=yes'
+    :farm_delivery: '&LA=yes'
+    :farm_pickup: '&LA=yes'
+    :fitness_center_delivery: '&LA=yes'
+    :fitness_center_pickup: '&LA=yes'
+    :golf_course_delivery: '&LA=yes'
+    :golf_course_pickup: '&LA=yes'
+    :government_delivery: '&LA=yes'
+    :government_pickup: '&LA=yes'
+    :hotel_delivery: '&LA=yes'
+    :hotel_pickup: '&LA=yes'
+    :inspection_site_delivery: '&LA=yes'
+    :inspection_site_pickup: '&LA=yes'
+    :jobsite_delivery: '&CS=yes'
+    :jobsite_pickup: '&CS=yes'
+    :liftgate_delivery: '&LIFT=yes'
+    :liftgate_pickup: '&LIFTP=yes'
+    :mall_pickup: '&LA=yes'
+    :marina_delivery: '&LA=yes'
+    :marina_pickup: '&LA=yes'
+    :military_site_delivery: '&LA=yes'
+    :military_site_pickup: '&LA=yes'
+    :mine_site_delivery: '&LA=yes'
+    :mine_site_pickup: '&LA=yes'
+    :nursing_home_delivery: '&LA=yes'
+    :nursing_home_pickup: '&LA=yes'
+    :park_delivery: '&LA=yes'
+    :park_pickup: '&LA=yes'
+    :prison_delivery: '&LA=yes'
+    :prison_pickup: '&LA=yes'
+    :ranch_delivery: '&LA=yes'
+    :ranch_pickup: '&LA=yes'
+    :reservation_delivery: '&LA=yes'
+    :reservation_pickup: '&LA=yes'
+    :residential_delivery: '&RESDEL=yes'
+    :residential_pickup: '&RESPI=yes'
+    :resort_delivery: '&LA=yes'
+    :resort_pickup: '&LA=yes'
+    :school_delivery: '&LA=yes'
+    :school_pickup: '&LA=yes'
+    :university_delivery: '&LA=yes'
+    :university_pickup: '&LA=yes'
+    :storage_facility_delivery: '&LA=yes'
+    :storage_facility_pickup: '&LA=yes'
+    :utility_site_delivery: '&LA=yes'
+    :utility_site_pickup: '&LA=yes'
+    :inside_delivery: '&INSIDE=yes'
+    :inside_pickup: '&INSIDE=yes'
+  # May be inaccurate
+  :unquotable:
+    - :athletic_facility_delivery
+    - :athletic_facility_delivery: false
+    - :athletic_facility_pickup: false
+    - :dock_dropoff: false
+    - :dock_pickup: false
+    - :grocery_store_delivery: false
+    - :grocery_store_pickup: false
+    - :hospital_delivery: false
+    - :hospital_pickup: false
+    - :mall_delivery: false
+    - :motel_delivery: false
+    - :motel_pickup: false
+    - :restaurant_delivery: false
+    - :restaurant_pickup: false
+    - :steel_mill_delivery: false
+    - :steel_mill_pickup: false
+  # May be inaccurate
+  :unserviceable:
+    - :appointment_pickup
+    - :brewery_delivery
+    - :brewery_pickup
+    - :convention_delivery
+    - :convention_pickup
+    - :customs_brokerage
+    - :driver_assist
+    - :early_morning_delivery
+    - :fair_delivery
+    - :fair_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :grocery_warehouse_delivery
+    - :grocery_warehouse_pickup
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm
+    - :guaranteed_delivery
+    - :winery_delivery
+    - :winery_pickup
+:api:
+  :domain: www.customco.com
+  :endpoints:
+    :bol: /scripts/cgiip.exe/web-login.htm?
+    :pod: /scripts/cgiip.exe/web-login.htm?
+    :rates: /scripts/cgiip.exe/ratequote.xml?
+    :track: /scripts/cgiip.exe/boldetail.htm?
+  :use_ssl:
+    :bol: false
+    :pod: false
+    :rates: false
+    :track: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
+:services:
+  :types:
+    - :standard
