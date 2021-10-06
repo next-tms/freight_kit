@@ -26,8 +26,8 @@ module Interstellar
       conf_path = File
                   .join(
                     File.expand_path(
-                      '../configuration/carriers',
-                      caller_locations.first.absolute_path,
+                      '../../../../configuration/carriers',
+                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first,
                     ),
                     "#{self.class.to_s.split('::')[1].underscore}.yml"
                   )
