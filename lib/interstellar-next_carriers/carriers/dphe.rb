@@ -75,31 +75,6 @@ module Interstellar
       raise ArgumentError if !action || !tracking_number
       raise ArgumentError if options[:url] && !options[:selenoid]
 
-      tmpdir = Dir.tmpdir
-
-      options[:watir_args] = [:chrome, options: { prefs: {} }] if !options[:watir_args]
-      options[:watir_args].each do |h|
-        if h.is_a?(Hash)
-          h.merge!(options: {prefs: {}}) unless h.dig(:options, :prefs)
-          if !options[:selenoid_options]
-            h[:options][:prefs].merge!(
-              download: {
-                prompt_for_download: false,
-                default_directory: tmpdir
-              }
-            )
-          else
-            h[:options][:prefs].merge!(
-              download: {
-                directory_upgrade: true,
-                prompt_for_download: false
-              }
-            )
-          end
-        end
-        h
-      end
-
       url = request_url(action)
       browser = Watir::Browser.new(*options[:watir_args])
       
@@ -170,10 +145,10 @@ module Interstellar
 
       browser.close
 
-      return Interstellar::ResponseError if !File.exist?(tif_path)
+      return Interstellar::ResponseError if !tif_path || !File.exist?(tif_path)
 
       path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{action.to_s.upcase}.pdf")
+               File.join(tmpdir, "#{self.class.name} #{tracking_number} #{action.to_s.upcase}.pdf")
              else
                options[:path]
              end
