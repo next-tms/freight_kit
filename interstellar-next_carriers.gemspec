@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/next-tms/interstellar-next_carriers'
 
   spec.files = Dir['lib/**/*']
+  spec.files += Dir['configuration/carriers/*.yml']
   spec.files += Dir['[A-Z]*'] + Dir['test/**/*']
   spec.files.reject! { |fn| fn.include? 'CVS' }
   spec.require_paths = ['lib']
