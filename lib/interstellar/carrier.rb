@@ -18,7 +18,7 @@ module Interstellar
   #   The last request performed against the carrier's API.
   #   @see #save_request
   class Carrier
-    attr_accessor :conf, :rates_with_excessive_length_fees, :test_mode
+    attr_accessor :conf, :rates_with_excessive_length_fees, :test_mode, :tmpdir
     attr_reader :last_request
 
     alias_method :test_mode?, :test_mode
@@ -31,11 +31,39 @@ module Interstellar
       requirements.each { |key| requires!(options, key) }
       @conf = nil
       @debug = options[:debug].blank? ? false : true
-      @options = options
       @last_request = nil
-      @test_mode = @options[:test]
+      @test_mode = options[:test]
+      @tmpdir = options[:tmpdir] || Dir.tmpdir
 
       return unless self.class::REACTIVE_FREIGHT_CARRIER
+
+      # Sanitize options[:watir_args]
+      unless options[:watir_args].blank?
+        options[:watir_args] = [:chrome, options: { prefs: {} }] if !options[:watir_args]
+        options[:watir_args].each do |h|
+          if h.is_a?(Hash)
+            h.merge!(options: {prefs: {}}) unless h.dig(:options, :prefs)
+            if !options[:selenoid_options]
+              h[:options][:prefs].merge!(
+                download: {
+                  prompt_for_download: false,
+                  default_directory: @tmpdir
+                }
+              )
+            else
+              h[:options][:prefs].merge!(
+                download: {
+                  directory_upgrade: true,
+                  prompt_for_download: false
+                }
+              )
+            end
+          end
+          h
+        end
+      end
+
+      @options = options
 
       conf_path = File
                   .join(
