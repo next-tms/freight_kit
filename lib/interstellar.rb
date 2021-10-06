@@ -9,7 +9,6 @@ require 'open-uri'
 require 'rmagick'
 require 'savon'
 require 'watir'
-require 'webdrivers/chromedriver'
 require 'yaml'
 
 require 'interstellar/response'
