@@ -6,7 +6,7 @@ module Interstellar
   # implement all the methods that the carrier supports.
   #
   # @see #find_rates
-  # @see #create_shipment
+  # @see #create_pickup
   # @see #cancel_shipment
   # @see #find_tracking_info
   #
@@ -105,7 +105,7 @@ module Interstellar
       raise NotImplementedError, "#find_rates is not supported by #{self.class.name}."
     end
 
-    # Registers a new shipment with the carrier, to get a tracking number and
+    # Registers a new pickup with the carrier, to get a tracking number and
     # potentially shipping labels
     #
     # @note Override with whatever you need to register a shipment, and obtain
@@ -119,8 +119,8 @@ module Interstellar
     # @return [Interstellar::ShipmentResponse] The response from the carrier. This
     #   response should include a shipment identifier or tracking_number if successful,
     #   and potentially shipping labels.
-    def create_shipment(origin, destination, packages, options = {})
-      raise NotImplementedError, "#create_shipment is not supported by #{self.class.name}."
+    def create_pickup(origin, destination, packages, options = {})
+      raise NotImplementedError, "#create_pickup is not supported by #{self.class.name}."
     end
 
     # Cancels a shipment with a carrier.
