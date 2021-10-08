@@ -31,14 +31,10 @@ module Interstellar
       packages = Array(packages)
 
       raise "Error: #{@@name}: Pallet count 5+ unsupported" if packages.size >= 5
-      if packages.sum { |p| p.pounds } > 10_000
-        raise "Error: #{@@name}: Weight > 10,000 lbs unsupported"
-      end
+      raise "Error: #{@@name}: Weight > 10,000 lbs unsupported" if packages.sum { |p| p.pounds } > 10_000
 
       packages.each do |package|
-        if package.height(:inches) > 95
-          raise "Error: #{@@name}: Height > 95 inches unsupported"
-        end
+        raise "Error: #{@@name}: Height > 95 inches unsupported" if package.height(:inches) > 95
       end
 
       request = build_rate_request(origin, destination, packages, options)
@@ -100,7 +96,12 @@ module Interstellar
     # Documents
     def download_document(type, tracking_number, url, options = {})
       options = @options.merge(options)
-      path = options[:path].blank? ? File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf") : options[:path]
+      path = if options[:path].blank?
+               File.join(Dir.tmpdir,
+                         "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
+             else
+               options[:path]
+             end
       file = File.new(path, 'w')
 
       File.open(file.path, 'wb') do |file|
@@ -125,12 +126,13 @@ module Interstellar
 
       if browser.html.include?('You are not enrolled in any application environments on this server')
         browser.close
-        raise Interstellar::InvalidCredentialsError.new('You are not enrolled in any application environments on this server')
+        raise Interstellar::InvalidCredentialsError,
+              'You are not enrolled in any application environments on this server'
       end
 
       if browser.html.include?('You already have the maximum permitted application sessions open')
         browser.close
-        raise Interstellar::ResponseError.new('You already have the maximum permitted application sessions open')
+        raise Interstellar::ResponseError, 'You already have the maximum permitted application sessions open'
       end
 
       browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/img').wait_until(&:present?).click
@@ -233,66 +235,64 @@ module Interstellar
       if !response
         success = false
         message = 'API Error: Unknown response'
+      elsif !response.dig(:getquote_response, :return, :rating, :errorcode).blank?
+        success = false
+        message = response.dig(:getquote_response, :return, :rating, :errorcode)
       else
-        if !response.dig(:getquote_response, :return, :rating, :errorcode).blank?
-          success = false
-          message = response.dig(:getquote_response, :return, :rating, :errorcode)
+        cost = (response.dig(:getquote_response, :return, :rating, :amount).to_f * 100).to_i
+
+        longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
+        if !@options[:tariff].blank?
+          if longest_dimension >= 168
+            cost += @options[:tariff].dig('overlength_fees').dig('over_14_ft')
+          elsif longest_dimension >= 144 && longest_dimension < 168
+            cost += @options[:tariff].dig('overlength_fees').dig('12_through_14_ft')
+          elsif longest_dimension >= 120 && longest_dimension < 144
+            cost += @options[:tariff].dig('overlength_fees').dig('10_through_12_ft')
+          elsif longest_dimension >= 96 && longest_dimension < 120
+            cost += @options[:tariff].dig('overlength_fees').dig('8_through_10_ft')
+          end
+        elsif longest_dimension >= 96
+          warn 'API Warning: Overlength fees not applied because `tariff` is empty!'
+        end
+
+        transit_days = response.dig(
+          :getquote_response,
+          :return,
+          :service,
+          :days
+        ).to_i
+
+        # Calculate real transit time based on information we have about the destination service days
+        %i[mon tue wed thu fri].each do |weekday|
+          transit_days += 1 if response.dig(:getquote_response, :return, :service, :destination, weekday) == 'N'
+        end
+
+        estimate_reference = response.dig(
+          :getquote_response,
+          :return,
+          :rating,
+          :quotenumber
+        )
+
+        if cost
+          rate_estimates = [
+            RateEstimate.new(
+              origin,
+              destination,
+              { scac: self.class.scac.upcase, name: self.class.name },
+              :standard,
+              transit_days: transit_days,
+              estimate_reference: estimate_reference,
+              total_cost: cost,
+              total_price: cost,
+              currency: 'USD',
+              with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+            )
+          ]
         else
-          cost = (response.dig(:getquote_response, :return, :rating, :amount).to_f * 100).to_i
-
-          longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
-          if !@options[:tariff].blank?
-            if longest_dimension >= 168
-              cost += @options[:tariff].dig('overlength_fees').dig('over_14_ft')
-            elsif longest_dimension >= 144 && longest_dimension < 168
-              cost += @options[:tariff].dig('overlength_fees').dig('12_through_14_ft')
-            elsif longest_dimension >= 120 && longest_dimension < 144
-              cost += @options[:tariff].dig('overlength_fees').dig('10_through_12_ft')
-            elsif longest_dimension >= 96 && longest_dimension < 120
-              cost += @options[:tariff].dig('overlength_fees').dig('8_through_10_ft')
-            end
-          elsif longest_dimension >= 96
-            warn 'API Warning: Overlength fees not applied because `tariff` is empty!'
-          end
-
-          transit_days = response.dig(
-            :getquote_response,
-            :return,
-            :service,
-            :days
-          ).to_i
-
-          # Calculate real transit time based on information we have about the destination service days
-          %i[mon tue wed thu fri].each do |weekday|
-            transit_days += 1 if response.dig(:getquote_response, :return, :service, :destination, weekday) == 'N'
-          end
-
-          estimate_reference = response.dig(
-            :getquote_response,
-            :return,
-            :rating,
-            :quotenumber
-          )
-
-          if cost
-            rate_estimates = [
-              RateEstimate.new(
-                origin,
-                destination,
-                { scac: self.class.scac.upcase, name: self.class.name },
-                :standard,
-                transit_days: transit_days,
-                estimate_reference: estimate_reference,
-                total_cost: cost,
-                total_price: cost,
-                currency: 'USD',
-                with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-              )
-            ]
-          else
-            success = false
-            message = 'API Error: Cost is emtpy'
-          end
+          success = false
+          message = 'API Error: Cost is emtpy'
         end
       end
 
@@ -320,96 +320,31 @@ module Interstellar
     end
 
     def parse_location(code)
-      case code
-      when '31'
+      country = ActiveUtils::Country.find('USA')
+      return Location.new(country: country) unless code
+
+      location = @conf.dig(:events, :locations, code.to_sym)
+
+      if location
         Location.new(
-          city: 'Las Vegas',
-          province: 'NV',
-          state: 'NV',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when '50'
-        Location.new(
-          city: 'Phoenix',
-          province: 'AZ',
-          state: 'AZ',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when '62'
-        Location.new(
-          city: 'Denver',
-          province: 'CO',
-          state: 'CO',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when 'BEN'
-        Location.new(
-          city: 'Benicia',
-          province: 'CA',
-          state: 'CA',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when 'DAL'
-        Location.new(
-          city: 'Dallas',
-          province: 'TX',
-          state: 'TX',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when 'FRES'
-        Location.new(
-          city: 'Fresno',
-          province: 'CA',
-          state: 'CA',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when 'DENT'
-        Location.new(
-          city: 'Kent',
-          province: 'WA',
-          state: 'WA',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when 'LA'
-        Location.new(
-          city: 'Los Angeles',
-          province: 'CA',
-          state: 'CA',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when 'PDX'
-        Location.new(
-          city: 'Portland',
-          province: 'OR',
-          state: 'OR',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when 'SAC'
-        Location.new(
-          city: 'Sacramento',
-          province: 'CA',
-          state: 'CA',
-          country: ActiveUtils::Country.find('USA')
-        )
-      when 'SJ'
-        Location.new(
-          city: 'San Jose',
-          province: 'CA',
-          state: 'CA',
-          country: ActiveUtils::Country.find('USA')
+          city: location.dig(:city),
+          state: location.dig(:state),
+          province: location.dig(:province),
+          country: country
         )
       else
         Location.new(
           city: code,
           province: nil,
           state: nil,
-          country: ActiveUtils::Country.find('USA')
+          country: country
         )
       end
     end
 
     def parse_tracking_response(response)
-      raise Interstellar::ShipmentNotFound unless response.dig(:tracktrace_response, :return, :currentstatus, :errorcode).blank?
+      raise Interstellar::ShipmentNotFound unless response.dig(:tracktrace_response, :return, :currentstatus,
+                                                               :errorcode).blank?
 
       receiver_address = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :city).titleize,
@@ -434,14 +369,15 @@ module Interstellar
       end
 
       ship_time = parse_date(response.dig(:tracktrace_response, :return, :currentstatus, :shipdate))
-      scheduled_delivery_date = parse_date(response.dig(:tracktrace_response, :return, :currentstatus, :estdeliverydate))
+      scheduled_delivery_date = parse_date(response.dig(:tracktrace_response, :return, :currentstatus,
+                                                        :estdeliverydate))
       tracking_number = response.dig(:tracktrace_response, :return, :pronumber)
 
       shipment_events = []
       status = nil
 
       api_events = response.dig(:tracktrace_response, :return, :history)
-      api_events = [ api_events ] if api_events.is_a?(Hash)
+      api_events = [api_events] if api_events.is_a?(Hash)
 
       api_events.each do |api_event|
         event = nil
@@ -456,6 +392,8 @@ module Interstellar
         datetime_without_time_zone = parse_datetime("#{api_event.dig(:date)} #{api_event.dig(:time)}")
 
         location = parse_location(api_event.dig(:location))
+        location = shipper_address if location.state.blank? && %i[picked_up
+                                                                  pickup_information_sent_to_carrier].include?(event)
         location = receiver_address if location.state.blank? && %i[delivered out_for_delivery].include?(event)
 
         status = event
