@@ -23,7 +23,7 @@ module Interstellar # :nodoc:
         @dimensions = [@dimensions].flatten.reject(&:nil?)
       end
 
-      @description = options[:description] == true
+      @description = options[:description]
       @hazmat = options[:hazmat] == true
       @nmfc = options[:nmfc].blank? ? nil : options[:nmfc]
 
