@@ -25,8 +25,8 @@ module Interstellar
         raise NotImplementedError, "#{self.class.name}: #serviceable_accessorials? not supported"
       end
 
-      serviceable_accessorials = @conf.dig(:accessorials, :mappable, :delivery).keys + 
-                                 @conf.dig(:accessorials, :mappable, :pickup).keys + 
+      serviceable_accessorials = @conf.dig(:accessorials, :mappable, :delivery).keys +
+                                 @conf.dig(:accessorials, :mappable, :pickup).keys +
                                  @conf.dig(:accessorials, :unquotable)
       serviceable_count = (serviceable_accessorials & accessorials).size
 
@@ -132,14 +132,14 @@ module Interstellar
         end
       end
 
-      unless delivery_accessorials.blank?
+      if !delivery_accessorials.blank? && delivery_accessorials.include?('RDE')
         # Remove duplicate delivery appointment accessorial when residential delivery (included with RDE)
-        delivery_accessorials -= ['ADE'] if delivery_accessorials.include?('RDE')
+        delivery_accessorials -= ['ADE']
       end
 
-      unless pickup_accessorials.blank?
+      if !pickup_accessorials.blank? && pickup_accessorials.include?('RPU')
         # Remove duplicate pickup appointment accessorial when residential pickup (included with RPU)
-        pickup_accessorials -= ['APP'] if pickup_accessorials.include?('RPU')
+        pickup_accessorials -= ['APP']
       end
 
       delivery_accessorials = delivery_accessorials.uniq
@@ -152,7 +152,7 @@ module Interstellar
       freight_details = []
       packages.each do |package|
         freight_details << {
-          description: 'Freight',
+          description: package.description,
           freightClass: package.freight_class.to_s,
           pieces: '1',
           weightType: 'L',
@@ -181,7 +181,7 @@ module Interstellar
             }
           },
           freightDetails: { freightDetail: freight_details },
-          hazmat: 'N',
+          hazmat: packages.map(&:hazmat).include?(true),
           inBondShipment: 'N',
           declaredValue: '0.00',
           shipmentDate: Date.current.strftime('%Y-%m-%d')

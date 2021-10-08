@@ -213,8 +213,8 @@ module Interstellar
             item: packages.inject([]) do |arr, package|
               arr << {
                 _class: package.freight_class,
-                description: 'Freight'.upcase, # Required
-                haz: '', # Y if yes
+                description: package.description[0..8].upcase,
+                haz: (package.hazmat? ? 'Y' : ''),
                 pallets: 1,
                 pieces: 1,
                 weight: package.pounds.ceil

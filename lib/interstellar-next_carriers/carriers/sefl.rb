@@ -74,14 +74,12 @@ module Interstellar
       method = request[:method]
       body = request[:body]
 
-      response = case method
-                 when :post
-                   HTTParty.post(url, headers: headers, body: body)
-                 else
-                   HTTParty.get(url, headers: headers)
-                 end
-
-      response
+      case method
+      when :post
+        HTTParty.post(url, headers: headers, body: body)
+      else
+        HTTParty.get(url, headers: headers)
+      end
     end
 
     # Documents
@@ -149,7 +147,7 @@ module Interstellar
         i += 1
         body = body.deep_merge({ "Class#{i}": package.freight_class.to_s.sub('.', '').to_i })
         body = body.deep_merge({ "CubicFt#{i}": package.cubic_ft }) if destination.to_hash[:province].upcase == 'PR'
-        body = body.deep_merge({ "Description#{i}": 'Freight All Kinds' })
+        body = body.deep_merge({ "Description#{i}": package.description })
         body = body.deep_merge({ "PieceLength#{i}": package.length(:in).ceil })
         body = body.deep_merge({ "PieceWidth#{i}": package.width(:in).ceil })
         body = body.deep_merge({ "PieceHeight#{i}": package.height(:in).ceil })
@@ -211,7 +209,7 @@ module Interstellar
               cost = cost.sub('.', '').to_i
               estimate_reference = response.dig('quoteNumber')
               transit_days = response.dig('transitTime').to_i
-  
+
               rate_estimates = [
                 RateEstimate.new(
                   origin,
