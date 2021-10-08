@@ -3,7 +3,7 @@ module Interstellar # :nodoc:
     VALID_FREIGHT_CLASSES = [55, 60, 65, 70, 77.5, 85, 92.5, 100, 110, 125, 150, 175, 200, 250, 300, 400].freeze
 
     cattr_accessor :default_options
-    attr_accessor :nmfc, :hazmat
+    attr_accessor :description, :hazmat, :nmfc
     attr_reader :currency, :options, :value
     attr_writer :declared_freight_class
 
@@ -23,6 +23,7 @@ module Interstellar # :nodoc:
         @dimensions = [@dimensions].flatten.reject(&:nil?)
       end
 
+      @description = options[:description] == true
       @hazmat = options[:hazmat] == true
       @nmfc = options[:nmfc].blank? ? nil : options[:nmfc]
 
