@@ -219,11 +219,16 @@ module Interstellar
     end
 
     def parse_location(comment, delimiters)
-      return nil if comment.blank? || !comment.include?(delimiters[0]) || !comment.include?(delimiters[1])
-      parts = comment.split(delimiters[0])[0].split(delimiters[1])[1].split(',')
+      return nil if comment.blank? || !comment.include?(delimiters[0])
+
+      parts = if delimiters.size == 2
+                comment.split(delimiters[0])[0].split(delimiters[1])[1].split(',')
+              else
+                comment.split(delimiters[0])[1].split(',')
+              end
 
       city = parts[0].squeeze.strip.titleize
-      state = parts[1].squeeze.strip.upcase
+      state = parts[1].gsub('.', '').squeeze.strip.upcase
 
       Location.new(
         city: city,
@@ -275,7 +280,7 @@ module Interstellar
 
         case event
         when :arrived_at_terminal
-          location = parse_location(comment, [' to ', 'in '])
+          location = parse_location(comment, [' terminal in '])
         when :delivered
           location = receiver_address
         when :departed
@@ -287,7 +292,7 @@ module Interstellar
         when :trailer_closed
           location = last_location
         when :trailer_unloaded
-          location = parse_location(comment, [' to ', 'in '])
+          location = parse_location(comment, [' terminal in '])
         end
         last_location = location
 
