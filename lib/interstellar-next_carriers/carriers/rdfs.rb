@@ -289,6 +289,8 @@ module Interstellar
           location = parse_location(comment, [' to ', 'from '])
         when :picked_up
           location = shipper_address
+        when :pending_delivery_appointment
+          location = last_location
         when :trailer_closed
           location = last_location
         when :trailer_unloaded

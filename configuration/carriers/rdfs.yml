@@ -128,6 +128,7 @@
     :departed: DSP
     :out_for_delivery: OFD
     :picked_up: PU
+    :pending_delivery_appointment: CFA
     :trailer_closed: CLO
     :trailer_unloaded: UNL
 :services:
