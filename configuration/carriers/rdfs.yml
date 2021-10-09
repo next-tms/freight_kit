@@ -126,6 +126,7 @@
     :arrived_at_terminal: ARV
     :delivered: DEL
     :departed: DSP
+    :located: ENR
     :out_for_delivery: OFD
     :picked_up: PU
     :pending_delivery_appointment: CFA

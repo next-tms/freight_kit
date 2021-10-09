@@ -285,6 +285,8 @@ module Interstellar
           location = receiver_address
         when :departed
           location = parse_location(comment, [' to ', 'from '])
+        when :located
+          location = parse_location(comment, [' currently at '])
         when :out_for_delivery
           location = parse_location(comment, [' to ', 'from '])
         when :picked_up
