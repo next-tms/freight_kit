@@ -15,6 +15,10 @@ module Interstellar # :nodoc:
       options.symbolize_keys!
       @options = options
 
+      if !packaging_type
+        raise ArgumentError.new('Package#new: packaging_type is required')
+      end
+
       # For backward compatibility
       if dimensions.is_a?(Array)
         @dimensions = [dimensions].flatten.reject(&:nil?)
