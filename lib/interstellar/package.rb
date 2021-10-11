@@ -4,13 +4,13 @@ module Interstellar # :nodoc:
 
     cattr_accessor :default_options
     attr_accessor :description, :hazmat, :nmfc
-    attr_reader :currency, :options, :value
+    attr_reader :currency, :options, :packaging, :value
     attr_writer :declared_freight_class
 
-    # Package.new(100, [10, 20, 30], :units => :metric)
-    # Package.new(Measured::Weight.new(100, :g), [10, 20, 30].map {|m| Length.new(m, :centimetres)})
+    # Package.new(100, [10, 20, 30], 'pallet', :units => :metric)
+    # Package.new(Measured::Weight.new(100, :g), 'box', [10, 20, 30].map {|m| Length.new(m, :centimetres)})
     # Package.new(100.grams, [10, 20, 30].map(&:centimetres))
-    def initialize(grams_or_ounces, dimensions, options = {})
+    def initialize(grams_or_ounces, dimensions, packaging_type, options = {})
       options = @@default_options.update(options) if @@default_options
       options.symbolize_keys!
       @options = options
@@ -63,6 +63,7 @@ module Interstellar # :nodoc:
       @gift = options[:gift] ? true : false
       @oversized = options[:oversized] ? true : false
       @unpackaged = options[:unpackaged] ? true : false
+      @packaging = Packaging.new(packaging_type)
     end
 
     def cubic_ft
