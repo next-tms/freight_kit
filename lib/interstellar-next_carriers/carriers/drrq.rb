@@ -35,14 +35,6 @@ module Interstellar
       parse_pod_response(tracking_number, options)
     end
 
-    # Pickups
-
-    def create_pickup(origin, destination, packages, options = {})
-      options = @options.merge(options)
-      request = build_pickup_request(origin, destination, packages, options)
-      parse_pickup_response(commit(request), options)
-    end
-
     # Rates
 
     def find_rates(origin, destination, packages, options = {})
@@ -59,34 +51,13 @@ module Interstellar
 
     protected
 
-    def build_accessorials(accessorials:, packages:)
-      serviceable_accessorials?(accessorials)
-
-      parsed_accessorials = []
-
-      accessorials.each do |a|
-        unless @conf.dig(:accessorials, :unserviceable).include?(a)
-          parsed_accessorials << { ServiceCode: @conf.dig(:accessorials, :mappable)[a] }
-        end
-      end
-
-      longest_dimension_ft = (packages.inject([]) do |_arr, p|
-                                [p.length(:in), p.width(:in)]
-                              end.max.ceil.to_f / 12).ceil.to_i
-      if longest_dimension_ft >= 8 && longest_dimension_ft < 30
-        parsed_accessorials << { ServiceCode: "OVL#{longest_dimension_ft}" }
-      end
-
-      parsed_accessorials.uniq.to_a
-    end
-
-    def build_headers(options = {})
+    def build_headers(_action, options = {})
       options = @options.merge(options)
 
       JSON_HEADERS.merge(
         {
-          ApiKey: options[:password],
-          UserName: options[:username]
+          'UserName' => options[:username],
+          'ApiKey' => options[:password]
         }
       )
     end
@@ -97,32 +68,34 @@ module Interstellar
       method = request[:method]
       body = request[:body]
 
-      case method
-      when :post
-        HTTParty.post(url, headers: headers, body: body)
-      else
-        HTTParty.get(url, headers: headers)
-      end
+      response = case method
+                 when :post
+                   HTTParty.post(url, headers: headers, body: body)
+                 else
+                   HTTParty.get(url, headers: headers)
+                 end
     end
 
     def parse_response(response)
       case response.code
       when 400
-        raise Interstellar::InvalidCredentialsError, "HTTP #{response.code}: #{response}"
+        raise Interstellar::InvalidCredentialsError
       end
 
-      raise Interstellar::ResponseError, "HTTP #{response.code}: #{response}" if response.code != 200
+      raise Interstellar::ResponseError if response.code != 200
 
-      begin
-        JSON.parse(response.body)
-      rescue JSON::ParserError => e
-        raise Interstellar::ResponseError
-      end
+      response = begin
+                   JSON.parse(response.body)
+                 rescue JSON::ParserError => e
+                   raise Interstellar::ResponseError
+                 end
+
+      response
     end
 
     def request_url(action)
-      env = test_mode? ? :staging : :production
-      "https://#{@conf.dig(:api, :domains, env, action)}/#{@conf.dig(:api, :endpoints, action)}"
+      url = "#{@conf.dig(:api, :use_ssl, action) ? 'https' : 'http'}://#{@conf.dig(:api, :domains, action)}#{@conf.dig(:api, :endpoints, action)}"
+      url
     end
 
     # Documents
@@ -133,7 +106,7 @@ module Interstellar
         method: @conf.dig(:api, :methods, type)
       }
 
-      request[:headers] = build_headers(options) if type == :bol
+      request[:headers] = build_headers(type, options) if type == :bol
 
       save_request(request)
       request
@@ -152,10 +125,10 @@ module Interstellar
              else
                options[:path]
              end
-
-      File.open(path, 'wb') do |f|
-        f.write(data)
-      end
+      
+      File.open(path, 'wb') {
+        |f| f.write(data)
+      }
 
       path
     end
@@ -233,7 +206,9 @@ module Interstellar
         url = text if url.blank? || !url.include?('hubtran') # Prefer HubTran
       end
 
-      raise Interstellar::DocumentNotFound, "API Error: #{self.class.name}: Document not found" if url.blank?
+      if url.blank?
+        raise Interstellar::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+      end
 
       path = if options[:path].blank?
                File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} POD.pdf")
@@ -258,170 +233,28 @@ module Interstellar
       File.exist?(path) ? path : false
     end
 
-    # Pickups
-
-    def build_pickup_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
-      accessorials = build_accessorials(accessorials: options[:accessorials], packages: packages)
-
-      shipper_phone = options[:shipper_phone].gsub(/\s+/, '').gsub(/[()-+.]/, '')
-      receiver_phone = options[:receiver_phone].gsub(/\s+/, '').gsub(/[()-+.]/, '')
-
-      [shipper_phone, receiver_phone].each do |phone_number|
-        phone_number = phone_number[1..] if phone_number.length == 11
-      end
-
-      items = []
-      i = 0
-      packages.each do |package|
-        # package_type = package.type.pallet? ? 'PALLETS' : ''
-        package_type = 'PALLETS'
-
-        i += 1
-        items << {
-          Id: i.to_s,
-          FreightClasses: {
-            FreightClass: package.freight_class.to_s,
-            Type: ''
-          },
-          Dimensions: {
-            Height: package.height(:in).ceil,
-            Length: package.length(:in).ceil,
-            Uom: 'in',
-            Width: package.width(:in).ceil
-          },
-          HazardousMaterial: package.hazmat?,
-          Name: 'Freight',
-          Quantities: {
-            Actual: 1,
-            Uom: package_type
-          },
-          Weights: {
-            Actual: package.pounds.ceil,
-            Uom: 'lb'
-          }
-        }
-      end
-
-      body = {
-        Comments: {
-          Comment: options[:hours],
-          Type: 'SpecialInstructions'
-        },
-        Consignee: {
-          AddressLine1: destination.to_hash[:street],
-          City: destination.to_hash[:city],
-          Contact: {
-            Name: options[:receiver_contact_name],
-            Phone: receiver_phone,
-            Fax: '',
-            Email: options[:receiver_contact_email]
-          },
-          CountryCode: 'USA',
-          IsResidential: false,
-          Name: options[:receiver_name],
-          PostalCode: destination.to_hash[:postal_code],
-          StateProvince: destination.to_hash[:province]
-        },
-        Dates: {
-          EarliestDropDate: '2017-09-13T20:48:35.844Z',
-          EarliestPickupDate: '2017-09-13T19:49:52.498Z',
-          LatestDropDate: '2017-09-13T20:48:35.844Z',
-          LatestPickupDate: '2017-09-13T19:49:52.498Z'
-        },
-        Items: items,
-        Payment: {
-          Address: {
-            IsResidential: false,
-            LocationCode: 'MNP9C1C',
-            PostalCode: '60490'
-          }
-        },
-        Pricesheets: [
-          {
-            IsSelected: true,
-            Mode: 'LTL',
-            Scac: 'FXFE',
-            Type: 'Carrier'
-          }
-        ],
-        ReferenceNumbers: [
-          {
-            IsPrimary: false,
-            ReferenceNumber: options[:shipper_ref],
-            Type: 'Ship Ref'
-          },
-          {
-            IsPrimary: true, # must have one true
-            ReferenceNumber: options[:po_number],
-            Type: 'PO Number'
-          }
-        ],
-        ServiceFlags: accessorials,
-        Shipper: {
-          AddressLine1: origin.to_hash[:street],
-          City: origin.to_hash[:city],
-          Contact: {
-            Name: options[:shipper_contact_name],
-            Phone: shipper_phone,
-            Fax: '',
-            Email: options[:shipper_contact_email]
-          },
-          CountryCode: 'USA',
-          IsResidential: options[:accessorials].include?(:residential_delivery),
-          Name: options[:shipper_name],
-          PostalCode: origin.to_hash[:postal_code],
-          StateProvince: origin.to_hash[:province]
-        },
-        Status: 'pending'
-      }.to_json
-
-      request = {
-        url: request_url(:pickup),
-        method: @conf.dig(:api, :methods, :pickup),
-        body: body
-      }
-
-      request[:headers] = build_headers(options)
-
-      save_request(request)
-      request
-    end
-
-    def parse_bol_response(response, type, tracking_number, options = {})
-      options = @options.merge(options)
-      response = parse_response(response)
-
-      file_bytes = response.dig('FileBytes')
-      return Interstellar::DocumentNotFound if file_bytes.blank?
-
-      data = Base64.decode64(file_bytes)
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
-
-      File.open(path, 'wb') do |f|
-        f.write(data)
-      end
-
-      path
-    end
-
-    def parse_pickup_response(response, options = {})
-      options = @options.merge(options)
-
-      response = parse_response(response)
-    end
-
     # Rates
 
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 
-      accessorials = build_accessorials(accessorials: options[:accessorials], packages: packages)
+      accessorials = []
+
+      unless options[:accessorials].blank?
+        serviceable_accessorials?(options[:accessorials])
+        options[:accessorials].each do |a|
+          unless @conf.dig(:accessorials, :unserviceable).include?(a)
+            accessorials << { ServiceCode: @conf.dig(:accessorials, :mappable)[a] }
+          end
+        end
+      end
+
+      longest_dimension_ft = (packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil.to_f / 12).ceil.to_i
+      if longest_dimension_ft >= 8 && longest_dimension_ft < 30
+        accessorials << { ServiceCode: "OVL#{longest_dimension_ft}" }
+      end
+
+      accessorials = accessorials.uniq.to_a
 
       items = []
       packages.each do |package|
@@ -466,7 +299,7 @@ module Interstellar
 
       request = {
         url: request_url(:quote),
-        headers: build_headers(options),
+        headers: build_headers(:quote, options),
         method: @conf.dig(:api, :methods, :quote),
         body: body
       }
@@ -529,4 +362,6 @@ module Interstellar
 
     # Tracking
   end
+
+  private
 end
