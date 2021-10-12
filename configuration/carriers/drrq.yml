@@ -100,21 +100,26 @@
     - :marina_pickup
 :api:
   :domains:
-    :bol: connectapi.tfwwi.com
-    :quote: connectapi.tfwwi.com
-    :pod: rrd.mercurygate.net
+    :production:
+      :bol: connectapi.tfwwi.com
+      :pickup: connectapi.tfwwi.com
+      :pod: rrd.mercurygate.net
+      :quote: connectapi.tfwwi.com
+    :staging:
+      :bol: connectapi-stage.tfwwi.com
+      :pickup: connectapi-stage.tfwwi.com
+      :pod: rrd.mercurygate.net
+      :quote: connectapi-stage.tfwwi.com
   :endpoints:
     :bol: /services/api/v1/Shipment/documentExtract?primaryReferenceBol=%TRACKING_NUMBER%
-    :quote: /services/api/v1/RateShop/RateRequest
+    :pickup: services/api/v1/Shipment/Import
     :pod: /MercuryGate/login/mgLogin.jsp?inline=true
+    :quote: /services/api/v1/RateShop/RateRequest
   :methods:
     :bol: :get
-    :quote: :post
+    :pickup: :post
     :pod: :get # Not really used since POD requires browser
-  :use_ssl:
-    :bol: true
-    :quote: true
-    :pod: true
+    :quote: :post
 :attributes:
   :rates:
     :with_excessive_length_fees: true
