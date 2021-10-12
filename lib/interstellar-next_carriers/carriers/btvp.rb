@@ -143,6 +143,8 @@ module Interstellar
       browser.textarea(name: 'TATFB').set(tracking_number)
       browser.button(xpath: '/html/body/div[1]/div[3]/div[3]/div/div[1]/div/button[2]').click
 
+      sleep(5)
+
       unless browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[4]/div[3]/div/table/tbody/tr[2]/td[2]').exists?
         browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').click
         browser.element(xpath: '/html/body/div[9]/div[11]/div/button[1]').wait_until(&:present?).click
@@ -165,13 +167,15 @@ module Interstellar
         url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
       end
 
+      ret = download_document(type, tracking_number, url, options)
+
       browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').click
       browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
       browser.close
 
       raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found" if url.blank?
 
-      download_document(type, tracking_number, url, options)
+      ret
     end
 
     # Rates
