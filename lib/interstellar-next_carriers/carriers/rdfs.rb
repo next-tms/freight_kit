@@ -243,10 +243,11 @@ module Interstellar
 
       raise Interstellar::ShipmentNotFound if json.dig('SearchResults').blank? || response.status[0] != '200'
 
-      search_result = json.dig('SearchResults')[0]
-      if search_result.dig('Shipment', 'ProNumber').downcase.include?('not available')
-        raise Interstellar::DocumentNotFound
-      end
+      search_result = json.dig('SearchResults')&.first
+      raise Interstellar::ShipmentNotFound if search_result.blank?
+
+      pro = search_result.dig('Shipment', 'ProNumber')&.downcase
+      raise Interstellar::ShipmentNotFound if pro.blank? || pro.downcase.include?('not available')
 
       receiver_address = Location.new(
         city: search_result.dig('Shipment', 'Consignee', 'City').titleize,
