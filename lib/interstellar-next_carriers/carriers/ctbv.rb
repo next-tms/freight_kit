@@ -27,8 +27,12 @@ module Interstellar
     # Tracking
 
     # Even though this is Carrier Logistics this website doesn't play well with our bot
-    def find_tracking_info(tracking_number, options = {})
+    def find_tracking_info(_tracking_number, _options = {})
       raise NotImplementedError, "#find_tracking_info is not supported by #{@@name}."
+    end
+
+    def find_tracking_info_implemented?
+      false
     end
 
     # protected

@@ -21,10 +21,18 @@ module Interstellar
       parse_rate_response(origin, destination, commit_soap(:rates, request))
     end
 
+    def find_rates_implemented?
+      true
+    end
+
     # Tracking
     def find_tracking_info(tracking_number)
       request = build_tracking_request(tracking_number)
       parse_tracking_response(commit_soap(:track, request))
+    end
+
+    def find_tracking_info_implemented?
+      true
     end
 
     protected
@@ -48,7 +56,7 @@ module Interstellar
           'AccountNumber': @options[:account],
           'UserID': @options[:username],
           'Password': @options[:password],
-          'TestMode': @options[:debug].blank? ? 'N' : 'Y',
+          'TestMode': @options[:debug].blank? ? 'N' : 'Y'
         }
       }
     end
@@ -222,11 +230,11 @@ module Interstellar
     end
 
     def parse_tracking_response(response)
-      if !response
-        error = 'API Error: Unknown response'
-      else
-        error = response.dig(:get_by_pro_number_response, :get_by_pro_number_result, :code)
-      end
+      error = if !response
+                'API Error: Unknown response'
+              else
+                response.dig(:get_by_pro_number_response, :get_by_pro_number_result, :code)
+              end
 
       raise Interstellar::ShipmentNotFound if error
 
@@ -273,7 +281,7 @@ module Interstellar
         api_events.each do |api_event|
           event_key = nil
           comment = api_event.dig(:activity)
-  
+
           @conf.dig(:events, :types).each do |key, val|
             if comment.downcase.include?(val)
               event_key = key
@@ -281,14 +289,14 @@ module Interstellar
             end
           end
           next if event_key.blank?
-  
+
           location = Location.new(
             city: api_event.dig(:city)&.titleize,
             state: api_event.dig(:state)&.upcase,
             country: ActiveUtils::Country.find('USA')
           )
           datetime_without_time_zone = parse_datetime(api_event.dig(:activity_date_time))
-  
+
           # status and type_code set automatically by ActiveFreight based on event
           shipment_events << ShipmentEvent.new(event_key, datetime_without_time_zone, location)
         end

@@ -18,9 +18,17 @@ module Interstellar
       parse_document_response(:bol, tracking_number, options)
     end
 
+    def find_bol_implemented?
+      true
+    end
+
     def find_pod(tracking_number, options = {})
       options = @options.merge(options)
       parse_document_response(:pod, tracking_number, options)
+    end
+
+    def find_pod_implemented?
+      true
     end
 
     # Rates
@@ -34,10 +42,18 @@ module Interstellar
       parse_rate_response(origin, destination, commit_soap(:rates, request))
     end
 
+    def find_rates_implemented?
+      true
+    end
+
     # Tracking
     def find_tracking_info(tracking_number)
       tracking_request = build_tracking_request(tracking_number)
       parse_tracking_response(tracking_request)
+    end
+
+    def find_tracking_info_implemented?
+      true
     end
 
     protected

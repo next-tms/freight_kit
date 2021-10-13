@@ -30,9 +30,17 @@ module Interstellar
       parse_bol_response(commit(request), :bol, tracking_number, options)
     end
 
+    def find_bol_implemented?
+      true
+    end
+
     def find_pod(tracking_number, options = {})
       options = @options.merge(options)
       parse_pod_response(tracking_number, options)
+    end
+
+    def find_pod_implemented?
+      true
     end
 
     # Pickups
@@ -41,6 +49,10 @@ module Interstellar
       options = @options.merge(options)
       request = build_pickup_request(origin, destination, packages, options)
       parse_pickup_response(commit(request))
+    end
+
+    def create_pickup_implemented?
+      true
     end
 
     # Rates
@@ -53,6 +65,10 @@ module Interstellar
 
       request = build_rate_request(origin, destination, packages, options)
       parse_rate_response(origin, destination, commit(request))
+    end
+
+    def find_rates_implemented?
+      true
     end
 
     # Tracking

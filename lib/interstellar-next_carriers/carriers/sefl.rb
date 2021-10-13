@@ -27,6 +27,10 @@ module Interstellar
       parse_rate_response(origin, destination, commit(request))
     end
 
+    def find_rates_implemented?
+      true
+    end
+
     # Tracking
 
     protected

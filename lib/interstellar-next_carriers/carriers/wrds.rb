@@ -22,12 +22,20 @@ module Interstellar
       parse_pod_response(tracking_number, options)
     end
 
+    def find_pod_implemented?
+      true
+    end
+
     # Rates
 
     # Tracking
     def find_tracking_info(tracking_number, options = {})
       options = @options.merge(options)
       parse_tracking_response(tracking_number, options)
+    end
+
+    def find_tracking_info_implemented?
+      true
     end
 
     protected
@@ -41,10 +49,10 @@ module Interstellar
       url = request_url(action)
 
       response = if @conf.dig(:api, :methods, action) == :post
-                    options[:params].blank? ? HTTParty.post(url) : HTTParty.post(url, query: options[:params])
-                  else
-                    HTTParty.get(url)
-                  end
+                   options[:params].blank? ? HTTParty.post(url) : HTTParty.post(url, query: options[:params])
+                 else
+                   HTTParty.get(url)
+                 end
 
       response.parsed_response if response&.parsed_response
     end

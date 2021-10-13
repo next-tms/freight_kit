@@ -15,9 +15,17 @@ module Interstellar
       parse_document_response(:bol, tracking_number, options)
     end
 
+    def find_bol_implemented?
+      true
+    end
+
     def find_pod(tracking_number, options = {})
       options = @options.merge(options)
       parse_document_response(:pod, tracking_number, options)
+    end
+
+    def find_pod_implemented?
+      true
     end
 
     # Rates
@@ -32,11 +40,19 @@ module Interstellar
       parse_rate_response(origin, destination, commit_soap(:rates, request))
     end
 
+    def find_rates_implemented?
+      true
+    end
+
     # Tracking
 
     def find_tracking_info(tracking_number)
       request = build_tracking_request(tracking_number)
       parse_tracking_response(commit_soap(:track, request))
+    end
+
+    def find_tracking_info
+      true
     end
 
     protected
@@ -77,7 +93,7 @@ module Interstellar
 
       url = request_url(action)
       browser = Watir::Browser.new(*options[:watir_args])
-      
+
       browser.goto(url)
 
       credentials = {
@@ -104,13 +120,11 @@ module Interstellar
       rescue Watir::Exception::UnknownObjectException
         raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found"
       end
-      
-      browser.switch_window      
+
+      browser.switch_window
       button_xpath = case action
                      when :bol then '//*[@id="ContentPlaceHolder1_btnDocs"]'
                      when :pod then '//*[@id="ContentPlaceHolder1_btnPOD"]'
-                     else
-                       nil
                      end
 
       if !button_xpath || !browser.element(xpath: button_xpath).exists?
@@ -129,12 +143,12 @@ module Interstellar
 
       tif_path = nil
       if !options.dig(:selenoid_options, :download_url)
-        tif_path = Dir.glob("#{tmpdir}/*.tif").max_by {|f| File.mtime(f)}
+        tif_path = Dir.glob("#{tmpdir}/*.tif").max_by { |f| File.mtime(f) }
       else
         download_url = "#{options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
         response = HTTParty.get("#{download_url}/?json")
         tif_url = "#{download_url}/#{JSON.parse(response.body)&.last}"
-        tif_path = File.join(tmpdir, "#{tracking_number}_#{DateTime.current.to_s}.tif")
+        tif_path = File.join(tmpdir, "#{tracking_number}_#{DateTime.current}.tif")
 
         File.open(tif_path, 'wb') do |file|
           HTTParty.get(tif_url, stream_body: true) do |fragment|
@@ -153,11 +167,11 @@ module Interstellar
                options[:path]
              end
       file = File.new(path, 'w')
-      
+
       file = Magick::ImageList.new(tif_path)
       file.write(path)
 
-      return File.exist?(path) ? path : false
+      File.exist?(path) ? path : false
     end
 
     # Rates
@@ -294,6 +308,7 @@ module Interstellar
 
     def parse_location(comment, delimiters)
       return nil if comment.blank? || !comment.include?(delimiters[0]) || !comment.include?(delimiters[1])
+
       parts = comment.split(delimiters[0])[0].split(delimiters[1])[1].split(',')
 
       city = parts[0].squeeze.strip.titleize
@@ -308,7 +323,8 @@ module Interstellar
     end
 
     def parse_tracking_response(response)
-      raise Interstellar::ShipmentNotFound if response.dig(:get_tracking_response, :get_tracking_result, :tracking_status_response).blank?
+      raise Interstellar::ShipmentNotFound if response.dig(:get_tracking_response, :get_tracking_result,
+                                                           :tracking_status_response).blank?
 
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 
