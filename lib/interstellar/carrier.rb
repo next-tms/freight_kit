@@ -1,5 +1,4 @@
 module Interstellar
-
   # Carrier is the abstract base class for all supported carriers.
   #
   # To implement support for a carrier, you should subclass this class and
@@ -21,7 +20,7 @@ module Interstellar
     attr_accessor :conf, :rates_with_excessive_length_fees, :test_mode, :tmpdir
     attr_reader :last_request
 
-    alias_method :test_mode?, :test_mode
+    alias test_mode? test_mode
 
     # Credentials should be in options hash under keys :login, :password and/or :key.
     # @param options [Hash] The details needed to connect to the carrier's API.
@@ -39,10 +38,10 @@ module Interstellar
 
       # Sanitize options[:watir_args]
       unless options[:watir_args].blank?
-        options[:watir_args] = [:chrome, options: { prefs: {} }] if !options[:watir_args]
+        options[:watir_args] = [:chrome, { options: { prefs: {} } }] unless options[:watir_args]
         options[:watir_args].each do |h|
           if h.is_a?(Hash)
-            h.merge!(options: {prefs: {}}) unless h.dig(:options, :prefs)
+            h.merge!(options: { prefs: {} }) unless h.dig(:options, :prefs)
             if !options[:selenoid_options]
               h[:options][:prefs].merge!(
                 download: {
@@ -69,7 +68,7 @@ module Interstellar
                   .join(
                     File.expand_path(
                       '../../../../configuration/carriers',
-                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first,
+                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first
                     ),
                     "#{self.class.to_s.split('::')[1].underscore}.yml"
                   )
@@ -82,12 +81,24 @@ module Interstellar
       raise NotImplementedError, "#{self.class.name}: #find_bol not supported"
     end
 
+    def find_bol_implemented?
+      false
+    end
+
     def find_estimate(*)
       raise NotImplementedError, "#{self.class.name}: #find_estimate not supported"
     end
 
+    def find_estimate_implemented?
+      false
+    end
+
     def find_pod(*)
       raise NotImplementedError, "#{self.class.name}: #find_pod not supported"
+    end
+
+    def find_pod_implemented?
+      false
     end
 
     # Asks the carrier for rate estimates for a given shipment.
@@ -101,8 +112,12 @@ module Interstellar
     # @param options [Hash] Carrier-specific parameters.
     # @return [Interstellar::RateResponse] The response from the carrier, which
     #   includes 0 or more rate estimates for different shipping products
-    def find_rates(origin, destination, packages, options = {})
+    def find_rates(_origin, _destination, _packages, _options = {})
       raise NotImplementedError, "#find_rates is not supported by #{self.class.name}."
+    end
+
+    def find_rates_implemented?
+      false
     end
 
     # Registers a new pickup with the carrier, to get a tracking number and
@@ -119,8 +134,12 @@ module Interstellar
     # @return [Interstellar::ShipmentResponse] The response from the carrier. This
     #   response should include a shipment identifier or tracking_number if successful,
     #   and potentially shipping labels.
-    def create_pickup(origin, destination, packages, options = {})
+    def create_pickup(_origin, _destination, _packages, _options = {})
       raise NotImplementedError, "#create_pickup is not supported by #{self.class.name}."
+    end
+
+    def create_pickup_implemented?
+      false
     end
 
     # Cancels a shipment with a carrier.
@@ -133,8 +152,12 @@ module Interstellar
     # @param options [Hash] Carrier-specific parameters.
     # @return [Interstellar::ShipmentResponse] The response from the carrier. This
     #   response in most cases has a cancellation id.
-    def cancel_shipment(shipment_id, options = {})
+    def cancel_shipment(_shipment_id, _options = {})
       raise NotImplementedError, "#cancel_shipment is not supported by #{self.class.name}."
+    end
+
+    def cancel_shipment_implemented?
+      false
     end
 
     # Retrieves tracking information for a previous shipment
@@ -145,8 +168,12 @@ module Interstellar
     # @param options [Hash] Carrier-specific parameters.
     # @return [Interstellar::TrackingResponse] The response from the carrier. This
     #   response should a list of shipment tracking events if successful.
-    def find_tracking_info(tracking_number, options = {})
+    def find_tracking_info(_tracking_number, _options = {})
       raise NotImplementedError, "#find_tracking_info is not supported by #{self.class.name}."
+    end
+
+    def find_tracking_info_implemented?
+      false
     end
 
     # Get a list of services available for the a specific route
@@ -155,8 +182,12 @@ module Interstellar
     # @param destination_country_code [String] The destination country
     # @return [Array<String>] A list of names of the available services
     #
-    def available_services(origin_country_code, destination_country_code, options = {})
+    def available_services(_origin_country_code, _destination_country_code, _options = {})
       raise NotImplementedError, "#available_services is not supported by #{self.class.name}."
+    end
+
+    def available_services_implemented?
+      false
     end
 
     # Validate credentials with a call to the API.
@@ -169,7 +200,7 @@ module Interstellar
     #   `false` otherswise.
     def valid_credentials?
       location = self.class.default_location
-      find_rates(location, location, Package.new(100, [5, 15, 30]), :test => test_mode)
+      find_rates(location, location, Package.new(100, [5, 15, 30]), test: test_mode)
     rescue Interstellar::ResponseError
       false
     else
@@ -227,14 +258,14 @@ module Interstellar
     # @note Override for non-U.S.-based carriers.
     # @return [Interstellar::Location]
     def self.default_location
-      Location.new( :country => 'US',
-                    :state => 'CA',
-                    :city => 'Beverly Hills',
-                    :address1 => '455 N. Rexford Dr.',
-                    :address2 => '3rd Floor',
-                    :zip => '90210',
-                    :phone => '1-310-285-1013',
-                    :fax => '1-310-275-8159')
+      Location.new(country: 'US',
+                   state: 'CA',
+                   city: 'Beverly Hills',
+                   address1: '455 N. Rexford Dr.',
+                   address2: '3rd Floor',
+                   zip: '90210',
+                   phone: '1-310-285-1013',
+                   fax: '1-310-275-8159')
     end
 
     # Use after building the request to save for later inspection.
@@ -249,6 +280,7 @@ module Interstellar
     # @return [DateTime] A timestamp, the provided number of business days in the future.
     def timestamp_from_business_day(days)
       return unless days
+
       date = DateTime.now.utc
 
       days.times do
