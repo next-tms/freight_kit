@@ -183,6 +183,11 @@ module Interstellar
       browser = Watir::Browser.new(*options[:watir_args])
       browser.goto(request[:url])
 
+      if browser.html.downcase.include?('unable to process request')
+        browser.close
+        raise ResponseError
+      end
+
       credentials = {
         username: options[:website_username] || options[:username],
         password: options[:website_password] || options[:password]
