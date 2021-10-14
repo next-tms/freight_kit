@@ -257,9 +257,9 @@ module Interstellar
     def parse_tracking_response(response)
       json = JSON.parse(response&.read || '{}')
 
-      raise Interstellar::ShipmentNotFound if json.dig('SearchResults').blank? || response.status[0] != '200'
+      raise Interstellar::ShipmentNotFound if json['SearchResults'].blank? || response.status[0] != '200'
 
-      search_result = json.dig('SearchResults')&.first
+      search_result = json['SearchResults']&.first
       raise Interstellar::ShipmentNotFound if search_result.blank?
 
       pro = search_result.dig('Shipment', 'ProNumber')&.downcase
@@ -286,20 +286,31 @@ module Interstellar
       last_location = nil
       shipment_events = []
       search_result.dig('Shipment', 'Comments').each do |api_event|
-        type_code = api_event.dig('ActivityCode')
+        type_code = api_event['ActivityCode']
         next if !type_code || type_code == 'ARQ'
 
         event = @conf.dig(:events, :types).key(type_code)
         next if event.blank?
 
-        datetime_without_time_zone = parse_date(api_event.dig('StatusDateTime'))
-        comment = strip_date(api_event.dig('StatusComment'))
+        datetime_without_time_zone = parse_date(api_event['StatusDateTime'])
+        comment = strip_date(api_event['StatusComment'])
+        appointment_date = nil
 
         case event
         when :arrived_at_terminal
           location = parse_location(comment, [' terminal in '])
         when :delivered
           location = receiver_address
+        when :delivery_appointment_scheduled
+          delimeter = ' on '
+          if !comment.blank? && comment.downcase.include?(delimeter)
+            location = receiver_address
+            appointment_date = Date
+                               .strptime(
+                                 comment.split(delimeter).last.strip,
+                                 '%m/%d/%y'
+                               )
+          end
         when :departed
           location = parse_location(comment, [' to ', 'from '])
         when :located
@@ -318,7 +329,12 @@ module Interstellar
         last_location = location
 
         # status and type_code set automatically by ActiveFreight based on event
-        shipment_events << ShipmentEvent.new(event, datetime_without_time_zone, location)
+        shipment_events << ShipmentEvent.new(
+          event,
+          datetime_without_time_zone,
+          location,
+          appointment_date
+        )
       end
 
       shipment_events = shipment_events.sort_by(&:time)
