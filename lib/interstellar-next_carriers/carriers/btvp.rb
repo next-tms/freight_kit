@@ -39,7 +39,7 @@ module Interstellar
       packages = Array(packages)
 
       raise "Error: #{@@name}: Pallet count 5+ unsupported" if packages.size >= 5
-      raise "Error: #{@@name}: Weight > 10,000 lbs unsupported" if packages.sum { |p| p.pounds } > 10_000
+      raise "Error: #{@@name}: Weight > 10,000 lbs unsupported" if packages.sum(&:pounds) > 10_000
 
       packages.each do |package|
         raise "Error: #{@@name}: Height > 95 inches unsupported" if package.height(:inches) > 95
@@ -54,8 +54,7 @@ module Interstellar
     end
 
     # Tracking
-    def find_tracking_info(tracking_number, options = {})
-      options = @options.merge(options)
+    def find_tracking_info(tracking_number, *)
       request = build_tracking_request(tracking_number)
       parse_tracking_response(commit(:track, request))
     end
@@ -183,15 +182,13 @@ module Interstellar
         url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
       end
 
-      ret = download_document(type, tracking_number, url, options)
-
       browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').click
       browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
       browser.close
 
       raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found" if url.blank?
 
-      ret
+      download_document(type, tracking_number, url, options)
     end
 
     # Rates
@@ -264,13 +261,13 @@ module Interstellar
         longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
         if !@options[:tariff].blank?
           if longest_dimension >= 168
-            cost += @options[:tariff].dig('overlength_fees').dig('over_14_ft')
+            cost += @options[:tariff]['overlength_fees']['over_14_ft']
           elsif longest_dimension >= 144 && longest_dimension < 168
-            cost += @options[:tariff].dig('overlength_fees').dig('12_through_14_ft')
+            cost += @options[:tariff]['overlength_fees']['12_through_14_ft']
           elsif longest_dimension >= 120 && longest_dimension < 144
-            cost += @options[:tariff].dig('overlength_fees').dig('10_through_12_ft')
+            cost += @options[:tariff]['overlength_fees']['10_through_12_ft']
           elsif longest_dimension >= 96 && longest_dimension < 120
-            cost += @options[:tariff].dig('overlength_fees').dig('8_through_10_ft')
+            cost += @options[:tariff]['overlength_fees']['8_through_10_ft']
           end
         elsif longest_dimension >= 96
           warn 'API Warning: Overlength fees not applied because `tariff` is empty!'
@@ -347,9 +344,9 @@ module Interstellar
 
       if location
         Location.new(
-          city: location.dig(:city),
-          state: location.dig(:state),
-          province: location.dig(:province),
+          city: location[:city],
+          state: location[:state],
+          province: location[:province],
           country: country
         )
       else
@@ -402,16 +399,16 @@ module Interstellar
       api_events.each do |api_event|
         event = nil
         @conf.dig(:events, :types).each do |key, val|
-          if api_event.dig(:description).downcase.include? val
+          if api_event[:description].downcase.include? val
             event = key
             break
           end
         end
         next if event.blank?
 
-        datetime_without_time_zone = parse_datetime("#{api_event.dig(:date)} #{api_event.dig(:time)}")
+        datetime_without_time_zone = parse_datetime("#{api_event[:date]} #{api_event[:time]}")
 
-        location = parse_location(api_event.dig(:location))
+        location = parse_location(api_event[:location])
         location = shipper_address if location.state.blank? && %i[picked_up
                                                                   pickup_information_sent_to_carrier].include?(event)
         location = receiver_address if location.state.blank? && %i[delivered out_for_delivery].include?(event)
