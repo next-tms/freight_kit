@@ -125,11 +125,12 @@
   :types:
     :arrived_at_terminal: ARV
     :delivered: DEL
+    :delivery_appointment_scheduled: APT
     :departed: DSP
     :located: ENR
     :out_for_delivery: OFD
-    :picked_up: PU
     :pending_delivery_appointment: CFA
+    :picked_up: PU
     :trailer_closed: CLO
     :trailer_unloaded: UNL
 :services:
