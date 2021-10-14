@@ -161,8 +161,8 @@ module Interstellar
       sleep(5)
 
       unless browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[4]/div[3]/div/table/tbody/tr[2]/td[2]').exists?
-        browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').click
-        browser.element(xpath: '/html/body/div[9]/div[11]/div/button[1]').wait_until(&:present?).click
+        browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').wait_until(&:present?).click
+        browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
         browser.close
 
         raise Interstellar::ShipmentNotFound
