@@ -182,13 +182,15 @@ module Interstellar
         url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
       end
 
+      raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found" if url.blank?
+
+      ret = download_document(type, tracking_number, url, options)
+
       browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').click
       browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
       browser.close
 
-      raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found" if url.blank?
-
-      download_document(type, tracking_number, url, options)
+      ret
     end
 
     # Rates
