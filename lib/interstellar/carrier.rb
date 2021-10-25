@@ -176,10 +176,6 @@ module Interstellar
       false
     end
 
-    def pickup_number_is_trackable?
-      false
-    end
-
     def pickup_number_is_tracking_number?
       false
     end
