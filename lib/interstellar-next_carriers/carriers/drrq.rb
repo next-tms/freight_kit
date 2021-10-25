@@ -63,7 +63,7 @@ module Interstellar
     end
 
     def pickup_number_is_tracking_number?
-      false
+      true
     end
 
     # Rates
