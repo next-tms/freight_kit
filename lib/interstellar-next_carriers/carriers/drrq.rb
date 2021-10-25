@@ -62,6 +62,10 @@ module Interstellar
       true
     end
 
+    def pickup_number_is_tracking_number?
+      false
+    end
+
     # Rates
 
     def find_rates(origin, destination, packages, options = {})

@@ -13,6 +13,7 @@ module Interstellar
     end
 
     # Documents
+
     def find_bol(tracking_number, options = {})
       options = @options.merge(options)
       parse_document_response(:bol, tracking_number, options)
@@ -31,7 +32,14 @@ module Interstellar
       true
     end
 
+    # Pickups
+
+    def pickup_number_is_tracking_number?
+      false
+    end
+
     # Rates
+
     def find_rates(origin, destination, packages, options = {})
       options = @options.merge(options)
       origin = Location.from(origin)
@@ -47,6 +55,7 @@ module Interstellar
     end
 
     # Tracking
+
     def find_tracking_info(tracking_number)
       tracking_request = build_tracking_request(tracking_number)
       parse_tracking_response(tracking_request)
@@ -95,6 +104,7 @@ module Interstellar
     end
 
     # Documents
+
     def parse_document_response(type, tracking_number, options = {})
       url = request_url(type).sub('%%TRACKING_NUMBER%%', tracking_number.to_s)
 
@@ -119,6 +129,7 @@ module Interstellar
     end
 
     # Rates
+
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 
@@ -230,6 +241,7 @@ module Interstellar
     end
 
     # Tracking
+
     def build_tracking_request(tracking_number)
       URI.parse("#{request_url(:track)}/#{tracking_number}").open
     end

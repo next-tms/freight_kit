@@ -42,7 +42,14 @@ module Interstellar
 
     # Documents
 
+    # Pickups
+
+    def pickup_number_is_tracking_number?
+      false
+    end
+
     # Rates
+
     def find_rates(origin, destination, packages, options = {})
       options = @options.merge(options)
       origin = Location.from(origin)
@@ -119,6 +126,7 @@ module Interstellar
     # Documents
 
     # Rates
+
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 

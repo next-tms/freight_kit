@@ -14,7 +14,14 @@ module Interstellar
 
     # Documents
 
+    # Pickups
+
+    def pickup_number_is_tracking_number?
+      true
+    end
+
     # Rates
+
     def build_calculated_accessorials(*); end
 
     # Tracking
@@ -32,53 +39,51 @@ module Interstellar
       if !response
         success = false
         message = 'API Error: Unknown response'
+      elsif response['error']
+        success = false
+        message = response['error']
       else
-        if response['error']
-          success = false
-          message = response['error']
-        else
-          cost = response.dig('ratequote', 'quotetotal').delete(',').delete('.').to_i
-          transit_days = response.dig('ratequote', 'busdays').to_i
-          if cost
-            # Carrier-specific pricing structure
-            oversized_pallets_price = 0
-            packages.each do |package|
-              short_side, long_side = nil
-              if !package.length(:in).blank? && !package.width(:in).blank? && !package.height(:in).blank?
-                long_side = package.length(:in) > package.width(:in) ? package.length(:in) : package.width(:in)
-                short_side = package.length(:in) < package.width(:in) ? package.length(:in) : package.width(:in)
-              end
-
-              next unless short_side &&
-                          long_side &&
-                          package.height(:in) &&
-                          (
-                            short_side > 40 ||
-                            long_side > 48 ||
-                            package.height(:in) > 84
-                          )
-
-              oversized_pallets_price += 1500
+        cost = response.dig('ratequote', 'quotetotal').delete(',').delete('.').to_i
+        transit_days = response.dig('ratequote', 'busdays').to_i
+        if cost
+          # Carrier-specific pricing structure
+          oversized_pallets_price = 0
+          packages.each do |package|
+            short_side, long_side = nil
+            if !package.length(:in).blank? && !package.width(:in).blank? && !package.height(:in).blank?
+              long_side = package.length(:in) > package.width(:in) ? package.length(:in) : package.width(:in)
+              short_side = package.length(:in) < package.width(:in) ? package.length(:in) : package.width(:in)
             end
-            cost += oversized_pallets_price
 
-            rate_estimates = [
-              RateEstimate.new(
-                origin,
-                destination,
-                { scac: self.class.scac.upcase, name: self.class.name },
-                :standard,
-                transit_days: transit_days,
-                estimate_reference: nil,
-                total_price: cost,
-                currency: 'USD',
-                with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-              )
-            ]
-          else
-            success = false
-            message = 'API Error: Cost is emtpy'
+            next unless short_side &&
+                        long_side &&
+                        package.height(:in) &&
+                        (
+                          short_side > 40 ||
+                          long_side > 48 ||
+                          package.height(:in) > 84
+                        )
+
+            oversized_pallets_price += 1500
           end
+          cost += oversized_pallets_price
+
+          rate_estimates = [
+            RateEstimate.new(
+              origin,
+              destination,
+              { scac: self.class.scac.upcase, name: self.class.name },
+              :standard,
+              transit_days: transit_days,
+              estimate_reference: nil,
+              total_price: cost,
+              currency: 'USD',
+              with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+            )
+          ]
+        else
+          success = false
+          message = 'API Error: Cost is emtpy'
         end
       end
 
