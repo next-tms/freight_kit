@@ -176,6 +176,10 @@ module Interstellar
       false
     end
 
+    def pickup_number_is_tracking_number?
+      false
+    end
+
     # Get a list of services available for the a specific route
     #
     # @param origin_country_code [String] The country of origin
