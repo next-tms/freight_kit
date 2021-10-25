@@ -98,6 +98,12 @@
     - :flatbed_pickup
     - :marina_delivery
     - :marina_pickup
+:service_types:
+  :mappable:
+    :guaranteed_delivery: Standard LTL Guarantee
+    :guaranteed_delivery_am: Guaranteed LTL Service AM
+    :guaranteed_delivery_pm: Guaranteed LTL Service PM
+    :standard: LTL
 :api:
   :domains:
     :production:

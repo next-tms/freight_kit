@@ -47,6 +47,13 @@ module Interstellar
 
     def create_pickup(origin, destination, packages, options = {})
       options = @options.merge(options)
+
+      if options[:service_type].blank?
+        raise ArgumentError, "#{self.class.name}#create_pickup: `service_type` is required"
+      end
+
+      raise ArgumentError, "#{self.class.name}#create_pickup: `scac` is required" if options[:scac].blank?
+
       request = build_pickup_request(origin, destination, packages, options)
       parse_pickup_response(commit(request))
     end
@@ -287,6 +294,9 @@ module Interstellar
 
       accessorials = build_accessorials(accessorials: options[:accessorials], packages: packages)
 
+      mode = @conf.dig(:services, :mappable, options[:service].to_sym)
+      scac = options[:scac]
+
       shipper_phone = options[:shipper_phone].gsub(/\s+/, '').gsub(/[()-+.]/, '')
       receiver_phone = options[:receiver_phone].gsub(/\s+/, '').gsub(/[()-+.]/, '')
 
@@ -313,7 +323,7 @@ module Interstellar
             Width: package.width(:in).ceil
           },
           HazardousMaterial: package.hazmat?,
-          Name: 'Freight',
+          Name: package.description,
           Quantities: {
             Actual: 1,
             Uom: package_type
@@ -340,7 +350,7 @@ module Interstellar
             Email: options[:receiver_contact_email]
           },
           CountryCode: 'USA',
-          IsResidential: false,
+          IsResidential: options[:accessorials].include?(:residential_pickup),
           Name: options[:receiver_name],
           PostalCode: destination.to_hash[:postal_code],
           StateProvince: destination.to_hash[:province]
@@ -362,20 +372,20 @@ module Interstellar
         Pricesheets: [
           {
             IsSelected: true,
-            Mode: 'LTL',
-            Scac: 'FXFE',
+            Mode: mode,
+            Scac: scac,
             Type: 'Carrier'
           }
         ],
         ReferenceNumbers: [
           {
             IsPrimary: false,
-            ReferenceNumber: options[:shipper_ref],
+            ReferenceNumber: options[:shipper_reference],
             Type: 'Ship Ref'
           },
           {
             IsPrimary: true, # must have one true
-            ReferenceNumber: options[:po_number],
+            ReferenceNumber: options[:customer_reference],
             Type: 'PO Number'
           }
         ],
@@ -390,7 +400,7 @@ module Interstellar
             Email: options[:shipper_contact_email]
           },
           CountryCode: 'USA',
-          IsResidential: options[:accessorials].include?(:residential_delivery),
+          IsResidential: options[:accessorials].include?(:residential_pickup),
           Name: options[:shipper_name],
           PostalCode: origin.to_hash[:postal_code],
           StateProvince: origin.to_hash[:province]
@@ -408,27 +418,6 @@ module Interstellar
 
       save_request(request)
       request
-    end
-
-    def parse_bol_response(response, type, tracking_number, options = {})
-      options = @options.merge(options)
-      response = parse_response(response)
-
-      file_bytes = response['FileBytes']
-      return Interstellar::DocumentNotFound if file_bytes.blank?
-
-      data = Base64.decode64(file_bytes)
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
-
-      File.open(path, 'wb') do |f|
-        f.write(data)
-      end
-
-      path
     end
 
     def parse_pickup_response(response)
