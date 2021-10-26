@@ -255,6 +255,19 @@ module Interstellar
                 comment.split(delimiters[0])[1].split(',')
               end
 
+      if parts.size == 1
+        str = parts[0].downcase
+        if str.include?('long beach')
+          return Location.new(
+            city: 'Long Beach',
+            state: 'CA',
+            country: ActiveUtils::Country.find('USA')
+          )
+        end
+
+        return nil
+      end
+
       city = parts[0].squeeze.strip.titleize
       state = parts[1].gsub('.', '').squeeze.strip.upcase
 
