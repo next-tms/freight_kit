@@ -24,6 +24,10 @@ module Interstellar
 
     # Documents
 
+    def bol_requires_tracking_number?
+      true
+    end
+
     def find_bol(tracking_number, options = {})
       options = @options.merge(options)
       request = build_document_request(:bol, tracking_number, options)
