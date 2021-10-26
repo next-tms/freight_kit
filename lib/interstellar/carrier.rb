@@ -77,6 +77,10 @@ module Interstellar
       @rates_with_excessive_length_fees = @conf.dig(:attributes, :rates, :with_excessive_length_fees)
     end
 
+    def bol_requires_tracking_number?
+      false
+    end
+
     def find_bol(*)
       raise NotImplementedError, "#{self.class.name}: #find_bol not supported"
     end
