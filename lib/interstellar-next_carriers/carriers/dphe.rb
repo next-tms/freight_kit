@@ -51,7 +51,7 @@ module Interstellar
       parse_tracking_response(commit_soap(:track, request))
     end
 
-    def find_tracking_info
+    def find_tracking_info_implemented?
       true
     end
 
