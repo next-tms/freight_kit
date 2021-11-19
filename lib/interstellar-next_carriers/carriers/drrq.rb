@@ -49,16 +49,47 @@ module Interstellar
 
     # Pickups
 
-    def create_pickup(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def create_pickup(
+      accessorials:,
+      customer_reference:,
+      delivery_from:,
+      delivery_to:,
+      destination:,
+      origin:,
+      packages:,
+      pickup_from:,
+      pickup_to:,
+      receiver_contact_name:,
+      receiver_name:,
+      receiver_phone:,
+      scac:,
+      service:,
+      shipper_contact_name:,
+      shipper_name:,
+      shipper_phone:,
+      shipper_reference:
+    )
+      request = build_pickup_request(
+        accessorials: accessorials,
+        customer_reference: customer_reference,
+        delivery_from: delivery_from,
+        delivery_to: delivery_to,
+        destination: destination,
+        origin: origin,
+        packages: packages,
+        pickup_from: pickup_from,
+        pickup_to: pickup_to,
+        receiver_contact_name: receiver_contact_name,
+        receiver_name: receiver_name,
+        receiver_phone: receiver_phone,
+        scac: scac,
+        service: service,
+        shipper_contact_name: shipper_contact_name,
+        shipper_name: shipper_name,
+        shipper_phone: shipper_phone,
+        shipper_reference: shipper_reference
+      )
 
-      if options[:service_type].blank?
-        raise ArgumentError, "#{self.class.name}#create_pickup: `service_type` is required"
-      end
-
-      raise ArgumentError, "#{self.class.name}#create_pickup: `scac` is required" if options[:scac].blank?
-
-      request = build_pickup_request(origin, destination, packages, options)
       parse_pickup_response(commit(request))
     end
 
@@ -138,7 +169,7 @@ module Interstellar
 
     def parse_response(response)
       case response.code
-      when 400
+      when 401
         raise Interstellar::InvalidCredentialsError, "HTTP #{response.code}: #{response}"
       end
 
@@ -297,18 +328,34 @@ module Interstellar
 
     # Pickups
 
-    def build_pickup_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def build_pickup_request(
+      accessorials:,
+      customer_reference:,
+      delivery_from:,
+      delivery_to:,
+      destination:,
+      origin:,
+      packages:,
+      pickup_from:,
+      pickup_to:,
+      receiver_contact_name:,
+      receiver_name:,
+      receiver_phone:,
+      scac:,
+      service:,
+      shipper_contact_name:,
+      shipper_name:,
+      shipper_phone:,
+      shipper_reference:
+    )
+      accessorials = build_accessorials(accessorials: accessorials, packages: packages)
 
-      accessorials = build_accessorials(accessorials: options[:accessorials], packages: packages)
+      mode = @conf.dig(:services, :mappable, service.to_sym)
 
-      mode = @conf.dig(:services, :mappable, options[:service].to_sym)
-      scac = options[:scac]
-
-      shipper_phone = options[:shipper_phone].gsub(/\s+/, '').gsub(/[()-+.]/, '')
-      receiver_phone = options[:receiver_phone].gsub(/\s+/, '').gsub(/[()-+.]/, '')
-
+      shipper_phone = shipper_phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
       shipper_phone = shipper_phone[1..] if shipper_phone.length == 11
+
+      receiver_phone = receiver_phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
       receiver_phone = receiver_phone[1..] if receiver_phone.length == 11
 
       items = []
@@ -345,29 +392,29 @@ module Interstellar
 
       body = {
         Comments: {
-          Comment: options[:hours],
+          Comment: '',
           Type: 'SpecialInstructions'
         },
         Consignee: {
-          AddressLine1: destination.to_hash[:street],
+          AddressLine1: destination.to_hash[:street1],
           City: destination.to_hash[:city],
           Contact: {
-            Name: options[:receiver_contact_name],
+            Name: receiver_contact_name,
             Phone: receiver_phone,
             Fax: '',
-            Email: options[:receiver_contact_email]
+            Email: ''
           },
           CountryCode: 'USA',
-          IsResidential: options[:accessorials].include?(:residential_pickup),
-          Name: options[:receiver_name],
+          IsResidential: accessorials.include?(:residential_pickup),
+          Name: receiver_name,
           PostalCode: destination.to_hash[:postal_code],
           StateProvince: destination.to_hash[:province]
         },
         Dates: {
-          EarliestDropDate: '2017-09-13T20:48:35.844Z',
-          EarliestPickupDate: '2017-09-13T19:49:52.498Z',
-          LatestDropDate: '2017-09-13T20:48:35.844Z',
-          LatestPickupDate: '2017-09-13T19:49:52.498Z'
+          EarliestPickupDate: "#{pickup_from.iso8601[..-7]}Z",
+          LatestPickupDate: "#{pickup_to.iso8601[..-7]}Z",
+          EarliestDropDate: "#{delivery_from.iso8601[..-7]}Z",
+          LatestDropDate: "#{delivery_to.iso8601[..-7]}Z"
         },
         Items: items,
         Payment: {
@@ -387,29 +434,29 @@ module Interstellar
         ],
         ReferenceNumbers: [
           {
-            IsPrimary: false,
-            ReferenceNumber: options[:shipper_reference],
+            IsPrimary: true,
+            ReferenceNumber: shipper_reference.to_s,
             Type: 'Ship Ref'
           },
           {
-            IsPrimary: true, # must have one true
-            ReferenceNumber: options[:customer_reference],
+            IsPrimary: false, # must have one true
+            ReferenceNumber: customer_reference.to_s,
             Type: 'PO Number'
           }
         ],
         ServiceFlags: accessorials,
         Shipper: {
-          AddressLine1: origin.to_hash[:street],
+          AddressLine1: origin.to_hash[:street1],
           City: origin.to_hash[:city],
           Contact: {
-            Name: options[:shipper_contact_name],
+            Name: shipper_contact_name,
             Phone: shipper_phone,
             Fax: '',
-            Email: options[:shipper_contact_email]
+            Email: ''
           },
           CountryCode: 'USA',
-          IsResidential: options[:accessorials].include?(:residential_pickup),
-          Name: options[:shipper_name],
+          IsResidential: accessorials.include?(:residential_pickup),
+          Name: shipper_name,
           PostalCode: origin.to_hash[:postal_code],
           StateProvince: origin.to_hash[:province]
         },
@@ -422,7 +469,7 @@ module Interstellar
         body: body
       }
 
-      request[:headers] = build_headers(options)
+      request[:headers] = build_headers
 
       save_request(request)
       request
