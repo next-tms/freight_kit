@@ -209,9 +209,18 @@ module Interstellar
       status = shipment_events.last&.status
 
       actual_delivery_date = browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[9]/td[2]/span').text
-      actual_delivery_date = actual_delivery_date ? Date.strptime(actual_delivery_date, '%m/%d/%Y').to_s(:db) : nil
 
       browser.close
+
+      actual_delivery_date = actual_delivery_date&.strip
+
+      actual_delivery_date = unless actual_delivery_date.blank?
+                               begin
+                                 Date.strptime(actual_delivery_date, '%m/%d/%Y').to_s(:db)
+                               rescue Date::Error
+                                 nil
+                               end
+                             end
 
       shipment_events = shipment_events.sort_by(&:time)
 
