@@ -106,7 +106,7 @@
     :bol: apps.godependable.com
     :pod: apps.godependable.com
     :rates: www.godependable.com
-    :tracking: www.godependable.com
+    :track: www.godependable.com
   :endpoints:
     :bol: /CustomerLogin.aspx
     :pod: /CustomerLogin.aspx
@@ -114,6 +114,7 @@
     :track: /services/track.asmx?WSDL
   :use_ssl:
     :rates: false
+    :track: false
 :attributes:
   :rates:
     :with_excessive_length_fees: true
@@ -121,6 +122,7 @@
   :types:
     :arrived_at_terminal: linehaul arrived
     :delivered: completed.  signed by # "delivery" used often to mean arrived at terminal
+    :delivered: partner delivery
     :departed: linehaul departed
     :out_for_delivery: out for delivery
     :trailer_closed: terminal load

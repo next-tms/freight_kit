@@ -372,8 +372,6 @@ module Interstellar
         case event_key
         when :arrived_at_terminal
           location = parse_city(comment.split('arrived')[1].upcase.split('SERVICE CENTER')[0])
-        when :delivered
-          location = parse_city_state(comment.split('in ')[1].split('completed')[0])
         when :departed
           location = parse_city(comment.split('departed')[1].upcase.split('SERVICE CENTER')[0])
         when :out_for_delivery
@@ -390,6 +388,7 @@ module Interstellar
         shipment_events << ShipmentEvent.new(event_key, datetime_without_time_zone, location)
       end
 
+      status = shipment_events.last&.status
       shipment_events = shipment_events.sort_by(&:time)
 
       TrackingResponse.new(
@@ -400,7 +399,7 @@ module Interstellar
         hash: response,
         response: response,
         status: status,
-        type_code: shipment_events.last&.status,
+        type_code: status,
         ship_time: parse_date(search_result.dig('Shipment', 'ProDateTime')),
         scheduled_delivery_date: scheduled_delivery_date,
         actual_delivery_date: actual_delivery_date,
