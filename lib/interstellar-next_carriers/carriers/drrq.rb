@@ -361,8 +361,8 @@ module Interstellar
       items = []
       i = 0
       packages.each do |package|
-        # package_type = package.type.pallet? ? 'PALLETS' : ''
-        package_type = 'PALLETS'
+        # package_type = package.type.pallet? ? 'PALLET' : ''
+        package_type = 'PALLET'
 
         i += 1
         items << {
