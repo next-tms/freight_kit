@@ -164,11 +164,11 @@ module Interstellar
       freight_details = []
       packages.each do |package|
         freight_details << {
-          description: package.description,
+          description: package.description || 'Freight',
           freightClass: package.freight_class.to_s,
-          pieces: '1',
+          pieces: 1,
           weightType: 'L',
-          weight: package.pounds.ceil.to_s
+          weight: package.pounds.ceil
         }
       end
 
@@ -193,10 +193,10 @@ module Interstellar
             }
           },
           freightDetails: { freightDetail: freight_details },
-          hazmat: packages.map(&:hazmat).include?(true),
+          hazmat: packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
           inBondShipment: 'N',
-          declaredValue: '0.00',
-          shipmentDate: Date.current.strftime('%Y-%m-%d')
+          declaredValue: 0,
+          shippingDate: Date.current.strftime('%Y-%m-%d')
         }.to_json
       }
 
