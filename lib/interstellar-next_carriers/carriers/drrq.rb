@@ -378,7 +378,7 @@ module Interstellar
             Width: package.width(:in).ceil
           },
           HazardousMaterial: package.hazmat?,
-          Name: package.description,
+          Description: package.description,
           Quantities: {
             Actual: 1,
             Uom: package_type
