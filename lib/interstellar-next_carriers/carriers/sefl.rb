@@ -184,7 +184,7 @@ module Interstellar
       else
         begin
           response = JSON.parse(response.body)
-          sleep(10) # TODO: Maybe improve this?
+          sleep(30) # TODO: Maybe improve this?
         rescue JSON::ParserError
           raise Interstellar::ResponseError
         end
