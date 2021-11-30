@@ -26,6 +26,7 @@ module Interstellar
 
   class DocumentNotFound < Interstellar::Error; end
   class ShipmentNotFound < Interstellar::Error; end
+  class UnserviceableError < Interstellar::Error; end
 
   class USPSValidationError < StandardError; end
 
