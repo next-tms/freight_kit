@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.files.reject! { |fn| fn.include? 'CVS' }
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'business_time', '~> 0.10.0'
+  spec.add_development_dependency 'business_time', '~> 0.11.0'
   spec.add_development_dependency 'minitest-reporters', '~> 1.4.3'
   spec.add_development_dependency 'minitest', '~> 5.14.4'
   spec.add_development_dependency 'mocha', '~> 1.13.0'
