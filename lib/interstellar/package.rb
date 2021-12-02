@@ -84,17 +84,25 @@ module Interstellar # :nodoc:
       @packaging = Packaging.new(packaging_type)
     end
 
-    def cubic_ft
+    def cubic_ft(each_or_total)
+      q = case each_or_total
+          when :each then 1
+          when :total then @quantity
+          else
+            raise ArgumentError, 'each_or_total must be one of :each, :total'
+          end
+
       if !inches[0].blank? && !inches[1].blank? && !inches[2].blank?
         cubic_ft = (inches[0] * inches[1] * inches[2]).to_f / 1728
+        cubic_ft *= q
         return ('%0.2f' % cubic_ft).to_f
       end
       nil
     end
 
     def density
-      if !inches[0].blank? && !inches[1].blank? && !inches[2].blank? && pounds
-        density = pounds.to_f / cubic_ft
+      if !inches[0].blank? && !inches[1].blank? && !inches[2].blank? && pounds(:each)
+        density = pounds(:each).to_f / cubic_ft(:each)
         return ('%0.2f' % density).to_f
       end
       nil
@@ -156,8 +164,8 @@ module Interstellar # :nodoc:
     end
     alias g grams
 
-    def pounds(options = {})
-      weight(options).convert_to(:lb).value.to_f
+    def pounds(args)
+      weight(*args).convert_to(:lb).value.to_f
     end
     alias lb pounds
     alias lbs pounds
