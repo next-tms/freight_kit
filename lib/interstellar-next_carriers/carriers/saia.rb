@@ -72,9 +72,7 @@ module Interstellar
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 
-      accessorials = [
-        { 'AccessorialItem': { 'Code': 'SingleShipment' } }
-      ]
+      accessorials = [{ 'AccessorialItem': { 'Code': 'SingleShipment' } }]
       unless options[:accessorials].blank?
         serviceable_accessorials?(options[:accessorials])
         options[:accessorials].each do |a|
@@ -84,38 +82,38 @@ module Interstellar
         end
       end
 
-      excessive_length_total_inches = 0
-      longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
-      if longest_dimension >= 96
-        accessorials << { 'AccessorialItem': { 'Code': 'ExcessiveLength' } }
-        excessive_length_total_inches += longest_dimension
-      end
-      excessive_length_total_inches = excessive_length_total_inches.ceil.to_s
+      longest_dimension = packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
+      accessorials << { 'AccessorialItem': { 'Code': 'ExcessiveLength' } } if longest_dimension >= 96
 
       accessorials = accessorials.uniq
 
       details = []
       dimensions = []
       packages.each do |package|
-        details << {
-          'DetailItem': {
-            'Weight': package.pounds.ceil,
-            'Class': package.freight_class.to_s,
-            'Length': package.length(:in).ceil,
-            'Width': package.width(:in).ceil,
-            'Height': package.height(:in).ceil
+        package.quantity.times do
+          details << {
+            'DetailItem': {
+              'Weight': package.pounds(:each).ceil,
+              'Class': package.freight_class.to_s,
+              'Length': package.length(:in).ceil,
+              'Width': package.width(:in).ceil,
+              'Height': package.height(:in).ceil
+            }
           }
-        }
-        dimensions << {
-          'DimensionItem': {
-            'Units': 1,
-            'Length': package.length(:in).round(2),
-            'Width': package.width(:in).round(2),
-            'Height': package.height(:in).round(2),
-            'Type': 'IN' # inches
+
+          # Keeping this one at a time to match with "details"
+          dimensions << {
+            'DimensionItem': {
+              'Units': 1,
+              'Length': package.length(:in).round(2),
+              'Width': package.width(:in).round(2),
+              'Height': package.height(:in).round(2),
+              'Type': 'IN' # inches
+            }
           }
-        }
+        end
       end
+
       request = {
         'request': {
           'Application': 'ThirdParty',
@@ -127,9 +125,9 @@ module Interstellar
           'DestinationState': destination.state,
           'DestinationZipcode': destination.to_hash[:postal_code].to_s.upcase,
           'WeightUnits': 'LBS',
-          'TotalCube': packages.inject(0) { |_sum, p| _sum += p.cubic_ft }.to_f.round(2),
+          'TotalCube': packages.sum { |p| p.cubic_ft(:each) }.round(2),
           'TotalCubeUnits': 'CUFT', # cubic ft
-          'ExcessiveLengthTotalInches': excessive_length_total_inches,
+          'ExcessiveLengthTotalInches': longest_dimension.to_s,
           'Details': details,
           'Dimensions': dimensions,
           'Accessorials': accessorials

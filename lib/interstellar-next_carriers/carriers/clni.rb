@@ -14,7 +14,7 @@ module Interstellar
     def build_calculated_accessorials(packages, origin, destination)
       accessorials = []
 
-      longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
+      longest_dimension = packages.map { |p| [p.length(:in), p.width(:in)].max }.max.ceil
       if longest_dimension > 48
         if longest_dimension < 240
           accessorials << '&HHG=yes' # standard overlength fee

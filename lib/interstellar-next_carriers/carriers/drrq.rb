@@ -380,11 +380,11 @@ module Interstellar
           HazardousMaterial: package.hazmat?,
           Description: package.description,
           Quantities: {
-            Actual: 1,
+            Actual: package.quantity,
             Uom: package_type
           },
           Weights: {
-            Actual: package.pounds.ceil,
+            Actual: package.pounds(:total).ceil,
             Uom: 'lb'
           }
         }
@@ -491,13 +491,13 @@ module Interstellar
         items << {
           Name: 'Freight',
           FreightClass: package.freight_class.to_s,
-          Weight: package.pounds.ceil.to_s,
+          Weight: package.pounds(:total).ceil.to_s,
           WeightUnits: 'lb',
           Width: package.width(:in).ceil,
           Length: package.length(:in).ceil,
           Height: package.height(:in).ceil,
           DimensionUnits: 'in',
-          Quantity: 1,
+          Quantity: package.quantity,
           QuantityUnits: 'PLT' # Check this
         }
       end

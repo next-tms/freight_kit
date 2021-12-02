@@ -189,7 +189,7 @@ module Interstellar
         end
       end
 
-      longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
+      longest_dimension = packages.map { |p| [p.length(:in), p.width(:in)].max }.max.ceil
       if longest_dimension >= 336
         accessorials << 'X29'
       elsif longest_dimension >= 240 && longest_dimension < 336
@@ -204,7 +204,7 @@ module Interstellar
 
       shipment_detail = []
       packages.each do |package|
-        shipment_detail << "1|#{package.freight_class}|#{package.pounds.ceil}"
+        shipment_detail << [package.quantity, package.freight_class, package.pounds(:total)].join('|')
       end
       shipment_detail = shipment_detail.join('|')
 

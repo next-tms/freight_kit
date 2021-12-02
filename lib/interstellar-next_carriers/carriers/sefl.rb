@@ -148,14 +148,18 @@ module Interstellar
 
       i = 0
       packages.each do |package|
-        i += 1
-        body = body.deep_merge({ "Class#{i}": package.freight_class.to_s.sub('.', '').to_i })
-        body = body.deep_merge({ "CubicFt#{i}": package.cubic_ft }) if destination.to_hash[:province].upcase == 'PR'
-        body = body.deep_merge({ "Description#{i}": package.description })
-        body = body.deep_merge({ "PieceLength#{i}": package.length(:in).ceil })
-        body = body.deep_merge({ "PieceWidth#{i}": package.width(:in).ceil })
-        body = body.deep_merge({ "PieceHeight#{i}": package.height(:in).ceil })
-        body = body.deep_merge({ "Weight#{i}": package.pounds.ceil })
+        package.quantity.times do
+          i += 1
+          body = body.deep_merge({ "Class#{i}": package.freight_class.to_s.sub('.', '').to_i })
+          if destination.to_hash[:province].upcase == 'PR'
+            body = body.deep_merge({ "CubicFt#{i}": package.cubic_ft(:each) })
+          end
+          body = body.deep_merge({ "Description#{i}": package.description || 'Freight' })
+          body = body.deep_merge({ "PieceLength#{i}": package.length(:in).ceil })
+          body = body.deep_merge({ "PieceWidth#{i}": package.width(:in).ceil })
+          body = body.deep_merge({ "PieceHeight#{i}": package.height(:in).ceil })
+          body = body.deep_merge({ "Weight#{i}": package.pounds(:each).ceil })
+        end
       end
 
       unless accessorials.blank?

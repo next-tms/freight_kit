@@ -57,20 +57,20 @@ module Interstellar
       options = @options.merge(options)
 
       request = {
-        user_id: @options[:username],
-        password: @options[:password],
-        account: @options[:account],
-        customer_type: @options[:customer_type].blank? ? 'B' : @options[:customer_type],
-        origin_zip: origin.to_hash[:postal_code].to_s,
-        destination_zip: destination.to_hash[:postal_code].to_s,
         accessorial_list: '', # TODO: Fix this!
-        class_list: packages.map(&:freight_class).join(','),
-        weight_list: packages.map(&:lbs).inject([]) { |weights, lbs| weights << lbs.ceil }.join(','),
-        none_palletized_mode: 'N',
-        plt_count_list: Array.new(packages.size, 1).join(','),
-        plt_length_list: packages.map(&:inches).inject([]) { |lengths, _inches| lengths << length(:in).ceil }.join(','),
-        plt_total_weight: packages.map(&:lbs).inject(0) { |sum, lbs| sum += lbs }.ceil,
-        plt_width_list: packages.map(&:inches).inject([]) { |lengths, _inches| lengths << width(:in).ceil }.join(',')
+        account: @options[:account],
+        class_list: packages.map(&:quantity).join(','),
+        customer_type: @options[:customer_type].blank? ? 'B' : @options[:customer_type],
+        destination_zip: destination.to_hash[:postal_code].to_s,
+        none_palletized_mode: packages.map(&:packaging).map(&:pallet?).any?(false) ? 'Y' : 'N',
+        origin_zip: origin.to_hash[:postal_code].to_s,
+        password: @options[:password],
+        plt_count_list: packages.map(&:quantity).join(','),
+        plt_length_list: packages.map { |p| p.inches(:length).ceil }.join(','),
+        plt_total_weight: packages.map { |p| p.pounds(:total).ceil }.join(','),
+        plt_width_list: packages.map { |p| p.inches(:width).ceil }.join(','),
+        user_id: @options[:username],
+        weight_list: packages.map { |p| p.pounds(:total) }.join(',')
       }
 
       save_request(request)
