@@ -42,11 +42,11 @@ module Interstellar
 
       raise UnserviceableError, "Error: #{@@name}: Pallet count of 5+ unsupported" if packages.sum(&:quantity) >= 5
 
-      if packages.map { p.height(:inches) }.max.ceil >= 95
+      if packages.map { |p| p.height(:inches) }.max.ceil >= 95
         raise UnserviceableError, "Error: #{@@name}: Height of 95+ inches unsupported"
       end
 
-      if packages.sum { p.pounds(:total) }.ceil >= 10_000
+      if packages.sum { |p| p.pounds(:total) }.ceil >= 10_000
         raise UnserviceableError, "Error: #{@@name}: Weight of 10,000+ lbs unsupported"
       end
 
