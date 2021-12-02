@@ -156,18 +156,21 @@ module Interstellar
 
       service_delivery_options = service_delivery_options.uniq.to_a
 
+      shipment_detail = []
+      packages.each do |package|
+        package.quantity.times do
+          shipment_detail << {
+            'ActualClass' => package.freight_class,
+            'Weight' => package.pounds(:each).ceil
+          }
+        end
+      end
+
       request = {
         'request' => {
           origin_zip: origin.to_hash[:postal_code].to_s,
           destination_zip: destination.to_hash[:postal_code].to_s,
-          shipment_details: {
-            shipment_detail: packages.inject([]) do |arr, package|
-              arr << {
-                'ActualClass' => package.freight_class,
-                'Weight' => package.pounds.ceil
-              }
-            end
-          },
+          shipment_details: { shipment_detail: shipment_detail },
           service_delivery_options: service_delivery_options,
           origin_type: options[:origin_type] || 'B', # O for shipper, I for consignee, B for third party
           payment_type: options[:payment_type] || 'P', # Prepaid

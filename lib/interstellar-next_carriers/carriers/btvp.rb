@@ -40,18 +40,14 @@ module Interstellar
       destination = Location.from(destination)
       packages = Array(packages)
 
-      raise Interstellar::UnserviceableError, "Error: #{@@name}: Pallet count 5+ unsupported" if packages.size >= 5
+      raise UnserviceableError, "Error: #{@@name}: Pallet count of 5+ unsupported" if packages.sum(&:quantity) >= 5
 
-      if packages.sum(&:pounds) > 10_000
-        raise Interstellar::UnserviceableError,
-              "Error: #{@@name}: Weight > 10,000 lbs unsupported"
+      if packages.map { p.height(:inches) }.max.ceil >= 95
+        raise UnserviceableError, "Error: #{@@name}: Height of 95+ inches unsupported"
       end
 
-      packages.each do |package|
-        if package.height(:inches) > 95
-          raise Interstellar::UnserviceableError,
-                "#{@@name}: Height > 95 inches unsupported"
-        end
+      if packages.sum { p.pounds(:total) }.ceil >= 10_000
+        raise UnserviceableError, "Error: #{@@name}: Weight of 10,000+ lbs unsupported"
       end
 
       request = build_rate_request(origin, destination, packages, options)
@@ -222,6 +218,18 @@ module Interstellar
 
       accessorials = accessorials.uniq.to_a
 
+      items = []
+      packages.each do |package|
+        items << {
+          _class: package.freight_class,
+          description: (packages.first.description || 'Freight')[..8].upcase,
+          haz: (package.hazmat? ? 'Y' : ''),
+          pallets: (package.packaging.pallet? ? package.quantity : 0),
+          pieces: package.quantity,
+          weight: package.pounds(:total).ceil
+        }
+      end
+
       request = {
         'arg0' => {
           securityinfo: build_soap_header,
@@ -241,16 +249,7 @@ module Interstellar
             accessorial: accessorials.blank? ? [] : accessorials,
             ppdcol: options[:payment_type].blank? ? 'P' : options[:payment_type].blank?, # Prepaid
             itemcount: packages.size,
-            item: packages.inject([]) do |arr, package|
-              arr << {
-                _class: package.freight_class,
-                description: package.description[0..8].upcase,
-                haz: (package.hazmat? ? 'Y' : ''),
-                pallets: 1,
-                pieces: 1,
-                weight: package.pounds.ceil
-              }
-            end
+            item: items
           }
         }
       }

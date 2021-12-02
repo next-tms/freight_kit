@@ -166,9 +166,9 @@ module Interstellar
         freight_details << {
           description: package.description || 'Freight',
           freightClass: package.freight_class.to_s,
-          pieces: 1,
+          pieces: package.quantity,
           weightType: 'L',
-          weight: package.pounds.ceil
+          weight: package.pounds(:total).ceil
         }
       end
 
