@@ -34,7 +34,7 @@ module Interstellar
       unserviceable_count = (unserviceable_accessorials & accessorials).size
 
       if serviceable_count != accessorials.size || !unserviceable_count.zero?
-        raise ArgumentError, "#{self.class.name}: Some accessorials unserviceable"
+        raise Interstellar::UnserviceableError, "#{self.class.name}: Some accessorials unserviceable"
       end
 
       true
