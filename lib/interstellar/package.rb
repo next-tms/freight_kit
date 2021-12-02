@@ -3,21 +3,20 @@ module Interstellar # :nodoc:
     VALID_FREIGHT_CLASSES = [55, 60, 65, 70, 77.5, 85, 92.5, 100, 110, 125, 150, 175, 200, 250, 300, 400].freeze
 
     cattr_accessor :default_options
-    attr_accessor :description, :hazmat, :nmfc
+    attr_accessor :description, :hazmat, :nmfc, :quantity
     attr_reader :currency, :options, :packaging, :value
     attr_writer :declared_freight_class
 
     # Package.new(100, [10, 20, 30], 'pallet', :units => :metric)
     # Package.new(Measured::Weight.new(100, :g), 'box', [10, 20, 30].map {|m| Length.new(m, :centimetres)})
     # Package.new(100.grams, [10, 20, 30].map(&:centimetres))
-    def initialize(grams_or_ounces, dimensions, packaging_type, options = {})
+    def initialize(total_grams_or_ounces, dimensions, packaging_type, options = {})
       options = @@default_options.update(options) if @@default_options
       options.symbolize_keys!
       @options = options
 
-      if !packaging_type
-        raise ArgumentError.new('Package#new: packaging_type is required')
-      end
+      raise ArgumentError, 'Package#new: packaging_type is required' unless packaging_type
+      raise ArgumentError, 'Package#new: quantity is required' unless options[:quantity]
 
       # For backward compatibility
       if dimensions.is_a?(Array)
@@ -42,8 +41,23 @@ module Interstellar # :nodoc:
       @weight_unit_system = weight_imperial ? :imperial : :metric
       @dimensions_unit_system = dimensions_imperial ? :imperial : :metric
 
-      @weight = attribute_from_metric_or_imperial(grams_or_ounces, Measured::Weight, @weight_unit_system, :grams,
-                                                  :ounces)
+      @quantity = options[:quantity] || 1
+
+      @total_weight = attribute_from_metric_or_imperial(
+        total_grams_or_ounces,
+        Measured::Weight,
+        @weight_unit_system,
+        :grams,
+        :ounces
+      )
+
+      @each_weight = attribute_from_metric_or_imperial(
+        total_grams_or_ounces / @quantity.to_f,
+        Measured::Weight,
+        @weight_unit_system,
+        :grams,
+        :ounces
+      )
 
       if @dimensions.blank?
         zero_length = Measured::Length.new(0, (dimensions_imperial ? :inches : :centimetres))
@@ -166,20 +180,13 @@ module Interstellar # :nodoc:
     end
     alias cm centimetres
 
-    def weight(options = {})
-      case options[:type]
-      when nil, :actual
-        @weight
-      when :volumetric, :dimensional
-        @volumetric_weight ||= begin
-          m = Measured::Weight.new((centimetres(:box_volume) / 6.0), :grams)
-          @weight_unit_system == :imperial ? m.convert_to(:oz) : m
-        end
-      when :billable
-        [weight, weight(type: :volumetric)].max
-      end
+    def each_weight(options = {})
+      weight(@each_weight, options)
     end
-    alias mass weight
+
+    def total_weight(options = {})
+      weight(@total_weight, options)
+    end
 
     def self.cents_from(money)
       return nil if money.nil?
@@ -262,6 +269,27 @@ module Interstellar # :nodoc:
       # etc..
       2.downto(@dimensions.length) do |_n|
         @dimensions.unshift(@dimensions[0])
+      end
+    end
+
+    def weight(which_weight, options = {})
+      weight = case which_weight
+               when :each then @each_weight
+               when :total then @total_weight
+               else
+                 raise ArgumentError, 'which_weight must be one of :each, :total'
+               end
+
+      case options[:type]
+      when nil, :actual
+        weight
+      when :volumetric, :dimensional
+        @volumetric_weight ||= begin
+          m = Measured::Weight.new((centimetres(:box_volume) / 6.0), :grams)
+          @weight_unit_system == :imperial ? m.convert_to(:oz) : m
+        end
+      when :billable
+        [weight, weight(weight, type: :volumetric)].max
       end
     end
   end
