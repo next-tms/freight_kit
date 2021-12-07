@@ -105,11 +105,13 @@
     :pod: tools.rrts.com
     :rates: webservices.rrts.com
     :track: webservices.rrts.com
+    :tracking_number_from_pickup_number: tools.rrts.com
   :endpoints:
     :bol: /LTLTrack/Home/ShowImage?proNumber=%%TRACKING_NUMBER%%&imageType=BOL
     :pod: /LTLTrack/Home/ShowImage?proNumber=%%TRACKING_NUMBER%%&imageType=POD
     :rates: /rating/ratequote.asmx?wsdl
     :track: /TrackWebApi/api/values
+    :tracking_number_from_pickup_number: /LTLTrack/?searchValues=%%PICKUP_NUMBER%%
   :soap:
     :namespaces:
       :rates: https://webservices.rrts.com/ratequote/ # even over non-encrypted HTTP
@@ -118,6 +120,7 @@
     :pod: false
     :rates: false
     :track: true
+    :tracking_number_from_pickup_number: false
 :attributes:
   :rates:
     :with_excessive_length_fees: true

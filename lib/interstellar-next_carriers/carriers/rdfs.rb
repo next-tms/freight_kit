@@ -65,6 +65,15 @@ module Interstellar
       true
     end
 
+    def find_tracking_number_from_pickup_number(pickup_number, _date, options = {})
+      options = @options.merge(options)
+      parse_tracking_number_from_pickup_number_response(pickup_number, options)
+    end
+
+    def find_tracking_number_from_pickup_number_implemented?
+      true
+    end
+
     protected
 
     def build_soap_header(action)
@@ -386,6 +395,26 @@ module Interstellar
         destination: receiver_address,
         tracking_number: tracking_number
       )
+    end
+
+    def parse_tracking_number_from_pickup_number_response(pickup_number, _date, options = {})
+      options = @options.merge(options)
+
+      url = request_url(:tracking_number_from_pickup_number).sub('%%PICKUP_NUMBER%%', pickup_number.to_s)
+
+      begin
+        doc = Nokogiri::HTML(URI.parse(url).open)
+      rescue OpenURI::HTTPError
+        raise Interstellar::ShipmentNotFoundError, "API Error: #{@@name}: Shipment not found"
+      end
+
+      pro = doc.css('#lblProNumber')&.text
+
+      if pro.blank? || pro.downcase.include?('not available')
+        raise Interstellar::ShipmentNotFoundError, "API Error: #{@@name}: Shipment not found"
+      end
+
+      pro
     end
   end
 end
