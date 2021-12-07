@@ -105,8 +105,10 @@
 :api:
   :domain: api.forwardair.com
   :endpoints:
+    :pickup: /ltlservices/v2/rest/waybills/book/json
     :rates: /ltlservices/v2/rest/waybills/quote/json
   :methods:
+    :pickup: :post
     :rates: :post
   :use_ssl: true
 :attributes:

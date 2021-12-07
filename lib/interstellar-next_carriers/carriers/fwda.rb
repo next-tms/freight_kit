@@ -44,8 +44,56 @@ module Interstellar
 
     # Pickups
 
+    def create_pickup(
+      accessorials:,
+      customer_reference:,
+      delivery_from:,
+      delivery_to:,
+      destination:,
+      origin:,
+      packages:,
+      pickup_from:,
+      pickup_to:,
+      receiver_contact_name:,
+      receiver_name:,
+      receiver_phone:,
+      scac:,
+      service:,
+      shipper_contact_name:,
+      shipper_name:,
+      shipper_phone:,
+      shipper_reference:
+    )
+      request = build_pickup_request(
+        accessorials: accessorials,
+        customer_reference: customer_reference,
+        delivery_from: delivery_from,
+        delivery_to: delivery_to,
+        destination: destination,
+        origin: origin,
+        packages: packages,
+        pickup_from: pickup_from,
+        pickup_to: pickup_to,
+        receiver_contact_name: receiver_contact_name,
+        receiver_name: receiver_name,
+        receiver_phone: receiver_phone,
+        scac: scac,
+        service: service,
+        shipper_contact_name: shipper_contact_name,
+        shipper_name: shipper_name,
+        shipper_phone: shipper_phone,
+        shipper_reference: shipper_reference
+      )
+
+      parse_pickup_response(commit(request))
+    end
+
+    def create_pickup_implemented?
+      true
+    end
+
     def pickup_number_is_tracking_number?
-      false
+      true
     end
 
     # Rates
@@ -67,6 +115,51 @@ module Interstellar
     # Tracking
 
     protected
+
+    def build_accessorials(accessorials)
+      delivery_accessorials = []
+      pickup_accessorials = []
+
+      unless accessorials.blank?
+        serviceable_accessorials?(accessorials)
+        accessorials.each do |a|
+          unless @conf.dig(:accessorials, :unserviceable).include?(a)
+            if @conf.dig(:accessorials, :mappable, :pickup).include?(a)
+              pickup_accessorials << @conf.dig(:accessorials, :mappable, :pickup)[a]
+            elsif delivery_accessorials << @conf.dig(:accessorials, :mappable, :delivery)[a]
+            end
+          end
+        end
+      end
+
+      if !delivery_accessorials.blank? && delivery_accessorials.include?('RDE')
+        # Remove duplicate delivery appointment accessorial when residential delivery (included with RDE)
+        delivery_accessorials -= ['ADE']
+      end
+
+      if !pickup_accessorials.blank? && pickup_accessorials.include?('RPU')
+        # Remove duplicate pickup appointment accessorial when residential pickup (included with RPU)
+        pickup_accessorials -= ['APP']
+      end
+
+      # API doesn't like empty arrays
+      delivery_accessorials = nil if delivery_accessorials.blank?
+      pickup_accessorials = nil if pickup_accessorials.blank?
+
+      [pickup_accessorials&.uniq, delivery_accessorials&.uniq]
+    end
+
+    def build_freight_details(packages)
+      packages.map do |package|
+        {
+          description: package.description || 'Freight',
+          freightClass: package.freight_class.to_s,
+          pieces: package.quantity,
+          weightType: 'L',
+          weight: package.pounds(:total).ceil
+        }
+      end
+    end
 
     def build_url(action, options = {})
       options = @options.merge(options)
@@ -115,7 +208,7 @@ module Interstellar
 
       response = case method
                  when :post
-                   HTTParty.post(url, headers: headers, body: body)
+                   HTTParty.post(url, headers: headers, body: body, debug_output: $stdout)
                  else
                    HTTParty.get(url, headers: headers)
                  end
@@ -125,52 +218,127 @@ module Interstellar
 
     # Documents
 
+    # Pickups
+
+    def build_pickup_request(
+      accessorials:,
+      customer_reference:,
+      delivery_from:,
+      delivery_to:,
+      destination:,
+      origin:,
+      packages:,
+      pickup_from:,
+      pickup_to:,
+      receiver_contact_name:,
+      receiver_name:,
+      receiver_phone:,
+      scac:,
+      service:,
+      shipper_contact_name:,
+      shipper_name:,
+      shipper_phone:,
+      shipper_reference:
+    )
+      options = @options
+      pickup_accessorials, delivery_accessorials = build_accessorials(accessorials)
+
+      shipper_phone = shipper_phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
+      shipper_phone = shipper_phone[1..] if shipper_phone.length == 11
+
+      receiver_phone = receiver_phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
+      receiver_phone = receiver_phone[1..] if receiver_phone.length == 11
+
+      request = {
+        headers: build_headers(options),
+        method: @conf.dig(:api, :methods, :pickup),
+        testmode: @options[:test] ? 'Y' : 'N',
+        url: build_url(:pickup, options),
+        body: {
+          orderAction: 'Create',
+          billToCustomerNumber: options[:account],
+          shipperCustomerNumber: options[:account],
+          order: {
+            declaredValue: 0,
+            freightDetails: { freightDetail: build_freight_details(packages) },
+            hazmat: packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
+            inBondShipment: 'N',
+            shippingDate: pickup_from.strftime('%Y-%m-%d'),
+            special_instructions: '',
+            consignee: {
+              consigneeAddress1: destination.to_hash[:address1],
+              consigneeCity: destination.to_hash[:city],
+              consigneeCloseTime: delivery_to.strftime('%H:%M:00'),
+              consigneeContactEmail: '',
+              consigneeContactName: receiver_contact_name || 'Receiving',
+              consigneeContactPhone: receiver_phone || '',
+              consigneeCountry: destination.country.code(:alpha2).to_s,
+              consigneeLocationName: receiver_name,
+              consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
+              consigneeState: destination.to_hash[:province],
+              consigneeZipCode: destination.to_hash[:postal_code].to_s
+            },
+            delivery: {
+              destinationZipCode: destination.to_hash[:postal_code].to_s.upcase,
+              delivery: {
+                airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
+                deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
+              }
+            },
+            dimensions: packages.map do |package|
+              {
+                height: package.inches(:height).ceil,
+                length: package.inches(:length).ceil,
+                width: package.inches(:width).ceil,
+                pieces: package.quantity
+              }
+            end,
+            emergencyContact: {
+              email: '',
+              name: '',
+              phone: ''
+            },
+            pickup: {
+              originZipCode: origin.to_hash[:postal_code].to_s.upcase,
+              pickup: {
+                airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
+                pickupAccessorials: { pickupAccessorial: pickup_accessorials },
+                pickupReadyTime: pickup_from.strftime('%H:%M:00')
+              }
+            },
+            shipper: {
+              shipperAddress1: origin.to_hash[:address1],
+              shipperCity: origin.to_hash[:city],
+              shipperCloseTime: pickup_to.strftime('%H:%M:00'),
+              shipperContactEmail: '',
+              shipperContactName: shipper_contact_name || 'Shipping',
+              shipperContactPhone: shipper_phone || '',
+              shipperCountry: origin.country.code(:alpha2).to_s,
+              shipperLocationName: shipper_name,
+              shipperOpenTime: pickup_from.strftime('%H:%M:00'),
+              shipperState: origin.to_hash[:province],
+              shipperZipCode: origin.to_hash[:postal_code].to_s
+            }
+          }
+        }.to_json
+      }
+
+      save_request(request)
+      request
+    end
+
+    def parse_pickup_response(response)
+      pp response
+      response&.dig('AirbillNumber')
+    end
+
     # Rates
 
     def build_rate_request(origin, destination, packages, options = {})
       options = @options.merge(options)
 
-      delivery_accessorials = []
-      pickup_accessorials = []
-      unless options[:accessorials].blank?
-        serviceable_accessorials?(options[:accessorials])
-        options[:accessorials].each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            if @conf.dig(:accessorials, :mappable, :pickup).include?(a)
-              pickup_accessorials << @conf.dig(:accessorials, :mappable, :pickup)[a]
-            elsif delivery_accessorials << @conf.dig(:accessorials, :mappable, :delivery)[a]
-            end
-          end
-        end
-      end
-
-      if !delivery_accessorials.blank? && delivery_accessorials.include?('RDE')
-        # Remove duplicate delivery appointment accessorial when residential delivery (included with RDE)
-        delivery_accessorials -= ['ADE']
-      end
-
-      if !pickup_accessorials.blank? && pickup_accessorials.include?('RPU')
-        # Remove duplicate pickup appointment accessorial when residential pickup (included with RPU)
-        pickup_accessorials -= ['APP']
-      end
-
-      delivery_accessorials = delivery_accessorials.uniq
-      pickup_accessorials = pickup_accessorials.uniq
-
-      # API doesn't like empty arrays
-      delivery_accessorials = nil if delivery_accessorials.blank?
-      pickup_accessorials = nil if pickup_accessorials.blank?
-
-      freight_details = []
-      packages.each do |package|
-        freight_details << {
-          description: package.description || 'Freight',
-          freightClass: package.freight_class.to_s,
-          pieces: package.quantity,
-          weightType: 'L',
-          weight: package.pounds(:total).ceil
-        }
-      end
+      pickup_accessorials, delivery_accessorials = build_accessorials(options[:accessorials])
+      freight_details = build_freight_details(packages)
 
       request = {
         url: build_url(:rates, options),
