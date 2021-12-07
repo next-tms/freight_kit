@@ -131,7 +131,7 @@ module Interstellar
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found"
+        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
       end
 
       File.exist?(path) ? path : false
@@ -172,7 +172,7 @@ module Interstellar
         browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
         browser.close
 
-        raise Interstellar::ShipmentNotFound
+        raise Interstellar::ShipmentNotFoundError
       end
 
       browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[4]/div[3]/div/table/tbody/tr[2]/td[2]').double_click
@@ -187,7 +187,7 @@ module Interstellar
         link_id = tr.css('td')[1].css('a').to_html.split('id=')[1].split('onfocus')[0].gsub('"', '').strip
       end
 
-      raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found" if link_id.blank?
+      raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found" if link_id.blank?
 
       browser.element(css: "##{link_id}").click
       url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
@@ -375,7 +375,7 @@ module Interstellar
     end
 
     def parse_tracking_response(response)
-      raise Interstellar::ShipmentNotFound unless response.dig(:tracktrace_response, :return, :currentstatus,
+      raise Interstellar::ShipmentNotFoundError unless response.dig(:tracktrace_response, :return, :currentstatus,
                                                                :errorcode).blank?
 
       receiver_address = Location.new(

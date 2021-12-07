@@ -111,7 +111,7 @@ module Interstellar
       begin
         doc = Nokogiri::HTML(URI.parse(url).open)
       rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found"
+        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
       end
 
       data = Base64.decode64(doc.css('img').first['src'].split('data:image/jpg;base64,').last)
@@ -285,13 +285,13 @@ module Interstellar
     def parse_tracking_response(response)
       json = JSON.parse(response&.read || '{}')
 
-      raise Interstellar::ShipmentNotFound if json['SearchResults'].blank? || response.status[0] != '200'
+      raise Interstellar::ShipmentNotFoundError if json['SearchResults'].blank? || response.status[0] != '200'
 
       search_result = json['SearchResults']&.first
-      raise Interstellar::ShipmentNotFound if search_result.blank?
+      raise Interstellar::ShipmentNotFoundError if search_result.blank?
 
       pro = search_result.dig('Shipment', 'ProNumber')&.downcase
-      raise Interstellar::ShipmentNotFound if pro.blank? || pro.downcase.include?('not available')
+      raise Interstellar::ShipmentNotFoundError if pro.blank? || pro.downcase.include?('not available')
 
       receiver_address = Location.new(
         city: search_result.dig('Shipment', 'Consignee', 'City').titleize,
