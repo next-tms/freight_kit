@@ -105,6 +105,14 @@ module Interstellar
       false
     end
 
+    def find_tracking_number_from_pickup_number(*)
+      raise NotImplementedError, "#{self.class.name}: #find_tracking_number_from_pickup_number not supported"
+    end
+
+    def find_tracking_number_from_pickup_number_implemented?
+      false
+    end
+
     # Asks the carrier for rate estimates for a given shipment.
     #
     # @note Override with whatever you need to get the rates from the carrier.
