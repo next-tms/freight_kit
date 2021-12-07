@@ -234,7 +234,7 @@ module Interstellar
                 response.dig(:get_by_pro_number_response, :get_by_pro_number_result, :code)
               end
 
-      raise Interstellar::ShipmentNotFound if error
+      raise Interstellar::ShipmentNotFoundError if error
 
       search_result = response.dig(:get_by_pro_number_response, :get_by_pro_number_result)
 

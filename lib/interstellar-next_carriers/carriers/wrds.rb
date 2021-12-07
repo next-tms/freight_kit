@@ -78,7 +78,7 @@ module Interstellar
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found"
+        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
       end
 
       file = Magick::ImageList.new(file.path)

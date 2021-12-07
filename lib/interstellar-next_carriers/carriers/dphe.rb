@@ -118,7 +118,7 @@ module Interstellar
           .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
           .click
       rescue Watir::Exception::UnknownObjectException
-        raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found"
+        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
       end
 
       browser.switch_window
@@ -129,14 +129,14 @@ module Interstellar
 
       if !button_xpath || !browser.element(xpath: button_xpath).exists?
         browser.close
-        raise Interstellar::DocumentNotFound
+        raise Interstellar::DocumentNotFoundError
       end
 
       browser.element(xpath: button_xpath).click
 
       if !button_xpath || browser.element(xpath: button_xpath).innertext.downcase.include?('unavailable')
         browser.close
-        raise Interstellar::DocumentNotFound
+        raise Interstellar::DocumentNotFoundError
       end
 
       sleep(10) # so Chrome can finish downloading
@@ -323,7 +323,7 @@ module Interstellar
     end
 
     def parse_tracking_response(response)
-      raise Interstellar::ShipmentNotFound if response.dig(:get_tracking_response, :get_tracking_result,
+      raise Interstellar::ShipmentNotFoundError if response.dig(:get_tracking_response, :get_tracking_result,
                                                            :tracking_status_response).blank?
 
       search_result = response.dig(:get_tracking_response, :get_tracking_result)

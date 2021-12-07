@@ -206,7 +206,7 @@ module Interstellar
       response = parse_response(response)
 
       file_bytes = response['FileBytes']
-      return Interstellar::DocumentNotFound if file_bytes.blank?
+      return Interstellar::DocumentNotFoundError if file_bytes.blank?
 
       data = Base64.decode64(file_bytes)
       path = if options[:path].blank?
@@ -275,7 +275,7 @@ module Interstellar
       rescue StandardError
         # POD not yet available
         browser.close
-        raise Interstellar::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+        raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found"
       end
 
       browser.iframe(name: 'AppBody').frame(id: 'Detail')
@@ -301,7 +301,7 @@ module Interstellar
         url = text if url.blank? || !url.include?('hubtran') # Prefer HubTran
       end
 
-      raise Interstellar::DocumentNotFound, "API Error: #{self.class.name}: Document not found" if url.blank?
+      raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found" if url.blank?
 
       path = if options[:path].blank?
                File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} POD.pdf")
@@ -315,7 +315,7 @@ module Interstellar
           file.write(input.read)
         end
       rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFound, "API Error: #{self.class.name}: Document not found"
+        raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found"
       end
 
       unless MimeMagic.by_magic(File.open(path)).type == 'application/pdf'
