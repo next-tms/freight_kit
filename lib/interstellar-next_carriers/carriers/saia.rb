@@ -153,11 +153,11 @@ module Interstellar
           message = response.dig(:create_response, :create_result, :message)
         else
           response = response.dig(:create_response, :create_result)
-          cost = response.dig(:total_invoice)
+          cost = response[:total_invoice]
           if cost
             cost = cost.sub('.', '').to_i
-            transit_days = response.dig(:standard_service_days).to_i
-            estimate_reference = response.dig(:quote_number)
+            transit_days = response[:standard_service_days].to_i
+            estimate_reference = response[:quote_number]
 
             rate_estimates = []
             rate_estimates << RateEstimate.new(
@@ -174,9 +174,9 @@ module Interstellar
             )
 
             [
-              { guaranteed_ltl: response.dig(:guarantee_amount) },
-              { guaranteed_ltl_am: response.dig(:guarantee_amount12pm) },
-              { guaranteed_ltl_pm: response.dig(:guarantee_amount2pm) }
+              { guaranteed_ltl: response[:guarantee_amount] },
+              { guaranteed_ltl_am: response[:guarantee_amount12pm] },
+              { guaranteed_ltl_pm: response[:guarantee_amount2pm] }
             ].each do |service|
               if !service.values[0] == '0' && !service.values[0].blank?
                 cost = service.values[0].sub('.', '').to_i
@@ -240,7 +240,7 @@ module Interstellar
 
       shipper_address = Location.new(
         street: (
-          search_result.dig(:shipper, :address1) || '' +
+          search_result.dig(:shipper, :address1) || '' \
           " #{search_result.dig(:shipper, :address2) || ''}"
         ).squeeze.strip.titleize,
         city: search_result.dig(:shipper, :city)&.squeeze&.strip&.titleize,
@@ -251,7 +251,7 @@ module Interstellar
 
       receiver_address = Location.new(
         street: (
-          search_result.dig(:consignee, :address1) || '' +
+          search_result.dig(:consignee, :address1) || '' \
           " #{search_result.dig(:consignee, :address2) || ''}"
         ).squeeze.strip.titleize,
         city: search_result.dig(:consignee, :city)&.squeeze&.strip&.titleize,
@@ -260,10 +260,10 @@ module Interstellar
         country: ActiveUtils::Country.find('USA')
       )
 
-      actual_delivery_date = parse_datetime(search_result.dig(:delivery_date_time_arrive))&.to_date
-      pickup_date = parse_datetime(search_result.dig(:pickup_date_time))&.to_date
+      actual_delivery_date = parse_datetime(search_result[:delivery_date_time_arrive])&.to_date
+      pickup_date = parse_datetime(search_result[:pickup_date_time])&.to_date
       scheduled_delivery_date = nil # TODO: Set correctly
-      tracking_number = search_result.dig(:pro_number)
+      tracking_number = search_result[:pro_number]
 
       shipment_events = []
 
@@ -276,9 +276,11 @@ module Interstellar
           shipper_address
         )
       else
+        api_events = [api_events] if api_events.is_a?(Hash)
+
         api_events.each do |api_event|
           event_key = nil
-          comment = api_event.dig(:activity)
+          comment = api_event[:activity]
 
           @conf.dig(:events, :types).each do |key, val|
             if comment.downcase.include?(val)
@@ -289,11 +291,11 @@ module Interstellar
           next if event_key.blank?
 
           location = Location.new(
-            city: api_event.dig(:city)&.titleize,
-            state: api_event.dig(:state)&.upcase,
+            city: api_event[:city]&.titleize,
+            state: api_event[:state]&.upcase,
             country: ActiveUtils::Country.find('USA')
           )
-          datetime_without_time_zone = parse_datetime(api_event.dig(:activity_date_time))
+          datetime_without_time_zone = parse_datetime(api_event[:activity_date_time])
 
           # status and type_code set automatically by ActiveFreight based on event
           shipment_events << ShipmentEvent.new(event_key, datetime_without_time_zone, location)
