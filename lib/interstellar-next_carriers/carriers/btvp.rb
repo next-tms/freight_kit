@@ -180,16 +180,17 @@ module Interstellar
       html = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div/div/form/div[4]/div[2]/div/div/table').inner_html
       html = Nokogiri::HTML.parse(html)
 
-      url = nil
+      link_id = nil
       html.css('tr').each do |tr|
         next unless tr.text.downcase.include?(@conf.dig(:documents, :types, type).downcase)
 
         link_id = tr.css('td')[1].css('a').to_html.split('id=')[1].split('onfocus')[0].gsub('"', '').strip
-        browser.element(css: "##{link_id}").click
-        url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
       end
 
-      raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found" if url.blank?
+      raise Interstellar::DocumentNotFound, "API Error: #{@@name}: Document not found" if link_id.blank?
+
+      browser.element(css: "##{link_id}").click
+      url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
 
       ret = download_document(type, tracking_number, url, options)
 
