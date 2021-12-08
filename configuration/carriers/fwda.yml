@@ -103,7 +103,9 @@
     - :winery_delivery
     - :winery_pickup
 :api:
-  :domain: api.forwardair.com
+  :domains:
+    :production: api.forwardair.com
+    :test: test-api.forwardair.com
   :endpoints:
     :pickup: /ltlservices/v2/rest/waybills/book/json
     :rates: /ltlservices/v2/rest/waybills/quote/json

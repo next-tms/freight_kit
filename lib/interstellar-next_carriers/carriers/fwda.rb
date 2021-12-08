@@ -154,9 +154,9 @@ module Interstellar
         {
           description: package.description || 'Freight',
           freightClass: package.freight_class.to_s,
-          pieces: package.quantity,
+          pieces: package.quantity.to_s,
           weightType: 'L',
-          weight: package.pounds(:total).ceil
+          weight: package.pounds(:total).ceil.to_s
         }
       end
     end
@@ -167,7 +167,8 @@ module Interstellar
     end
 
     def base_url
-      "https://#{@conf.dig(:api, :domain)}"
+      env = @test_mode ? :test : :production
+      "https://#{@conf.dig(:api, :domains, env)}"
     end
 
     def build_headers(options = {})
@@ -213,7 +214,12 @@ module Interstellar
                    HTTParty.get(url, headers: headers)
                  end
 
-      JSON.parse(response.body)
+      json = JSON.parse(response.body)
+      error = json['errorMessage']
+
+      raise Interstellar::InvalidCredentialsError if !error.blank? && error.downcase.include?('not authorized')
+
+      json
     end
 
     # Documents
@@ -240,84 +246,93 @@ module Interstellar
       shipper_phone:,
       shipper_reference:
     )
+
       options = @options
       pickup_accessorials, delivery_accessorials = build_accessorials(accessorials)
 
-      shipper_phone = shipper_phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
-      shipper_phone = shipper_phone[1..] if shipper_phone.length == 11
-
-      receiver_phone = receiver_phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
-      receiver_phone = receiver_phone[1..] if receiver_phone.length == 11
+      shipper_phone = shipper_phone.delete('^0-9')
+      receiver_phone = receiver_phone.delete('^0-9')
 
       request = {
         headers: build_headers(options),
         method: @conf.dig(:api, :methods, :pickup),
-        testmode: @options[:test] ? 'Y' : 'N',
         url: build_url(:pickup, options),
         body: {
-          orderAction: 'Create',
-          billToCustomerNumber: options[:account],
-          shipperCustomerNumber: options[:account],
-          order: {
-            declaredValue: 0,
-            freightDetails: { freightDetail: build_freight_details(packages) },
+          testmode: test_mode? ? 'Y' : 'N',
+          consignee: {
+            consigneeAddress1: destination.to_hash[:address1],
+            consigneeAddress2: '',
+            consigneeCity: destination.to_hash[:city],
+            consigneeCloseTime: delivery_to.strftime('%H:%M:00'),
+            consigneeContactEmail: '',
+            consigneeContactName: receiver_contact_name || 'Receiving',
+            consigneeContactPhone: receiver_phone || '',
+            consigneeCountry: destination.country.code(:alpha2).to_s,
+            consigneeLocationName: receiver_name,
+            consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
+            consigneeState: destination.to_hash[:province],
+            consigneeZipCode: destination.to_hash[:postal_code].to_s
+          },
+          shipper: {
+            shipperAddress1: origin.to_hash[:address1],
+            shipperAddress2: '',
+            shipperCity: origin.to_hash[:city],
+            shipperCloseTime: pickup_to.strftime('%H:%M:00'),
+            shipperContactEmail: '',
+            shipperContactName: shipper_contact_name || 'Shipping',
+            shipperContactPhone: shipper_phone || '',
+            shipperCountry: origin.country.code(:alpha2).to_s,
+            shipperLocationName: shipper_name,
+            shipperOpenTime: pickup_from.strftime('%H:%M:00'),
+            shipperState: origin.to_hash[:province],
+            shipperZipCode: origin.to_hash[:postal_code].to_s
+          },
+          orderDetails: {
+            airbillNumber: '00000000',
+            billToCustomerNumber: options[:account]&.to_s || '',
+            customerReferenceNumber: '00000000',
+            declaredValue: '0',
+            description: 'Testing',
+            destinationAirportCode: '',
+            guaranteedService: 'N',
             hazmat: packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
             inBondShipment: 'N',
+            orderAction: 'CREATE',
+            originAirportCode: '',
             shippingDate: pickup_from.strftime('%Y-%m-%d'),
-            special_instructions: '',
-            consignee: {
-              consigneeAddress1: destination.to_hash[:address1],
-              consigneeCity: destination.to_hash[:city],
-              consigneeCloseTime: delivery_to.strftime('%H:%M:00'),
-              consigneeContactEmail: '',
-              consigneeContactName: receiver_contact_name || 'Receiving',
-              consigneeContactPhone: receiver_phone || '',
-              consigneeCountry: destination.country.code(:alpha2).to_s,
-              consigneeLocationName: receiver_name,
-              consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
-              consigneeState: destination.to_hash[:province],
-              consigneeZipCode: destination.to_hash[:postal_code].to_s
+            shipperCustomerNumber: '',
+            specialInstructions: '',
+            dimensions: {
+              dimension: packages.map do |package|
+                {
+                  height: package.inches(:height).ceil.to_s,
+                  length: package.inches(:length).ceil.to_s,
+                  width: package.inches(:width).ceil.to_s,
+                  pieces: package.quantity.to_s
+                }
+              end
             },
+            freightDetails: { freightDetail: build_freight_details(packages) },
             delivery: {
-              destinationZipCode: destination.to_hash[:postal_code].to_s.upcase,
-              delivery: {
-                airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
-                deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
-              }
+              airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
+              deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
             },
-            dimensions: packages.map do |package|
-              {
-                height: package.inches(:height).ceil,
-                length: package.inches(:length).ceil,
-                width: package.inches(:width).ceil,
-                pieces: package.quantity
-              }
-            end,
             emergencyContact: {
-              email: '',
-              name: '',
-              phone: ''
+              email: 'test@example.com',
+              name: 'Brody Hoskins',
+              phone: '1111111111'
             },
             pickup: {
-              originZipCode: origin.to_hash[:postal_code].to_s.upcase,
-              pickup: {
-                airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
-                pickupAccessorials: { pickupAccessorial: pickup_accessorials },
-                pickupReadyTime: pickup_from.strftime('%H:%M:00')
-              }
+              airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
+              pickupAccessorials: { pickupAccessorial: pickup_accessorials },
+              pickupReadyTime: pickup_from.strftime('%H:%M:00')
             },
-            shipper: {
-              shipperAddress1: origin.to_hash[:address1],
-              shipperCity: origin.to_hash[:city],
-              shipperCloseTime: pickup_to.strftime('%H:%M:00'),
-              shipperContactEmail: '',
-              shipperContactName: shipper_contact_name || 'Shipping',
-              shipperContactPhone: shipper_phone || '',
-              shipperCountry: origin.country.code(:alpha2).to_s,
-              shipperLocationName: shipper_name,
-              shipperOpenTime: pickup_from.strftime('%H:%M:00'),
-              shipperState: origin.to_hash[:province],
-              shipperZipCode: origin.to_hash[:postal_code].to_s
+            referenceNumbers: {
+              referenceNumber: [
+                shipper_reference,
+                'TEST',
+                'TEST'
+              ]
             }
           }
         }.to_json
@@ -328,7 +343,6 @@ module Interstellar
     end
 
     def parse_pickup_response(response)
-      pp response
       response&.dig('AirbillNumber')
     end
 
@@ -363,7 +377,7 @@ module Interstellar
           freightDetails: { freightDetail: freight_details },
           hazmat: packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
           inBondShipment: 'N',
-          declaredValue: 0,
+          declaredValue: '0',
           shippingDate: Date.current.strftime('%Y-%m-%d')
         }.to_json
       }
@@ -381,12 +395,12 @@ module Interstellar
         message = 'API Error: Unknown response'
       elsif response.key?('errorMessage')
         success = false
-        message = response.dig('errorMessage')
+        message = response['errorMessage']
       else
-        cost = response.dig('quoteTotal')
+        cost = response['quoteTotal']
         if cost
           cost = (cost.to_f * 100).to_i
-          transit_days = response.dig('transitDaysTotal')
+          transit_days = response['transitDaysTotal']
 
           rate_estimates = [
             RateEstimate.new(
