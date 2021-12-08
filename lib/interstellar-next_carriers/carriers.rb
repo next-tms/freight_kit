@@ -33,7 +33,6 @@ Interstellar::Carriers.register :SEFL, 'interstellar-next_carriers/carriers/sefl
 Interstellar::Carriers.register :WRDS, 'interstellar-next_carriers/carriers/wrds'
 
 # Based on Platform
-Interstellar::Carriers.register :CLNI, 'interstellar-next_carriers/carriers/clni'
 Interstellar::Carriers.register :CTBV, 'interstellar-next_carriers/carriers/ctbv'
 Interstellar::Carriers.register :JFJTransportation, 'interstellar-next_carriers/carriers/jfj_transportation'
 Interstellar::Carriers.register :FCSY, 'interstellar-next_carriers/carriers/fcsy'
