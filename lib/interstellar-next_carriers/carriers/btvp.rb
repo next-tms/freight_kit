@@ -267,8 +267,12 @@ module Interstellar
         success = false
         message = 'API Error: Unknown response'
       elsif !response.dig(:getquote_response, :return, :rating, :errorcode).blank?
+        error_code = response.dig(:getquote_response, :return, :rating, :errorcode)
+
+        raise Interstellar::UnserviceableError if error_code == 'NOSVC'
+
         success = false
-        message = response.dig(:getquote_response, :return, :rating, :errorcode)
+        message = error_code
       else
         cost = (response.dig(:getquote_response, :return, :rating, :amount).to_f * 100).to_i
 
@@ -376,7 +380,7 @@ module Interstellar
 
     def parse_tracking_response(response)
       raise Interstellar::ShipmentNotFoundError unless response.dig(:tracktrace_response, :return, :currentstatus,
-                                                               :errorcode).blank?
+                                                                    :errorcode).blank?
 
       receiver_address = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :city).titleize,
