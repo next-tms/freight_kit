@@ -50,6 +50,9 @@ module Interstellar
       delivery_from:,
       delivery_to:,
       destination:,
+      dispatcher_email:,
+      dispatcher_name:,
+      dispatcher_phone:,
       origin:,
       packages:,
       pickup_from:,
@@ -57,6 +60,7 @@ module Interstellar
       receiver_contact_name:,
       receiver_name:,
       receiver_phone:,
+      receiver_reference:,
       scac:,
       service:,
       shipper_contact_name:,
@@ -70,6 +74,9 @@ module Interstellar
         delivery_from: delivery_from,
         delivery_to: delivery_to,
         destination: destination,
+        dispatcher_email: dispatcher_email,
+        dispatcher_name: dispatcher_name,
+        dispatcher_phone: dispatcher_phone,
         origin: origin,
         packages: packages,
         pickup_from: pickup_from,
@@ -77,6 +84,7 @@ module Interstellar
         receiver_contact_name: receiver_contact_name,
         receiver_name: receiver_name,
         receiver_phone: receiver_phone,
+        receiver_reference: receiver_reference,
         scac: scac,
         service: service,
         shipper_contact_name: shipper_contact_name,
@@ -177,7 +185,7 @@ module Interstellar
         return JSON_HEADERS.merge(
           'user': options[:username],
           'password': options[:password],
-          'customerId': options[:account]
+          'customerId': options[:username]&.upcase
         )
       end
 
@@ -209,7 +217,7 @@ module Interstellar
 
       response = case method
                  when :post
-                   HTTParty.post(url, headers: headers, body: body, debug_output: $stdout)
+                   HTTParty.post(url, headers: headers, body: body)
                  else
                    HTTParty.get(url, headers: headers)
                  end
@@ -217,9 +225,12 @@ module Interstellar
       json = JSON.parse(response.body)
       error = json['errorMessage']
 
-      raise Interstellar::InvalidCredentialsError if !error.blank? && error.downcase.include?('not authorized')
+      return json if error.blank?
 
-      json
+      raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('not authorized')
+      raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('shipper client does not exist')
+
+      raise Interstellar::ResponseError, error
     end
 
     # Documents
@@ -232,6 +243,9 @@ module Interstellar
       delivery_from:,
       delivery_to:,
       destination:,
+      dispatcher_email:,
+      dispatcher_name:,
+      dispatcher_phone:,
       origin:,
       packages:,
       pickup_from:,
@@ -239,6 +253,7 @@ module Interstellar
       receiver_contact_name:,
       receiver_name:,
       receiver_phone:,
+      receiver_reference:,
       scac:,
       service:,
       shipper_contact_name:,
@@ -250,6 +265,7 @@ module Interstellar
       options = @options
       pickup_accessorials, delivery_accessorials = build_accessorials(accessorials)
 
+      dispatcher_phone = dispatcher_phone.delete('^0-9')
       shipper_phone = shipper_phone.delete('^0-9')
       receiver_phone = receiver_phone.delete('^0-9')
 
@@ -300,7 +316,7 @@ module Interstellar
             orderAction: 'CREATE',
             originAirportCode: '',
             shippingDate: pickup_from.strftime('%Y-%m-%d'),
-            shipperCustomerNumber: '',
+            shipperCustomerNumber: options[:account]&.to_s || '',
             specialInstructions: '',
             dimensions: {
               dimension: packages.map do |package|
@@ -318,9 +334,9 @@ module Interstellar
               deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
             },
             emergencyContact: {
-              email: 'test@example.com',
-              name: 'Brody Hoskins',
-              phone: '1111111111'
+              email: dispatcher_email,
+              name: dispatcher_name,
+              phone: dispatcher_phone
             },
             pickup: {
               airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
@@ -330,8 +346,8 @@ module Interstellar
             referenceNumbers: {
               referenceNumber: [
                 shipper_reference,
-                'TEST',
-                'TEST'
+                receiver_reference,
+                ''
               ]
             }
           }
@@ -343,7 +359,7 @@ module Interstellar
     end
 
     def parse_pickup_response(response)
-      response&.dig('AirbillNumber')
+      response['airbillNumber']
     end
 
     # Rates
