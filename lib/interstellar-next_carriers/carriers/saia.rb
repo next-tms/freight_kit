@@ -149,8 +149,13 @@ module Interstellar
         error = response.dig(:create_response, :create_result, :code)
 
         if !error.blank?
-          success = false
           message = response.dig(:create_response, :create_result, :message)
+
+          if message.downcase.include?('must not exceed 10 lines')
+            raise Interstellar::UnserviceableError, "#{error}: #{message}"
+          else
+            raise Interstellar::ResponseError, "#{error}: #{message}"
+          end
         else
           response = response.dig(:create_response, :create_result)
           cost = response[:total_invoice]
