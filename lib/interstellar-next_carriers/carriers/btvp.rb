@@ -40,14 +40,14 @@ module Interstellar
       destination = Location.from(destination)
       packages = Array(packages)
 
-      raise UnserviceableError, "Error: #{@@name}: Pallet count of 5+ unsupported" if packages.sum(&:quantity) >= 5
+      raise UnserviceableError, 'Shipment must be five or fewer pallets' if packages.sum(&:quantity) >= 5
 
       if packages.map { |p| p.height(:inches) }.max.ceil >= 95
-        raise UnserviceableError, "Error: #{@@name}: Height of 95+ inches unsupported"
+        raise UnserviceableError, 'Shipment must be less than 95 inches tall'
       end
 
       if packages.sum { |p| p.pounds(:total) }.ceil >= 10_000
-        raise UnserviceableError, "Error: #{@@name}: Weight of 10,000+ lbs unsupported"
+        raise UnserviceableError, 'Shipment must be less than 10,000 lbs'
       end
 
       request = build_rate_request(origin, destination, packages, options)

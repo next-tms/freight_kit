@@ -17,6 +17,8 @@ module Interstellar
       destination = Location.from(destination)
       packages = Array(packages)
 
+      raise UnserviceableError, 'Shipment must be fewer than 10 pieces' if packages.sum(&:quantity) > 10
+
       request = build_rate_request(origin, destination, packages, options)
       parse_rate_response(origin, destination, commit_soap(:rates, request))
     end
