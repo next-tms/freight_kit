@@ -177,7 +177,7 @@ module Interstellar
 
       case method
       when :post
-        HTTParty.post(url, headers: headers, body: body, debug_output: $stdout)
+        HTTParty.post(url, headers: headers, body: body)
       else
         HTTParty.get(url, headers: headers)
       end
