@@ -248,6 +248,12 @@ module Interstellar
         success = false
         message = 'API Error: Unknown response'
       else
+        credentials_error = response.dig(:get_rates_response, :get_rates_result, :return_line)
+
+        if !credentials_error.blank? && credentials_error.downcase.include?('not a valid customer code')
+          raise InvalidCredentialsError, credentials_error
+        end
+
         error = response.dig(:get_rates_response, :get_rates_result, :rate_error)
         quote_number = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number).blank?
 
@@ -259,6 +265,7 @@ module Interstellar
           message = error
         else
           cost = response.dig(:get_rates_response, :get_rates_result, :totals)
+
           if cost
             cost = cost.sub('$', '').sub(',', '').sub('.', '').to_i
             transit_days = response.dig(:get_rates_response, :get_rates_result, :transit_days).to_i
