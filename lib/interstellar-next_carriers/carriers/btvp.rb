@@ -40,8 +40,6 @@ module Interstellar
       destination = Location.from(destination)
       packages = Array(packages)
 
-      raise UnserviceableError, 'Shipment must be five or fewer pallets' if packages.sum(&:quantity) >= 5
-
       if packages.map { |p| p.height(:inches) }.max.ceil >= 95
         raise UnserviceableError, 'Shipment must be less than 95 inches tall'
       end
