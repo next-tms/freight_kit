@@ -7,6 +7,8 @@
     :residential_pickup: '&NONCMPU=yes'
   # May be inaccurate
   :unquotable:
+    - :airport_delivery
+    - :airport_pickup
     - :amusement_park_delivery
     - :amusement_park_pickup
     - :athletic_facility_delivery
@@ -74,8 +76,6 @@
     - :utility_site_pickup
   # May be inaccurate
   :unserviceable:
-    - :airport_delivery
-    - :airport_pickup
     - :appointment_pickup
     - :brewery_delivery
     - :brewery_pickup
