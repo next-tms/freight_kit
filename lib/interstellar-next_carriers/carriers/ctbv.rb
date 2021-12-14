@@ -8,6 +8,22 @@ module Interstellar
     @@name = 'The Custom Companies'
     @@scac = 'CTBV'
 
+    def maximum_height
+      Measured::Length.new(95, :inches)
+    end
+
+    def maximum_weight
+      Measured::Weight.new(10_000, :pounds)
+    end
+
+    def minimum_length_for_overlength_fees
+      Measured::Length.new(8, :feet)
+    end
+
+    def overlength_fees_require_tariff?
+      false
+    end
+
     # Documents
 
     # Rates
