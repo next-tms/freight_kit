@@ -177,7 +177,7 @@ module Interstellar
 
       case method
       when :post
-        HTTParty.post(url, headers: headers, body: body)
+        HTTParty.post(url, headers: headers, body: body, debug_output: $stdout)
       else
         HTTParty.get(url, headers: headers)
       end
@@ -200,7 +200,7 @@ module Interstellar
 
     def request_url(action)
       env = test_mode? ? :staging : :production
-      "https://#{@conf.dig(:api, :domains, env, action)}/#{@conf.dig(:api, :endpoints, action)}"
+      "https://#{@conf.dig(:api, :domains, env, action)}#{@conf.dig(:api, :endpoints, action)}"
     end
 
     # Documents
