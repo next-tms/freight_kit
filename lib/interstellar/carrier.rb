@@ -294,6 +294,22 @@ module Interstellar
       true
     end
 
+    def overlength_fee(tarrif, package)
+      max_dimension_inches = [package.length(:inches), package.width(:inches)].max
+
+      return 0 if max_dimension_inches < minimum_length_for_overlength_fees.convert_to(:inches).value
+
+      tarrif.overlength_rules.each do |overlength_rule|
+        next if max_dimension_inches < overlength_rule[:min_length].convert_to(:inches).value
+
+        if overlength_rule[:max_length].blank? || max_dimension_inches <= overlength_rule[:max_length].convert_to(:inches).value
+          return (package.quantity * overlength_rule[:fee_cents])
+        end
+      end
+
+      0
+    end
+
     # Determine whether the carrier will accept the packages.
     # @param packages [Array<Package>]
     # @param tariff [Hash]
@@ -313,7 +329,7 @@ module Interstellar
         message << "items must weigh #{max_weight_pounds.to_f} lbs or less"
       end
 
-      if overlength_fees_require_tariff? && tariff.blank?
+      if overlength_fees_require_tariff? && (tariff.blank? || !tariff.is_a?(Interstellar::Tariff))
         missing_dimensions = packages.map do |p|
           [p.height(:inches), p.length(:inches), p.width(:inches)].any?(&:zero?)
         end.any?(true)
