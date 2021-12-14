@@ -286,14 +286,22 @@ module Interstellar
         raise NotImplementedError, "#{self.class.name}: #serviceable_accessorials? not supported"
       end
 
-      serviceable_accessorials = @conf.dig(:accessorials, :mappable).keys + @conf.dig(:accessorials, :unquotable)
-      serviceable_count = (serviceable_accessorials & accessorials).size
+      unserviceable_accessorials = []
 
-      unserviceable_accessorials = @conf.dig(:accessorials, :unserviceable)
-      unserviceable_count = (unserviceable_accessorials & accessorials).size
+      accessorials.each do |accessorial|
+        if @conf.dig(:accessorials, :unserviceable).any?(accessorial)
+          unserviceable_accessorials << accessorial
+          next
+        end
 
-      if serviceable_count != accessorials.size || !unserviceable_count.zero?
-        raise ArgumentError, "#{self.class.name}: Some accessorials unserviceable"
+        next if @conf.dig(:accessorials, :mappable).keys.any?(accessorial)
+        next if @conf.dig(:accessorials, :unquotable).any?(accessorial)
+
+        unserviceable_accessorials << accessorial
+      end
+
+      unless unserviceable_accessorials.blank?
+        raise Interstellar::UnserviceableAccessorialsError.new(accessorials: unserviceable_accessorials)
       end
 
       true
