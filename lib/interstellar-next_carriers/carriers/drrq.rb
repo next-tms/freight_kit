@@ -185,6 +185,8 @@ module Interstellar
 
     def parse_response(response)
       case response.code
+      when 204
+        return {}
       when 401
         raise Interstellar::InvalidCredentialsError, "HTTP #{response.code}: #{response}"
       end
@@ -522,13 +524,15 @@ module Interstellar
         }
       end
 
+      pickup_date = DateTime.now + 1.day
+
       body = {
         Constraints: {
           ServiceFlags: accessorials
         },
         Items: items,
         PickupEvent: {
-          Date: DateTime.now.strftime('%m/%d/%Y %I:%M:00 %p'),
+          Date: pickup_date.strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'PLocationCode',
           City: origin.to_hash[:city].upcase,
           State: origin.to_hash[:province].upcase,
@@ -560,6 +564,8 @@ module Interstellar
 
     def parse_rate_response(origin, destination, response)
       response = parse_response(response)
+
+      raise UnserviceableError, 'No rates found' if response.blank?
 
       success = true
       message = ''
