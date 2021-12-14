@@ -17,7 +17,7 @@ module Interstellar
     end
 
     def minimum_length_for_overlength_fees
-      Measured::Length.new(6, :feet)
+      Measured::Length.new(12, :feet)
     end
 
     def overlength_fees_require_tariff?
