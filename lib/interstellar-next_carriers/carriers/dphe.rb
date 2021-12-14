@@ -233,9 +233,11 @@ module Interstellar
         quote_number = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number).blank?
 
         # error on its own isn't reliable indicator of error - returns false on error
-        if !error.blank? || quote_number
+        if !error.blank? || !quote_number
+          raise Interstellar::UnserviceableError, error if error.downcase.include?('not a direct service point')
+
           success = false
-          message = response.dig(:get_rates_response, :get_rates_result, :return_line)
+          message = error
         else
           cost = response.dig(:get_rates_response, :get_rates_result, :totals)
           if cost
@@ -324,7 +326,7 @@ module Interstellar
 
     def parse_tracking_response(response)
       raise Interstellar::ShipmentNotFoundError if response.dig(:get_tracking_response, :get_tracking_result,
-                                                           :tracking_status_response).blank?
+                                                                :tracking_status_response).blank?
 
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 
