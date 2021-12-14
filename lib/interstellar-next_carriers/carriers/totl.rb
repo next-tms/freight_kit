@@ -8,6 +8,22 @@ module Interstellar
     @@name = 'Total Transportation'
     @@scac = 'TOTL'
 
+    def maximum_height
+      Measured::Length.new(95, :inches)
+    end
+
+    def maximum_weight
+      Measured::Weight.new(10_000, :pounds)
+    end
+
+    def minimum_length_for_overlength_fees
+      Measured::Length.new(40, :inches)
+    end
+
+    def overlength_fees_require_tariff?
+      false
+    end
+
     def requirements
       %i[username password account]
     end

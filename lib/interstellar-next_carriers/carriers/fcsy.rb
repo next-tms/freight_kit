@@ -8,6 +8,22 @@ module Interstellar
     @@name = 'Frontline Freight'
     @@scac = 'FCSY'
 
+    def maximum_height
+      Measured::Length.new(95, :inches)
+    end
+
+    def maximum_weight
+      Measured::Weight.new(10_000, :pounds)
+    end
+
+    def minimum_length_for_overlength_fees
+      Measured::Length.new(6, :feet)
+    end
+
+    def overlength_fees_require_tariff?
+      true
+    end
+
     # Documents
 
     # Rates

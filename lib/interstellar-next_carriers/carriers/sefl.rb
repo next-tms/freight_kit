@@ -14,14 +14,33 @@ module Interstellar
       'Content-Type' => 'application/x-www-form-urlencoded'
     }.freeze
 
+    def maximum_height
+      Measured::Length.new(95, :inches)
+    end
+
+    def maximum_weight
+      Measured::Weight.new(10_000, :pounds)
+    end
+
+    def minimum_length_for_overlength_fees
+      Measured::Length.new(8, :feet)
+    end
+
+    def overlength_fees_require_tariff?
+      false
+    end
+
     # Documents
 
     # Rates
     def find_rates(origin, destination, packages, options = {})
       options = @options.merge(options)
+
       origin = Location.from(origin)
       destination = Location.from(destination)
       packages = Array(packages)
+
+      validate_packages(packages)
 
       request = build_rate_request(origin, destination, packages, options)
       parse_rate_response(origin, destination, commit(request))

@@ -18,6 +18,10 @@ module Interstellar
       nil
     end
 
+    def overlength_fees_require_tariff?
+      false
+    end
+
     def requirements
       %i[username password]
     end
@@ -113,9 +117,13 @@ module Interstellar
 
     def find_rates(origin, destination, packages, options = {})
       options = @options.merge(options)
+
       origin = Location.from(origin)
       destination = Location.from(destination)
       packages = Array(packages)
+
+      # Not necessary
+      # validate_packages(packages)
 
       request = build_rate_request(origin, destination, packages, options)
       parse_rate_response(origin, destination, commit(request))
