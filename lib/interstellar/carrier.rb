@@ -314,10 +314,18 @@ module Interstellar
       end
 
       if overlength_fees_require_tariff? && tariff.blank?
-        max_length_inches = minimum_length_for_overlength_fees.convert_to(:inches).value
+        missing_dimensions = packages.map do |p|
+          [p.height(:inches), p.length(:inches), p.width(:inches)].any?(&:zero?)
+        end.any?(true)
 
-        unless packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max < max_length_inches
-          message << 'tariff must be defined to calculate overlength fees'
+        if missing_dimensions
+          message << 'item dimensions are required'
+        else
+          max_length_inches = minimum_length_for_overlength_fees.convert_to(:inches).value
+
+          unless packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max < max_length_inches
+            message << 'tariff must be defined to calculate overlength fees'
+          end
         end
       end
 
