@@ -285,19 +285,8 @@ module Interstellar
       else
         cost = (response.dig(:getquote_response, :return, :rating, :amount).to_f * 100).to_i
 
-        longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
-        if !@options[:tariff].blank?
-          if longest_dimension >= 168
-            cost += @options[:tariff]['overlength_fees']['over_14_ft']
-          elsif longest_dimension >= 144 && longest_dimension < 168
-            cost += @options[:tariff]['overlength_fees']['12_through_14_ft']
-          elsif longest_dimension >= 120 && longest_dimension < 144
-            cost += @options[:tariff]['overlength_fees']['10_through_12_ft']
-          elsif longest_dimension >= 96 && longest_dimension < 120
-            cost += @options[:tariff]['overlength_fees']['8_through_10_ft']
-          end
-        elsif longest_dimension >= 96
-          warn 'API Warning: Overlength fees not applied because `tariff` is empty!'
+        packages.each do |package|
+          cost += overlength_fee(@options[:tariff], package)
         end
 
         transit_days = response.dig(
