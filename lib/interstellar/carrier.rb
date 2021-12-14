@@ -264,16 +264,66 @@ module Interstellar
       true
     end
 
+    # The address field maximum length accepted by the carrier
+    # @return [Integer]
+    def maximum_address_field_length
+      255
+    end
+
+    # The maximum height the carrier will accept.
+    # @return [Measured::Weight]
+    def maximum_height
+      Measured::Length.new(95, :inches)
+    end
+
     # The maximum weight the carrier will accept.
     # @return [Measured::Weight]
     def maximum_weight
       Measured::Weight.new(10_000, :pounds)
     end
 
-    # The address field maximum length accepted by the carrier
-    # @return [Integer]
-    def maximum_address_field_length
-      255
+    # What length overlength fees the carrier begins charging at.
+    # @return [Measured::Length]
+    def minimum_length_for_overlength_fees
+      Measured::Length.new(48, :inches)
+    end
+
+    # Whether or not the carrier quotes overlength fees via API
+    # @return [Boolean]
+    def overlength_fees_require_tariff?
+      true
+    end
+
+    # Determine whether the carrier will accept the packages.
+    # @param packages [Array<Package>]
+    # @param tariff [Hash]
+    # @return [Boolean]
+    def validate_packages(packages, tariff = nil)
+      return false if packages.blank?
+
+      message = []
+
+      max_height_inches = maximum_height.convert_to(:inches).value
+      unless packages.map { |p| p.height(:inches) }.max <= max_height_inches
+        message << "items must be #{max_height_inches.to_f} inches tall or less"
+      end
+
+      max_weight_pounds = maximum_weight.convert_to(:pounds).value
+      unless packages.sum { |p| p.pounds(:total) } <= max_weight_pounds
+        message << "items must weigh #{max_weight_pounds.to_f} lbs or less"
+      end
+
+      if overlength_fees_require_tariff? && tariff.blank?
+        max_length_inches = minimum_length_for_overlength_fees.convert_to(:inches).value
+
+        unless packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max < max_length_inches
+          message << 'tariff must be defined to calculate overlength fees'
+        end
+      end
+
+      raise UnserviceableError, message.join(', ').capitalize unless message.blank?
+
+      true
     end
 
     def serviceable_accessorials?(accessorials)
