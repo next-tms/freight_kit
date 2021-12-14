@@ -43,9 +43,14 @@ module Interstellar
       if !response
         success = false
         message = 'API Error: Unknown response'
-      elsif response['error']
+      elsif !response.dig('error', 'errormessage').blank?
+        error = response.dig('error', 'errormessage')
+        raise Interstellar::InvalidCredentialsError if error.downcase.include?('invalid username/password')
+        raise Interstellar::UnserviceableError, error if error.downcase.include?('is not available')
+        raise Interstellar::UnserviceableError, error if error.downcase.include?('out of the serviceable area')
+
         success = false
-        message = response['error']
+        message = error
       else
         cost = response.dig('ratequote', 'quotetotal').delete(',').delete('.').to_i
         transit_days = response.dig('ratequote', 'busdays').to_i
