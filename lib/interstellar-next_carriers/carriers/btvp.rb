@@ -269,28 +269,28 @@ module Interstellar
     # Pickups
 
     def parse_pickup_response(
-      accessorials: accessorials,
-      customer_reference: customer_reference,
-      delivery_from: delivery_from,
-      delivery_to: delivery_to,
-      destination: destination,
-      dispatcher_email: dispatcher_email,
-      dispatcher_name: dispatcher_name,
-      dispatcher_phone: dispatcher_phone,
-      origin: origin,
-      packages: packages,
-      pickup_from: pickup_from,
-      pickup_to: pickup_to,
-      receiver_contact_name: receiver_contact_name,
-      receiver_name: receiver_name,
-      receiver_phone: receiver_phone,
-      receiver_reference: receiver_reference,
-      scac: scac,
-      service: service,
-      shipper_contact_name: shipper_contact_name,
-      shipper_name: shipper_name,
-      shipper_phone: shipper_phone,
-      shipper_reference: shipper_reference
+      accessorials:,
+      customer_reference:,
+      delivery_from:,
+      delivery_to:,
+      destination:,
+      dispatcher_email:,
+      dispatcher_name:,
+      dispatcher_phone:,
+      origin:,
+      packages:,
+      pickup_from:,
+      pickup_to:,
+      receiver_contact_name:,
+      receiver_name:,
+      receiver_phone:,
+      receiver_reference:,
+      scac:,
+      service:,
+      shipper_contact_name:,
+      shipper_name:,
+      shipper_phone:,
+      shipper_reference:
     )
       options = @options
       browser = Watir::Browser.new(*options[:watir_args])
@@ -345,13 +345,9 @@ module Interstellar
       browser.text_field(name: 'DSTPC_1').set(packages.map { |p| p.quantity }.sum)
       browser.text_field(name: 'DSPLT_1').set(packages.map { |p| p.quantity }.sum)
 
-      if packages.map(&:hazmat?).include?(true)
-        browser.checkbox(name: 'DSHAZ_1').check
-      end
+      browser.checkbox(name: 'DSHAZ_1').check if packages.map(&:hazmat?).include?(true)
 
-      if accessorials.include?(:liftgate_pickup)
-        browser.checkbox(name: 'DSLIFT_1').check
-      end
+      browser.checkbox(name: 'DSLIFT_1').check if accessorials.include?(:liftgate_pickup)
 
       browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div/div[1]/div/button[2]/span').click
 
@@ -378,7 +374,7 @@ module Interstellar
       browser.element(xpath: '/html/body/div[10]/div[11]/div/button[1]').wait_until(&:present?).click
       browser.close
 
-      return pickup_number
+      pickup_number
     end
 
     # Rates
