@@ -48,6 +48,62 @@ module Interstellar
       true
     end
 
+    # Pickups
+
+    def create_pickup(
+      accessorials:,
+      customer_reference:,
+      delivery_from:,
+      delivery_to:,
+      destination:,
+      dispatcher_email:,
+      dispatcher_name:,
+      dispatcher_phone:,
+      origin:,
+      packages:,
+      pickup_from:,
+      pickup_to:,
+      receiver_contact_name:,
+      receiver_name:,
+      receiver_phone:,
+      receiver_reference:,
+      scac:,
+      service:,
+      shipper_contact_name:,
+      shipper_name:,
+      shipper_phone:,
+      shipper_reference:
+    )
+      parse_pickup_response(
+        accessorials: accessorials,
+        customer_reference: customer_reference,
+        delivery_from: delivery_from,
+        delivery_to: delivery_to,
+        destination: destination,
+        dispatcher_email: dispatcher_email,
+        dispatcher_name: dispatcher_name,
+        dispatcher_phone: dispatcher_phone,
+        origin: origin,
+        packages: packages,
+        pickup_from: pickup_from,
+        pickup_to: pickup_to,
+        receiver_contact_name: receiver_contact_name,
+        receiver_name: receiver_name,
+        receiver_phone: receiver_phone,
+        receiver_reference: receiver_reference,
+        scac: scac,
+        service: service,
+        shipper_contact_name: shipper_contact_name,
+        shipper_name: shipper_name,
+        shipper_phone: shipper_phone,
+        shipper_reference: shipper_reference
+      )
+    end
+
+    def create_pickup_implemented?
+      true
+    end
+
     # Rates
 
     def find_rates(origin, destination, packages, options = {})
@@ -208,6 +264,121 @@ module Interstellar
       browser.close
 
       ret
+    end
+
+    # Pickups
+
+    def parse_pickup_response(
+      accessorials: accessorials,
+      customer_reference: customer_reference,
+      delivery_from: delivery_from,
+      delivery_to: delivery_to,
+      destination: destination,
+      dispatcher_email: dispatcher_email,
+      dispatcher_name: dispatcher_name,
+      dispatcher_phone: dispatcher_phone,
+      origin: origin,
+      packages: packages,
+      pickup_from: pickup_from,
+      pickup_to: pickup_to,
+      receiver_contact_name: receiver_contact_name,
+      receiver_name: receiver_name,
+      receiver_phone: receiver_phone,
+      receiver_reference: receiver_reference,
+      scac: scac,
+      service: service,
+      shipper_contact_name: shipper_contact_name,
+      shipper_name: shipper_name,
+      shipper_phone: shipper_phone,
+      shipper_reference: shipper_reference
+    )
+      options = @options
+      browser = Watir::Browser.new(*options[:watir_args])
+      browser.goto(build_url(:pickup))
+
+      browser.text_field(name: 'userid').set(@options[:username])
+      browser.text_field(name: 'password').set(@options[:password])
+      browser.button(name: 'btnLogin').click
+
+      if browser.html.include?('You are not enrolled in any application environments on this server')
+        browser.close
+        raise Interstellar::InvalidCredentialsError,
+              'You are not enrolled in any application environments on this server'
+      end
+
+      if browser.html.include?('You already have the maximum permitted application sessions open')
+        browser.close
+        raise Interstellar::ResponseError, 'You already have the maximum permitted application sessions open'
+      end
+
+      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/img').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li[2]/span[2]').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[6]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/div/span/img').wait_until(&:present?).click
+
+      shipper_name = shipper_name.upcase.squish.strip
+      new_customer = true
+
+      browser.select_list(id: 'DPSC').wait_until(&:present?).click
+
+      if browser.select_list(id: 'DPSC').options.to_a.map(&:text).include?(shipper_name)
+        new_customer = false
+        browser.option(text: shipper_name).click
+      else
+        browser.option(text: '<new>').click
+
+        browser.text_field(name: 'SHPNAM').set(shipper_name.upcase)
+        browser.text_field(name: 'SHPAD1').set(origin.to_hash[:address1].upcase)
+        browser.text_field(name: 'SHPCTY').set(origin.to_hash[:city].upcase)
+        browser.text_field(name: 'SHPSTA').set(origin.to_hash[:province].upcase[..1])
+        browser.text_field(name: 'SHPZIP').set(origin.to_hash[:postal_code])
+      end
+
+      browser.text_field(name: 'DPADAT').set(pickup_from.to_date.strftime('%m/%d/%Y'))
+      browser.text_field(name: 'DPATIM').set(pickup_from.strftime('%H:%M'))
+      browser.text_field(name: 'DPCTIM').set(pickup_to.strftime('%H:%M'))
+
+      total_weight = packages.map { |p| p.pounds(:total) }.sum.ceil
+
+      browser.text_field(name: 'DSTWT_1').set(total_weight)
+      browser.text_field(name: 'DSDZIP_1').set(destination.to_hash[:postal_code])
+      browser.text_field(name: 'DSTPC_1').set(packages.map { |p| p.quantity }.sum)
+      browser.text_field(name: 'DSPLT_1').set(packages.map { |p| p.quantity }.sum)
+
+      if packages.map(&:hazmat?).include?(true)
+        browser.checkbox(name: 'DSHAZ_1').check
+      end
+
+      if accessorials.include?(:liftgate_pickup)
+        browser.checkbox(name: 'DSLIFT_1').check
+      end
+
+      browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div/div[1]/div/button[2]/span').click
+
+      if new_customer
+        browser.radio(id: 'CCS', value: 'NEW').wait_until(&:present?).select
+        browser.element(xpath: '/html/body/div[3]/div[2]/div[2]/div/div[1]/div/button[1]').click
+      end
+
+      browser.text_field(name: 'DPADAT').wait_until(&:present?).set(pickup_from.to_date.strftime('%m/%d/%Y'))
+      browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/form[1]/div/div[2]/div/div/table/tbody/tr/td[2]/a/img').click
+
+      html = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[3]/div[3]/div/table').wait_until(&:present?).html
+      html = Nokogiri::HTML.parse(html)
+
+      pickup_number = nil
+
+      html.css('tr').each do |tr|
+        next unless tr.text.include?(shipper_name) && tr.text.include?(total_weight)
+
+        pickup_number = tr.css('td')[1].text
+      end
+
+      browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/div[10]/div[11]/div/button[1]').wait_until(&:present?).click
+      browser.close
+
+      return pickup_number
     end
 
     # Rates
