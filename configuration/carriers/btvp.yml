@@ -110,15 +110,18 @@
   :domain: tgif1.bestovernite.com
   :endpoints:
     :bol: /xr0001.pgm
+    :pickup: /xr0001.pgm
     :pod: /xr0001.pgm
     :rates: /web/services/TQUOTEAPIService/TQUOTEAPI?wsdl
     :track: /web/services/TTRACKAPIService/TTRACKAPI?wsdl
   :ports:
     :bol: 8090
+    :pickup: 8090
     :pod: 8090
     :rates: 10032
     :track: 10032
   :use_ssl:
+    :pickup: false
     :rates: false
     :track: false
 :attributes:
