@@ -445,7 +445,10 @@ module Interstellar
       elsif !response.dig(:getquote_response, :return, :rating, :errorcode).blank?
         error_code = response.dig(:getquote_response, :return, :rating, :errorcode)
 
-        raise Interstellar::UnserviceableError if error_code == 'NOSVC'
+        if error_code == 'NOSVC'
+          raise Interstellar::UnserviceableError,
+                'Origin or destination has no service available'
+        end
 
         success = false
         message = error_code
