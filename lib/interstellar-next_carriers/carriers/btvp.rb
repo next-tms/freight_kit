@@ -439,15 +439,21 @@ module Interstellar
       success = true
       message = ''
 
+      return response
+
       if !response
         success = false
         message = 'API Error: Unknown response'
       elsif !response.dig(:getquote_response, :return, :rating, :errorcode).blank?
         error_code = response.dig(:getquote_response, :return, :rating, :errorcode)
 
-        if error_code == 'NOSVC'
+        case error_code
+        when 'NOSVC'
           raise Interstellar::UnserviceableError,
                 'Origin or destination has no service available'
+        when 'BADCONZIP'
+          raise Interstellar::UnserviceableError,
+                'Invalid destination ZIP code'
         end
 
         success = false
