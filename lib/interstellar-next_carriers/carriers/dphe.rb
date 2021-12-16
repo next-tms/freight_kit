@@ -254,21 +254,18 @@ module Interstellar
           raise InvalidCredentialsError, credentials_error
         end
 
-        if !error.blank? && error.downcase.include?('not a direct service point')
-          raise UnserviceableError, error
-        end
+        raise UnserviceableError, error if !error.blank? && error.downcase.include?('not a direct service point')
 
         error = response.dig(:get_rates_response, :get_rates_result, :rate_error)
-        quote_number = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number).blank?
+        quote_number = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number)
 
-        # error on its own isn't reliable indicator of error - returns false on error
-        if !error.blank? || !quote_number
+        # NOTE: error can be set to false by API
+        if error || !quote_number
           raise Interstellar::UnserviceableError, error if error.downcase.include?('not a direct service point')
 
           success = false
           message = error
         else
-          # return response
           cost = response.dig(:get_rates_response, :get_rates_result, :totals)
 
           if cost
