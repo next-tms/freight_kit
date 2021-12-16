@@ -171,10 +171,15 @@ module Interstellar
         if !error.blank?
           message = response.dig(:create_response, :create_result, :message)
 
-          if message.downcase.include?('must not exceed 10 lines')
+          case error
+          when 'DNF'
             raise Interstellar::UnserviceableError, "#{error}: #{message}"
           else
-            raise Interstellar::ResponseError, "#{error}: #{message}"
+            if message.downcase.include?('must not exceed 10 lines')
+              raise Interstellar::UnserviceableError, "#{error}: #{message}"
+            else
+              raise Interstellar::ResponseError, "#{error}: #{message}"
+            end
           end
         else
           response = response.dig(:create_response, :create_result)
