@@ -439,8 +439,6 @@ module Interstellar
       success = true
       message = ''
 
-      return response
-
       if !response
         success = false
         message = 'API Error: Unknown response'
