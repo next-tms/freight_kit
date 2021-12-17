@@ -100,7 +100,7 @@ module Interstellar
               { scac: self.class.scac.upcase, name: self.class.name },
               :standard,
               transit_days: transit_days,
-              estimate_reference: nil,
+              estimate_reference: response.dig('ratequote', 'quotenumber'),
               total_price: cost,
               currency: 'USD',
               with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
