@@ -15,7 +15,7 @@ module Interstellar
     }.freeze
 
     def maximum_height
-      Measured::Length.new(95, :inches)
+      Measured::Length.new(105, :inches)
     end
 
     def maximum_weight
