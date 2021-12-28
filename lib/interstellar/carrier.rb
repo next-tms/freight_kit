@@ -273,7 +273,7 @@ module Interstellar
     # The maximum height the carrier will accept.
     # @return [Measured::Weight]
     def maximum_height
-      Measured::Length.new(95, :inches)
+      Measured::Length.new(105, :inches)
     end
 
     # The maximum weight the carrier will accept.
