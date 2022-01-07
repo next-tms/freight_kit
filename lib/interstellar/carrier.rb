@@ -371,7 +371,7 @@ module Interstellar
           next
         end
 
-        next if !conf_mappable_accessorials.blank? && conf_mappable_accessorials.map(&:keys).flatten.any?(accessorial)
+        next if !conf_mappable_accessorials.blank? && conf_mappable_accessorials.keys.any?(accessorial)
         next if !conf_unquotable_accessorials.blank? && conf_unquotable_accessorials.any?(accessorial)
 
         unserviceable_accessorials << accessorial
