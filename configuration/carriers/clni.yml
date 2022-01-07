@@ -8,6 +8,7 @@
     :residential_pickup: RESPU
   # May be inaccurate
   :unquotable:
+    - :appointment_delivery
   # May be inaccurate
   :unserviceable:
     - :afterhours_delivery
@@ -16,7 +17,6 @@
     - :airport_pickup
     - :amusement_park_delivery
     - :amusement_park_pickup
-    - :appointment_delivery
     - :appointment_pickup
     - :athletic_facility_delivery
     - :athletic_facility_pickup
