@@ -44,7 +44,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'webmock', '~> 3.14.0'
 
   spec.add_dependency 'active_utils', '~> 3.3.1'
-  spec.add_dependency 'activesupport', '>= 4.2', '< 7.1'
+  spec.add_dependency 'activesupport', '>= 4.2', '< 7.0.2'
   spec.add_dependency 'httparty', '~> 0.10'
   spec.add_dependency 'measured', '>= 2.0'
   spec.add_dependency 'mimemagic', '~> 0.4.3'
