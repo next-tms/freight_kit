@@ -354,9 +354,9 @@ module Interstellar
       return true if accessorials.blank?
 
       if !self.class::REACTIVE_FREIGHT_CARRIER ||
-         !@conf.dig(:accessorials, :mappable) ||
-         !@conf.dig(:accessorials, :unquotable) ||
-         !@conf.dig(:accessorials, :unserviceable)
+         @conf.dig(:accessorials, :mappable).nil? ||
+         @conf.dig(:accessorials, :unquotable).nil? ||
+         @conf.dig(:accessorials, :unserviceable).nil?
         raise NotImplementedError, "#{self.class.name}: #serviceable_accessorials? not supported"
       end
 
