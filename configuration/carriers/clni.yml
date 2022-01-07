@@ -1,11 +1,11 @@
 :accessorials:
   :mappable:
-    - :inside_delivery: INSD
-    - :inside_pickup: INSP
-    - :liftgate_delivery: LIFTD
-    - :liftgate_pickup: LIFTP
-    - :residential_delivery: RESDLY
-    - :residential_pickup: RESPU
+    :inside_delivery: INSD
+    :inside_pickup: INSP
+    :liftgate_delivery: LIFTD
+    :liftgate_pickup: LIFTP
+    :residential_delivery: RESDLY
+    :residential_pickup: RESPU
   # May be inaccurate
   :unquotable:
   # May be inaccurate
