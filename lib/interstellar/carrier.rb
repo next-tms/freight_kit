@@ -353,23 +353,26 @@ module Interstellar
     def serviceable_accessorials?(accessorials)
       return true if accessorials.blank?
 
-      if !self.class::REACTIVE_FREIGHT_CARRIER ||
-         @conf.dig(:accessorials, :mappable).nil? ||
-         @conf.dig(:accessorials, :unquotable).nil? ||
-         @conf.dig(:accessorials, :unserviceable).nil?
+      unless self.class::REACTIVE_FREIGHT_CARRIER
         raise NotImplementedError, "#{self.class.name}: #serviceable_accessorials? not supported"
       end
+
+      return false if @conf.dig(:accessorials, :mappable).blank?
+
+      conf_mappable_accessorials = @conf.dig(:accessorials, :mappable)
+      conf_unquotable_accessorials = @conf.dig(:accessorials, :unquotable)
+      conf_unserviceable_accessorials = @conf.dig(:accessorials, :unserviceable)
 
       unserviceable_accessorials = []
 
       accessorials.each do |accessorial|
-        if @conf.dig(:accessorials, :unserviceable).any?(accessorial)
+        if !conf_unserviceable_accessorials.blank? && conf_unserviceable_accessorials.any?(accessorial)
           unserviceable_accessorials << accessorial
           next
         end
 
-        next if @conf.dig(:accessorials, :mappable).keys.any?(accessorial)
-        next if @conf.dig(:accessorials, :unquotable).any?(accessorial)
+        next if !conf_mappable_accessorials.blank? && conf_mappable_accessorials.map(&:keys).flatten.any?(accessorial)
+        next if !conf_unquotable_accessorials.blank? && conf_unquotable_accessorials.any?(accessorial)
 
         unserviceable_accessorials << accessorial
       end
