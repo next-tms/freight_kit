@@ -5,6 +5,7 @@ This library is an [Interstellar](https://github.com/next-tms/interstellar) Carr
 |Carrier                            |BOL|POD|Rates|Tracking|
 |-----------------------------------|---|---|-----|--------|
 |Best Overnite Express              |✓  |✓  |✓    |✓       |
+|Clear Lane Freight Systems         |   |   |✓    |        |
 |The Custom Companies               |   |   |✓    |✓       |
 |Dependable Highway Express         |✓  |✓  |✓    |✓       |
 |Forward Air                        |   |✓  |✓    |✓       |
