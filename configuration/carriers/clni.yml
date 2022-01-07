@@ -1,107 +1,111 @@
 :accessorials:
   :mappable:
-    :amusement_park_delivery: '&LIMDEL=yes'
-    :amusement_park_pickup: '&LIMPU=yes'
-    :appointment_delivery: '&DAR=yes&APPT=yes'
-    :athletic_facility_delivery: '&LIMDEL=yes'
-    :athletic_facility_pickup: '&LIMPU=yes'
-    :cemetery_delivery: '&LIMDEL=yes'
-    :cemetery_pickup: '&LIMPU=yes'
-    :church_delivery: '&LIMDEL=yes'
-    :church_pickup: '&LIMPU=yes'
-    :construction_delivery: '&CONSDELY=yes'
-    :construction_pickup: '&CONSPU=yes'
-    :dock_pickup: '&LIMPU=yes'
-    :farm_delivery: '&LIMDEL=yes'
-    :farm_pickup: '&LIMPU=yes'
-    :fitness_center_delivery: '&LIMDEL=yes'
-    :fitness_center_pickup: '&LIMPU=yes'
-    :golf_course_delivery: '&LIMDEL=yes'
-    :golf_course_pickup: '&LIMPU=yes'
-    :government_delivery: '&GOVD=yes'
-    :government_pickup: '&GOVP=yes'
-    :grocery_store_delivery: '&LIMDEL=yes'
-    :grocery_store_pickup: '&LIMPU=yes'
-    :hospital_delivery: '&LIMDEL=yes'
-    :hospital_pickup: '&LIMPU=yes'
-    :hotel_delivery: '&LIMDEL=yes'
-    :hotel_pickup: '&LIMPU=yes'
-    :inside_delivery: '&INSD=yes'
-    :inside_pickup: '&INSPU=yes'
-    :inspection_site_delivery: '&LIMDEL=yes'
-    :inspection_site_pickup: '&LIMPU=yes'
-    :jobsite_delivery: '&CONSDELY=yes'
-    :jobsite_pickup: '&CONSPU=yes'
-    :liftgate_delivery: '&LIFTD=yes'
-    :liftgate_pickup: '&LIFTP=yes'
-    :mall_delivery: '&LIMDEL=yes'
-    :mall_pickup: '&LIMPU=yes'
-    :marina_delivery: '&LIMDEL=yes'
-    :marina_pickup: '&LIMPU=yes'
-    :military_site_delivery: '&LIMDEL=yes'
-    :military_site_pickup: '&LIMPU=yes'
-    :mine_site_delivery: '&LIMDEL=yes'
-    :mine_site_pickup: '&LIMPU=yes'
-    :motel_delivery: '&LIMDEL=yes'
-    :motel_pickup: '&LIMPU=yes'
-    :nursing_home_delivery: '&LIMDEL=yes'
-    :nursing_home_pickup: '&LIMPU=yes'
-    :park_delivery: '&LIMDEL=yes'
-    :park_pickup: '&LIMPU=yes'
-    :prison_delivery: '&LIMDEL=yes'
-    :prison_pickup: '&LIMPU=yes'
-    :ranch_delivery: '&LIMDEL=yes'
-    :ranch_pickup: '&LIMPU=yes'
-    :reservation_delivery: '&LIMDEL=yes'
-    :reservation_pickup: '&LIMPU=yes'
-    :residential_delivery: '&RESDLY=yes'
-    :residential_pickup: '&RESPU=yes'
-    :resort_delivery: '&LIMDEL=yes'
-    :resort_pickup: '&LIMPU=yes'
-    :restaurant_delivery: '&LIMDEL=yes'
-    :restaurant_pickup: '&LIMPU=yes'
-    :school_delivery: '&LIMDEL=yes'
-    :school_pickup: '&LIMPU=yes'
-    :steel_mill_delivery: '&LIMDEL=yes'
-    :steel_mill_pickup: '&LIMPU=yes'
-    :storage_facility_delivery: '&LIMDEL=yes'
-    :storage_facility_pickup: '&LIMPU=yes'
-    :university_delivery: '&LIMDEL=yes'
-    :university_pickup: '&LIMPU=yes'
-    :utility_site_delivery: '&LIMDEL=yes'
-    :utility_site_pickup: '&LIMPU=yes'
+    - :inside_delivery: INSD
+    - :inside_pickup: INSP
+    - :liftgate_delivery: LIFTD
+    - :liftgate_pickup: LIFTP
+    - :residential_delivery: RESDLY
+    - :residential_pickup: RESPU
   # May be inaccurate
   :unquotable:
-    - :dock_dropoff
-    - :dock_pickup
   # May be inaccurate
   :unserviceable:
+    - :afterhours_delivery
+    - :afterhours_pickup
     - :airport_delivery
     - :airport_pickup
+    - :amusement_park_delivery
+    - :amusement_park_pickup
+    - :appointment_delivery
     - :appointment_pickup
+    - :athletic_facility_delivery
+    - :athletic_facility_pickup
     - :brewery_delivery
     - :brewery_pickup
+    - :cemetery_delivery
+    - :cemetery_pickup
+    - :church_delivery
+    - :church_pickup
+    - :construction_delivery
+    - :construction_pickup
     - :convention_delivery
     - :convention_pickup
     - :customs_brokerage
+    - :dock_dropoff
+    - :dock_pickup
     - :driver_assist
     - :early_morning_delivery
+    - :early_morning_pickup
     - :fair_delivery
     - :fair_pickup
+    - :farm_delivery
+    - :farm_pickup
+    - :fitness_center_delivery
+    - :fitness_center_pickup
     - :flatbed_delivery
     - :flatbed_pickup
+    - :golf_course_delivery
+    - :golf_course_pickup
+    - :government_delivery
+    - :government_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
     - :grocery_warehouse_delivery
     - :grocery_warehouse_pickup
     - :guaranteed_delivery
     - :guaranteed_delivery_am
     - :guaranteed_delivery_pm
+    - :hospital_delivery
+    - :hospital_pickup
+    - :hotel_delivery
+    - :hotel_pickup
+    - :inspection_site_delivery
+    - :inspection_site_pickup
+    - :jobsite_delivery
+    - :jobsite_pickup
+    - :mall_delivery
+    - :mall_pickup
+    - :marina_delivery
+    - :marina_pickup
+    - :military_site_delivery
+    - :military_site_pickup
+    - :mine_site_delivery
+    - :mine_site_pickup
+    - :motel_delivery
+    - :motel_pickup
+    - :nursing_home_delivery
+    - :nursing_home_pickup
+    - :park_delivery
+    - :park_pickup
+    - :prison_delivery
+    - :prison_pickup
+    - :ranch_delivery
+    - :ranch_pickup
+    - :reservation_delivery
+    - :reservation_pickup
+    - :resort_delivery
+    - :resort_pickup
+    - :restaurant_delivery
+    - :restaurant_pickup
+    - :school_delivery
+    - :school_pickup
+    - :steel_mill_delivery
+    - :steel_mill_pickup
+    - :storage_facility_delivery
+    - :storage_facility_pickup
+    - :university_delivery
+    - :university_pickup
+    - :utility_site_delivery
+    - :utility_site_pickup
     - :winery_delivery
     - :winery_pickup
 :api:
-  :carrier_code: clf
+  :actions:
+    :rates: :get_rating
+  :domain: ssworldtrak.com
+  :endpoints:
+    :rates: /WTKServicesCLEARL/GetRating.asmx?WSDL
+  :use_ssl: true
 :attributes:
   :rates:
     :with_excessive_length_fees: true
-:services:
-  :types:
-    - :standard

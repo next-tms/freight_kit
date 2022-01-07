@@ -5,11 +5,12 @@ module Interstellar
     extend self
 
     attr_reader :registered
+
     @registered = []
 
     def register(class_name, autoload_require)
       Interstellar.autoload(class_name, autoload_require)
-      self.registered << class_name
+      registered << class_name
     end
 
     def all
@@ -23,6 +24,7 @@ module Interstellar
 end
 
 Interstellar::Carriers.register :BTVP, 'interstellar-next_carriers/carriers/btvp'
+Interstellar::Carriers.register :CLNI, 'interstellar-next_carriers/carriers/clni'
 Interstellar::Carriers.register :DPHE, 'interstellar-next_carriers/carriers/dphe'
 Interstellar::Carriers.register :DRRQ, 'interstellar-next_carriers/carriers/drrq'
 Interstellar::Carriers.register :FWDA, 'interstellar-next_carriers/carriers/fwda'
