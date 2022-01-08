@@ -85,28 +85,28 @@ module Interstellar
       shipper_reference:
     )
       request = build_pickup_request(
-        accessorials: accessorials,
-        customer_reference: customer_reference,
-        delivery_from: delivery_from,
-        delivery_to: delivery_to,
-        destination: destination,
-        dispatcher_email: dispatcher_email,
-        dispatcher_name: dispatcher_name,
-        dispatcher_phone: dispatcher_phone,
-        origin: origin,
-        packages: packages,
-        pickup_from: pickup_from,
-        pickup_to: pickup_to,
-        receiver_contact_name: receiver_contact_name,
-        receiver_name: receiver_name,
-        receiver_phone: receiver_phone,
-        receiver_reference: receiver_reference,
-        scac: scac,
-        service: service,
-        shipper_contact_name: shipper_contact_name,
-        shipper_name: shipper_name,
-        shipper_phone: shipper_phone,
-        shipper_reference: shipper_reference
+        accessorials:,
+        customer_reference:,
+        delivery_from:,
+        delivery_to:,
+        destination:,
+        dispatcher_email:,
+        dispatcher_name:,
+        dispatcher_phone:,
+        origin:,
+        packages:,
+        pickup_from:,
+        pickup_to:,
+        receiver_contact_name:,
+        receiver_name:,
+        receiver_phone:,
+        receiver_reference:,
+        scac:,
+        service:,
+        shipper_contact_name:,
+        shipper_name:,
+        shipper_phone:,
+        shipper_reference:
       )
 
       parse_pickup_response(commit(request))
@@ -136,6 +136,10 @@ module Interstellar
     end
 
     def find_rates_implemented?
+      true
+    end
+
+    def find_rates_with_declared_value?
       true
     end
 
@@ -219,9 +223,9 @@ module Interstellar
 
       request = {
         url: build_url(action, options),
-        headers: headers,
+        headers:,
         method: @conf.dig(:api, :methods, action),
-        body: body
+        body:
       }
 
       save_request(request)
@@ -236,9 +240,9 @@ module Interstellar
 
       response = case method
                  when :post
-                   HTTParty.post(url, headers: headers, body: body)
+                   HTTParty.post(url, headers:, body:)
                  else
-                   HTTParty.get(url, headers: headers)
+                   HTTParty.get(url, headers:)
                  end
 
       json = JSON.parse(response.body)
@@ -389,6 +393,12 @@ module Interstellar
       pickup_accessorials, delivery_accessorials = build_accessorials(options[:accessorials])
       freight_details = build_freight_details(packages)
 
+      declared_value = if options[:declared_value_cents].blank?
+                         '0'
+                       else
+                         format('%.2f', (options[:declared_value_cents].to_f / 100).ceil)
+                       end
+
       request = {
         url: build_url(:rates, options),
         headers: build_headers(options),
@@ -412,7 +422,7 @@ module Interstellar
           freightDetails: { freightDetail: freight_details },
           hazmat: packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
           inBondShipment: 'N',
-          declaredValue: '0',
+          declaredValue: declared_value,
           shippingDate: Date.current.strftime('%Y-%m-%d')
         }.to_json
       }
@@ -443,7 +453,7 @@ module Interstellar
               destination,
               self.class,
               :standard,
-              transit_days: transit_days,
+              transit_days:,
               estimate_reference: nil,
               total_cost: cost,
               total_price: cost,
@@ -462,7 +472,7 @@ module Interstellar
         message,
         response.to_hash,
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end
