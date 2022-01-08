@@ -132,6 +132,10 @@ module Interstellar
       false
     end
 
+    def find_rates_with_declared_value?
+      false
+    end
+
     # Registers a new pickup with the carrier, to get a tracking number and
     # potentially shipping labels
     #
