@@ -45,6 +45,10 @@ module Interstellar
       true
     end
 
+    def find_rates_with_declared_value?
+      true
+    end
+
     # Tracking
     def find_tracking_info(tracking_number)
       request = build_tracking_request(tracking_number)
@@ -154,6 +158,23 @@ module Interstellar
         }
       }
 
+      declared_value = if options[:declared_value_cents].blank?
+                         nil
+                       else
+                         (options[:declared_value_cents].to_f / 100).ceil
+                       end
+
+      unless declared_value.blank?
+        request = request.deep_merge(
+          {
+            'request': {
+              'DeclaredValue': declared_value,
+              'FullValueCoverage': declared_value
+            }
+          }
+        )
+      end
+
       save_request(request)
       request
     end
@@ -195,8 +216,8 @@ module Interstellar
               destination,
               { scac: self.class.scac.upcase, name: self.class.name },
               :standard,
-              transit_days: transit_days,
-              estimate_reference: estimate_reference,
+              transit_days:,
+              estimate_reference:,
               total_cost: cost,
               total_price: cost,
               currency: 'USD',
@@ -215,8 +236,8 @@ module Interstellar
                   destination,
                   { scac: self.class.scac.upcase, name: self.class.name },
                   service.keys[0],
-                  delivery_range: delivery_range,
-                  estimate_reference: estimate_reference,
+                  delivery_range:,
+                  estimate_reference:,
                   total_cost: cost,
                   total_price: cost,
                   currency: 'USD',
@@ -237,7 +258,7 @@ module Interstellar
         message,
         response.to_hash,
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end
@@ -340,18 +361,18 @@ module Interstellar
         response,
         carrier: "#{@@scac}, #{@@name}",
         hash: response,
-        response: response,
+        response:,
         status: shipment_events&.last&.status,
         type_code: shipment_events&.last&.status,
         ship_time: pickup_date,
-        scheduled_delivery_date: scheduled_delivery_date,
-        actual_delivery_date: actual_delivery_date,
+        scheduled_delivery_date:,
+        actual_delivery_date:,
         delivery_signature: nil,
-        shipment_events: shipment_events,
-        shipper_address: shipper_address,
+        shipment_events:,
+        shipper_address:,
         origin: shipper_address,
         destination: receiver_address,
-        tracking_number: tracking_number,
+        tracking_number:,
         request: last_request
       )
     end
