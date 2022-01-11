@@ -122,17 +122,11 @@ module Interstellar
 
     # Rates
 
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def find_rates(shipment:)
+      validate_packages(shipment.packages)
 
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
-      validate_packages(packages)
-
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, commit(request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit(request))
     end
 
     def find_rates_implemented?
@@ -310,7 +304,7 @@ module Interstellar
             consigneeLocationName: receiver_name,
             consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
             consigneeState: destination.to_hash[:province],
-            consigneeZipCode: destination.to_hash[:postal_code].to_s
+            consigneeZipCode: destination.zip.to_s
           },
           shipper: {
             shipperAddress1: origin.to_hash[:address1],
@@ -324,7 +318,7 @@ module Interstellar
             shipperLocationName: shipper_name,
             shipperOpenTime: pickup_from.strftime('%H:%M:00'),
             shipperState: origin.to_hash[:province],
-            shipperZipCode: origin.to_hash[:postal_code].to_s
+            shipperZipCode: origin.zip.to_s
           },
           orderDetails: {
             airbillNumber: '00000000',
@@ -387,40 +381,38 @@ module Interstellar
 
     # Rates
 
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def build_rate_request(shipment:)
+      pickup_accessorials, delivery_accessorials = build_accessorials(shipment.accessorials)
+      freight_details = build_freight_details(shipment.packages)
 
-      pickup_accessorials, delivery_accessorials = build_accessorials(options[:accessorials])
-      freight_details = build_freight_details(packages)
-
-      declared_value = if options[:declared_value_cents].blank?
+      declared_value = if shipment.declared_value_cents.blank?
                          '0'
                        else
-                         format('%.2f', (options[:declared_value_cents].to_f / 100).ceil)
+                         format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
                        end
 
       request = {
-        url: build_url(:rates, options),
-        headers: build_headers(options),
+        url: build_url(:rates, @options),
+        headers: build_headers(@options),
         method: @conf.dig(:api, :methods, :rates),
         body: {
-          billToCustomerNumber: options[:account],
+          billToCustomerNumber: @options[:account],
           origin: {
-            originZipCode: origin.to_hash[:postal_code].to_s.upcase,
+            originZipCode: shipment.origin.zip.to_s.upcase,
             pickup: {
               airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
               pickupAccessorials: { pickupAccessorial: pickup_accessorials }
             }
           },
           destination: {
-            destinationZipCode: destination.to_hash[:postal_code].to_s.upcase,
+            destinationZipCode: shipment.destination.zip.to_s.upcase,
             delivery: {
               airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
               deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
             }
           },
           freightDetails: { freightDetail: freight_details },
-          hazmat: packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
+          hazmat: shipment.packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
           inBondShipment: 'N',
           declaredValue: declared_value,
           shippingDate: Date.current.strftime('%Y-%m-%d')
@@ -431,7 +423,7 @@ module Interstellar
       request
     end
 
-    def parse_rate_response(origin, destination, response)
+    def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
@@ -449,8 +441,8 @@ module Interstellar
 
           rate_estimates = [
             RateEstimate.new(
-              origin,
-              destination,
+              shipment.origin,
+              shipment.destination,
               self.class,
               :standard,
               transit_days:,

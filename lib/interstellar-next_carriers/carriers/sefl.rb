@@ -33,17 +33,11 @@ module Interstellar
     # Documents
 
     # Rates
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def find_rates(shipment:)
+      validate_packages(shipment.packages)
 
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
-      validate_packages(packages)
-
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, commit(request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit(request))
     end
 
     def find_rates_implemented?
@@ -82,9 +76,9 @@ module Interstellar
 
       request = {
         url: options[:url].blank? ? build_url(action, options) : options[:url],
-        headers: headers,
+        headers:,
         method: @conf.dig(:api, :methods, action),
-        body: body
+        body:
       }
 
       save_request(request)
@@ -99,61 +93,60 @@ module Interstellar
 
       case method
       when :post
-        HTTParty.post(url, headers: headers, body: body)
+        HTTParty.post(url, headers:, body:)
       else
-        HTTParty.get(url, headers: headers)
+        HTTParty.get(url, headers:)
       end
     end
 
     # Documents
 
     # Rates
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
+    def build_rate_request(shipment:)
       accessorials = []
-      unless options[:accessorials].blank?
-        serviceable_accessorials?(options[:accessorials])
-        options[:accessorials].each do |a|
+      unless shipment.accessorials.blank?
+        serviceable_accessorials?(shipment.accessorials)
+        shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
             accessorials << @conf.dig(:accessorials, :mappable)[a]
           end
         end
       end
 
-      longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
+      longest_dimension = shipment.packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
       accessorials << 'chkOD' if longest_dimension >= 96
 
       accessorials = accessorials.uniq
-
-      pickup_on = options[:pickup_on].blank? ? Date.current : options[:pickup_on]
+      pickup_on = Date.current
+      shipment_description = shipment.packages.map(&:description).reject(&:blank?).uniq.join(', ')
+      shipment_description = 'Freight All Kinds' if shipment_description.blank?
 
       body = {
-        returnX: 'Y',
-        rateXML: 'Y',
-        CustomerAccount: options[:account].to_i.to_s.rjust(9, '0'),
-        CustomerName: options[:customer_name],
-        CustomerStreet: options.dig(:customer_address, :street),
-        CustomerCity: options.dig(:customer_address, :city),
-        CustomerState: options.dig(:customer_address, :state),
-        CustomerZip: options.dig(:customer_address, :zip_code),
-        Description: 'Freight All Kinds',
-        Option: 'T',
-        Terms: 'P',
-        allowSpot: packages.inject(0) { |_sum, p| _sum += [p.length(:in), p.width(:in)].max.ceil } >= 120 ? 'Y' : 'N',
+        allowSpot: longest_dimension >= 120 ? 'Y' : 'N',
+        CustomerAccount: @options[:account].to_i.to_s.rjust(9, '0'),
+        CustomerCity: @options.dig(:customer_address, :city),
+        CustomerName: @options[:customer_name],
+        CustomerState: @options.dig(:customer_address, :state),
+        CustomerStreet: @options.dig(:customer_address, :street),
+        CustomerZip: @options.dig(:customer_address, :zip_code),
+        Description: shipment_description,
+        DestCountry: 'U',
+        DestinationCity: shipment.destination.city,
+        DestinationState: shipment.destination.state,
+        DestinationZip: shipment.destination.zip,
         DimsOption: 'I',
-        EmailAddress: options[:customer_email].blank? ? 'unknown@fake.fake' : options[:customer_email],
-        PickupMonth: pickup_on.strftime('%_m'),
-        PickupDay: pickup_on.strftime('%_d'),
-        PickupYear: pickup_on.strftime('%Y'),
-        OriginCity: origin.to_hash[:city],
-        OriginState: origin.to_hash[:province],
-        OriginZip: origin.to_hash[:postal_code],
+        EmailAddress: @options[:customer_email].blank? ? 'unknown@fake.fake' : @options[:customer_email],
+        Option: 'T',
         OrigCountry: 'U',
-        DestinationCity: destination.to_hash[:city],
-        DestinationState: destination.to_hash[:province],
-        DestinationZip: destination.to_hash[:postal_code],
-        DestCountry: 'U'
+        OriginCity: shipment.origin.city,
+        OriginState: shipment.origin.state,
+        OriginZip: shipment.origin.zip,
+        PickupDay: pickup_on.strftime('%_d'),
+        PickupMonth: pickup_on.strftime('%_m'),
+        PickupYear: pickup_on.strftime('%Y'),
+        rateXML: 'Y',
+        returnX: 'Y',
+        Terms: 'P'
       }
 
       if longest_dimension >= 96
@@ -165,41 +158,40 @@ module Interstellar
         )
       end
 
+      cubic_ft_required = shipment.destination.state.upcase == 'PR'
+
       i = 0
-      packages.each do |package|
+      shipment.packages.each do |package|
         package.quantity.times do
           i += 1
+
           body = body.deep_merge({ "Class#{i}": package.freight_class.to_s.sub('.', '').to_i })
-          if destination.to_hash[:province].upcase == 'PR'
-            body = body.deep_merge({ "CubicFt#{i}": package.cubic_ft(:each) })
-          end
           body = body.deep_merge({ "Description#{i}": package.description || 'Freight' })
           body = body.deep_merge({ "PieceLength#{i}": package.length(:in).ceil })
           body = body.deep_merge({ "PieceWidth#{i}": package.width(:in).ceil })
           body = body.deep_merge({ "PieceHeight#{i}": package.height(:in).ceil })
           body = body.deep_merge({ "Weight#{i}": package.pounds(:each).ceil })
+
+          body = body.deep_merge({ "CubicFt#{i}": package.cubic_ft(:each) }) if cubic_ft_required
         end
       end
 
-      unless accessorials.blank?
-        accessorials.each do |_accessorial|
-          body = body.deep_merge({ accessorial: 'on' })
-        end
-      end
+      body = body.deep_merge({ accessorial: 'on' }) unless accessorials.blank?
 
-      request = build_request(:rates, body: body)
-
+      request = build_request(:rates, body:)
       save_request(request)
       request
     end
 
-    def parse_rate_response(origin, destination, response)
+    def parse_rate_response(shipment:, response:, tries: 0)
+      raise Interstellar::ResponseError if tries > 10
+
       success = true
       message = ''
 
       if response.body.blank?
         if response.code == 401
-          raise Interstellar::InvalidCredentialsError
+          raise Interstellar::InvalidCredentialsError, "API Error: Timeout after #{tries * 5} seconds"
         else
           success = false
           message = 'API Error: Unknown response'
@@ -207,13 +199,13 @@ module Interstellar
       else
         begin
           response = JSON.parse(response.body)
-          sleep(30) # TODO: Maybe improve this?
         rescue JSON::ParserError
-          raise Interstellar::ResponseError
+          sleep(5)
+          parse_rate_response(shipment:, response:, tries: tries + 1)
         end
 
-        url = response.dig('detailQuoteLocation').gsub('\\', '')
-        request = build_request(:get_rate, url: url)
+        url = response['detailQuoteLocation'].gsub('\\', '')
+        request = build_request(:get_rate, url:)
         save_request(request)
         response = commit(request)
 
@@ -230,21 +222,21 @@ module Interstellar
           rescue JSON::ParserError
             raise Interstellar::ResponseError
           end
-          if response.dig('errorMessage').blank?
-            cost = response.dig('rateQuote')
+          if response['errorMessage'].blank?
+            cost = response['rateQuote']
             if cost
               cost = cost.sub('.', '').to_i
-              estimate_reference = response.dig('quoteNumber')
-              transit_days = response.dig('transitTime').to_i
+              estimate_reference = response['quoteNumber']
+              transit_days = response['transitTime'].to_i
 
               rate_estimates = [
                 RateEstimate.new(
-                  origin,
-                  destination,
+                  shipment.origin,
+                  shipment.destination,
                   { scac: self.class.scac.upcase, name: self.class.name },
                   :standard,
-                  transit_days: transit_days,
-                  estimate_reference: estimate_reference,
+                  transit_days:,
+                  estimate_reference:,
                   total_cost: cost,
                   total_price: cost,
                   currency: 'USD',
@@ -257,7 +249,7 @@ module Interstellar
             end
           else
             success = false
-            message = response.dig('errorMessage')
+            message = response['errorMessage']
           end
         end
       end
@@ -267,7 +259,7 @@ module Interstellar
         message,
         response.to_hash,
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end

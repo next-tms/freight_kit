@@ -75,28 +75,28 @@ module Interstellar
       shipper_reference:
     )
       parse_pickup_response(
-        accessorials: accessorials,
-        customer_reference: customer_reference,
-        delivery_from: delivery_from,
-        delivery_to: delivery_to,
-        destination: destination,
-        dispatcher_email: dispatcher_email,
-        dispatcher_name: dispatcher_name,
-        dispatcher_phone: dispatcher_phone,
-        origin: origin,
-        packages: packages,
-        pickup_from: pickup_from,
-        pickup_to: pickup_to,
-        receiver_contact_name: receiver_contact_name,
-        receiver_name: receiver_name,
-        receiver_phone: receiver_phone,
-        receiver_reference: receiver_reference,
-        scac: scac,
-        service: service,
-        shipper_contact_name: shipper_contact_name,
-        shipper_name: shipper_name,
-        shipper_phone: shipper_phone,
-        shipper_reference: shipper_reference
+        accessorials:,
+        customer_reference:,
+        delivery_from:,
+        delivery_to:,
+        destination:,
+        dispatcher_email:,
+        dispatcher_name:,
+        dispatcher_phone:,
+        origin:,
+        packages:,
+        pickup_from:,
+        pickup_to:,
+        receiver_contact_name:,
+        receiver_name:,
+        receiver_phone:,
+        receiver_reference:,
+        scac:,
+        service:,
+        shipper_contact_name:,
+        shipper_name:,
+        shipper_phone:,
+        shipper_reference:
       )
     end
 
@@ -106,17 +106,11 @@ module Interstellar
 
     # Rates
 
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def find_rates(shipment:)
+      validate_packages(shipment.packages, @tariff)
 
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
-      validate_packages(packages, options[:tariff])
-
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, packages, commit(:rates, request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit(:rates, request))
     end
 
     def find_rates_implemented?
@@ -328,10 +322,10 @@ module Interstellar
         browser.option(text: '<new>').click
 
         browser.text_field(name: 'SHPNAM').set(shipper_name.upcase)
-        browser.text_field(name: 'SHPAD1').set(origin.to_hash[:address1].upcase)
-        browser.text_field(name: 'SHPCTY').set(origin.to_hash[:city].upcase)
-        browser.text_field(name: 'SHPSTA').set(origin.to_hash[:province].upcase[..1])
-        browser.text_field(name: 'SHPZIP').set(origin.to_hash[:postal_code])
+        browser.text_field(name: 'SHPAD1').set(origin.address1.upcase)
+        browser.text_field(name: 'SHPCTY').set(origin.city.upcase)
+        browser.text_field(name: 'SHPSTA').set(origin.state.upcase[..1])
+        browser.text_field(name: 'SHPZIP').set(origin.zip)
       end
 
       browser.text_field(name: 'DPADAT').set(pickup_from.to_date.strftime('%m/%d/%Y'))
@@ -341,9 +335,9 @@ module Interstellar
       total_weight = packages.map { |p| p.pounds(:total) }.sum.ceil
 
       browser.text_field(name: 'DSTWT_1').set(total_weight)
-      browser.text_field(name: 'DSDZIP_1').set(destination.to_hash[:postal_code])
-      browser.text_field(name: 'DSTPC_1').set(packages.map { |p| p.quantity }.sum)
-      browser.text_field(name: 'DSPLT_1').set(packages.map { |p| p.quantity }.sum)
+      browser.text_field(name: 'DSDZIP_1').set(destination.zip)
+      browser.text_field(name: 'DSTPC_1').set(packages.map(&:quantity).sum)
+      browser.text_field(name: 'DSPLT_1').set(packages.map(&:quantity).sum)
 
       browser.checkbox(name: 'DSHAZ_1').check if packages.map(&:hazmat?).include?(true)
 
@@ -379,14 +373,12 @@ module Interstellar
 
     # Rates
 
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
+    def build_rate_request(shipment:)
       accessorials = []
 
-      unless options[:accessorials].blank?
-        serviceable_accessorials?(options[:accessorials])
-        options[:accessorials].each do |a|
+      unless shipment.accessorials.blank?
+        serviceable_accessorials?(shipment.accessorials)
+        shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
             accessorials << { code: @conf.dig(:accessorials, :mappable)[a] }
           end
@@ -396,10 +388,10 @@ module Interstellar
       accessorials = accessorials.uniq.to_a
 
       items = []
-      packages.each do |package|
+      shipment.packages.each do |package|
         items << {
           _class: package.freight_class,
-          description: (packages.first.description || 'Freight')[..8].upcase,
+          description: (package.description || 'Freight')[..8].upcase,
           haz: (package.hazmat? ? 'Y' : ''),
           pallets: (package.packaging.pallet? ? package.quantity : 0),
           pieces: package.quantity,
@@ -411,21 +403,21 @@ module Interstellar
         'arg0' => {
           securityinfo: build_soap_header,
           quote: {
-            iam: options[:iam].blank? ? 'D' : options[:iam], # S for shipper, C for consignee, D for third party
+            iam: 'D', # S for shipper, C for consignee, D for third party
             shipper: {
-              city: origin.to_hash[:city].to_s.upcase,
-              state: origin.to_hash[:province].to_s.upcase,
-              zip: origin.to_hash[:postal_code].to_s.upcase
+              city: shipment.origin.city.upcase,
+              state: shipment.origin.state.upcase,
+              zip: shipment.origin.zip.upcase
             },
             consignee: {
-              city: destination.to_hash[:city].to_s.upcase,
-              state: destination.to_hash[:province].to_s.upcase,
-              zip: destination.to_hash[:postal_code].to_s.upcase
+              city: shipment.destination.city.upcase,
+              state: shipment.destination.state.upcase,
+              zip: shipment.destination.zip.upcase
             },
-            accessorialcount: accessorials.size,
-            accessorial: accessorials.blank? ? [] : accessorials,
-            ppdcol: options[:payment_type].blank? ? 'P' : options[:payment_type].blank?, # Prepaid
-            itemcount: packages.size,
+            accessorialcount: shipment.accessorials.size,
+            accessorial: shipment.accessorials.blank? ? [] : accessorials,
+            ppdcol: 'P', # Prepaid
+            itemcount: shipment.packages.size,
             item: items
           }
         }
@@ -435,7 +427,7 @@ module Interstellar
       request
     end
 
-    def parse_rate_response(origin, destination, packages, response)
+    def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
@@ -459,7 +451,7 @@ module Interstellar
       else
         cost = (response.dig(:getquote_response, :return, :rating, :amount).to_f * 100).to_i
 
-        packages.each do |package|
+        shipment.packages.each do |package|
           cost += overlength_fee(@options[:tariff], package)
         end
 
@@ -485,12 +477,12 @@ module Interstellar
         if cost
           rate_estimates = [
             RateEstimate.new(
-              origin,
-              destination,
+              shipment.origin,
+              shipment.destination,
               { scac: self.class.scac.upcase, name: self.class.name },
               :standard,
-              transit_days: transit_days,
-              estimate_reference: estimate_reference,
+              transit_days:,
+              estimate_reference:,
               total_cost: cost,
               total_price: cost,
               currency: 'USD',
@@ -508,7 +500,7 @@ module Interstellar
         message,
         response,
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end
@@ -529,7 +521,7 @@ module Interstellar
 
     def parse_location(code)
       country = ActiveUtils::Country.find('USA')
-      return Location.new(country: country) unless code
+      return Location.new(country:) unless code
 
       location = @conf.dig(:events, :locations, code.to_sym)
 
@@ -538,14 +530,14 @@ module Interstellar
           city: location[:city],
           state: location[:state],
           province: location[:province],
-          country: country
+          country:
         )
       else
         Location.new(
           city: code,
           province: nil,
           state: nil,
-          country: country
+          country:
         )
       end
     end
@@ -629,18 +621,18 @@ module Interstellar
         response,
         carrier: "#{@@scac}, #{@@name}",
         xml: response,
-        response: response,
-        status: status,
+        response:,
+        status:,
         type_code: status,
-        ship_time: ship_time,
-        scheduled_delivery_date: scheduled_delivery_date,
-        actual_delivery_date: actual_delivery_date,
+        ship_time:,
+        scheduled_delivery_date:,
+        actual_delivery_date:,
         delivery_signature: nil,
-        shipment_events: shipment_events,
-        shipper_address: shipper_address,
+        shipment_events:,
+        shipper_address:,
         origin: shipper_address,
         destination: receiver_address,
-        tracking_number: tracking_number,
+        tracking_number:,
         request: last_request
       )
     end

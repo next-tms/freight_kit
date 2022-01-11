@@ -27,18 +27,12 @@ module Interstellar
     # Documents
 
     # Rates
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def find_rates(shipment:)
+      validate_packages(shipment.packages)
+      raise UnserviceableError, 'Must be fewer than 10 items altogether' if shipment.packages.sum(&:quantity) > 10
 
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
-      validate_packages(packages)
-      raise UnserviceableError, 'Must be fewer than 10 items altogether' if packages.sum(&:quantity) > 10
-
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, commit_soap(:rates, request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit_soap(:rates, request))
     end
 
     def find_rates_implemented?
@@ -81,13 +75,11 @@ module Interstellar
     # Documents
 
     # Rates
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
+    def build_rate_request(shipment:)
       accessorial_input = []
-      unless options[:accessorials].blank?
-        serviceable_accessorials?(options[:accessorials])
-        options[:accessorials].each do |a|
+      unless shipment.accessorials.blank?
+        serviceable_accessorials?(shipment.accessorials)
+        shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
             accessorial_input << { 'AccessorialInput': { 'AccessorialCode': @conf.dig(:accessorials, :mappable)[a] } }
           end
@@ -98,7 +90,7 @@ module Interstellar
 
       commodity_input = []
       dimensions = []
-      packages.each do |package|
+      shipment.packages.each do |package|
         commodity_input << {
           'CommodityInput': {
             'CommodityClass': package.freight_class,
@@ -124,16 +116,16 @@ module Interstellar
           'CommodityInput': commodity_input,
           'RatingInput': {
             'DeclaredValue': 0,
-            'DestinationCity': destination.to_hash[:city],
-            'DestinationCountry': destination.country.code(:alpha2).to_s,
-            'DestinationState': destination.to_hash[:province],
-            'DestinationZip': destination.to_hash[:postal_code],
+            'DestinationCity': shipment.destination.city,
+            'DestinationCountry': shipment.destination.country.code(:alpha2).to_s,
+            'DestinationState': shipment.destination.state,
+            'DestinationZip': shipment.destination.zip,
             'LiabilityType': '',
-            'OriginCity': origin.to_hash[:city],
-            'OriginCountry': origin.country.code(:alpha2).to_s,
-            'OriginState': origin.to_hash[:province],
-            'OriginZip': origin.to_hash[:postal_code],
-            'Palletized': packages.map(&:packaging).map(&:pallet?).any?(false) ? 'N' : 'Y',
+            'OriginCity': shipment.origin.city,
+            'OriginCountry': shipment.origin.country.code(:alpha2).to_s,
+            'OriginState': shipment.origin.state,
+            'OriginZip': shipment.origin.zip,
+            'Palletized': shipment.packages.map(&:packaging).map(&:pallet?).any?(false) ? 'N' : 'Y',
             'PickupDate': pickup_from.to_date.strftime('%Y-%m-%d'),
             'PickupLocationCloseTime': pickup_to.strftime('%H:%M:00'),
             'PickupTime': pickup_from.strftime('%H:%M:00'),
@@ -141,7 +133,7 @@ module Interstellar
             'ServiceLevelID': '',
             'ShipmentTerms': '',
             'Stackable': false,
-            'WebTrakUserID': options[:username]
+            'WebTrakUserID': @options[:username]
           }
         }
       }
@@ -150,17 +142,18 @@ module Interstellar
       request
     end
 
-    def parse_rate_response(origin, destination, response)
+    def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
       raise Interstellar::ResponseError, pretty_error if response.blank?
-        
+
       error = response.dig(:get_rating_response, :get_rating_result, :rating_output, :message)
 
-      if !error.blank?
+      unless error.blank?
         if error.include?('do not service this lane')
-          raise Interstellar::UnserviceableError, 'Incorrect ZIP code or no service available at origin and/or destination'
+          raise Interstellar::UnserviceableError,
+                'Incorrect ZIP code or no service available at origin and/or destination'
         end
 
         pretty_error = error.strip.gsub('can not', 'cannot')
@@ -170,20 +163,20 @@ module Interstellar
       response = response.dig(:get_rating_response, :get_rating_result, :rating_output)
       raise Interstellar::ResponseError, pretty_error if response.blank?
 
-      cost = response.dig(:standard_total_rate)&.sub('.', '')&.to_i
+      cost = response[:standard_total_rate]&.sub('.', '')&.to_i
       raise Interstellar::ResponseError, 'Cost is blank' if cost.blank?
 
-      transit_days = response.dig(:transit_days).to_i
+      transit_days = response[:transit_days].to_i
       rate = RateEstimate.new(
-        origin,
-        destination,
+        shipment.origin,
+        shipment.destination,
         { scac: self.class.scac.upcase, name: self.class.name },
         :standard,
         currency: 'USD',
         estimate_reference: nil,
         total_cost: cost,
         total_price: cost,
-        transit_days: transit_days,
+        transit_days:,
         with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 

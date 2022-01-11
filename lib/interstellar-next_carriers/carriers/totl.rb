@@ -52,7 +52,7 @@ module Interstellar
 
     # Rates
 
-    def parse_rate_response(origin, destination, packages, response)
+    def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
@@ -73,7 +73,7 @@ module Interstellar
         if cost
           # Carrier-specific pricing structure
           oversized_pallets_price = 0
-          packages.each do |package|
+          shipment.packages.each do |package|
             short_side, long_side = nil
             if !package.length(:in).blank? && !package.width(:in).blank? && !package.height(:in).blank?
               long_side = package.length(:in) > package.width(:in) ? package.length(:in) : package.width(:in)
@@ -95,11 +95,11 @@ module Interstellar
 
           rate_estimates = [
             RateEstimate.new(
-              origin,
-              destination,
+              shipment.origin,
+              shipment.destination,
               { scac: self.class.scac.upcase, name: self.class.name },
               :standard,
-              transit_days: transit_days,
+              transit_days:,
               estimate_reference: response.dig('ratequote', 'quotenumber'),
               total_price: cost,
               currency: 'USD',
@@ -117,7 +117,7 @@ module Interstellar
         message,
         response.to_hash,
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end

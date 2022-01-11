@@ -31,17 +31,11 @@ module Interstellar
     # Documents
 
     # Rates
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def find_rates(shipment:)
+      validate_packages(shipment.packages)
 
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
-      validate_packages(packages)
-
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, commit_soap(:rates, request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit_soap(:rates, request))
     end
 
     def find_rates_implemented?
@@ -72,31 +66,31 @@ module Interstellar
     # Documents
 
     # Rates
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def build_rate_request(shipment:)
+      raise UnserviceableError, 'Unable to quote accessorials over API' unless shipment.accessorials.blank?
 
       request = {
         accessorial_list: '', # TODO: Fix this!
         account: @options[:account],
-        class_list: packages.map(&:quantity).join(','),
+        class_list: shipment.packages.map(&:quantity).join(','),
         customer_type: @options[:customer_type].blank? ? 'B' : @options[:customer_type],
-        destination_zip: destination.to_hash[:postal_code].to_s,
-        none_palletized_mode: packages.map(&:packaging).map(&:pallet?).any?(false) ? 'Y' : 'N',
-        origin_zip: origin.to_hash[:postal_code].to_s,
+        destination_zip: shipment.destination.zip.to_s,
+        none_palletized_mode: shipment.packages.map(&:packaging).map(&:pallet?).any?(false) ? 'Y' : 'N',
+        origin_zip: shipment.origin.zip.to_s,
         password: @options[:password],
-        plt_count_list: packages.map(&:quantity).join(','),
-        plt_length_list: packages.map { |p| p.inches(:length).ceil }.join(','),
-        plt_total_weight: packages.map { |p| p.pounds(:total).ceil }.join(','),
-        plt_width_list: packages.map { |p| p.inches(:width).ceil }.join(','),
+        plt_count_list: shipment.packages.map(&:quantity).join(','),
+        plt_length_list: shipment.packages.map { |p| p.inches(:length).ceil }.join(','),
+        plt_total_weight: shipment.packages.map { |p| p.pounds(:total).ceil }.join(','),
+        plt_width_list: shipment.packages.map { |p| p.inches(:width).ceil }.join(','),
         user_id: @options[:username],
-        weight_list: packages.map { |p| p.pounds(:total) }.join(',')
+        weight_list: shipment.packages.map { |p| p.pounds(:total) }.join(',')
       }
 
       save_request(request)
       request
     end
 
-    def parse_rate_response(origin, destination, response)
+    def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
@@ -124,12 +118,12 @@ module Interstellar
           if cost
             rate_estimates = [
               RateEstimate.new(
-                origin,
-                destination,
+                shipment.origin,
+                shipment.destination,
                 { scac: self.class.scac.upcase, name: self.class.name },
                 service_type,
-                transit_days: transit_days,
-                estimate_reference: estimate_reference,
+                transit_days:,
+                estimate_reference:,
                 total_cost: cost,
                 total_price: cost,
                 currency: 'USD',
@@ -148,7 +142,7 @@ module Interstellar
         message,
         response.to_hash,
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end
