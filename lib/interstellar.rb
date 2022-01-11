@@ -1,3 +1,6 @@
+require 'active_model/forbidden_attributes_protection'
+require 'active_model/attribute_assignment'
+
 require 'active_support/all'
 require 'active_utils'
 
@@ -12,6 +15,7 @@ require 'watir'
 require 'yaml'
 
 require 'interstellar/errors/errors'
+require 'interstellar/model'
 
 require 'interstellar/response'
 require 'interstellar/address_validation_response'
@@ -25,6 +29,7 @@ require 'interstellar/packaging'
 require 'interstellar/platform'
 require 'interstellar/rate_estimate'
 require 'interstellar/rate_response'
+require 'interstellar/shipment'
 require 'interstellar/shipment_event'
 require 'interstellar/shipment_packer'
 require 'interstellar/shipping_response'
