@@ -26,5 +26,5 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'interstellar', '0.1.pre2'
-  spec.add_dependency 'interstellar-next_platforms', '0.1.pre1'
+  spec.add_dependency 'interstellar-next_platforms', '0.1.pre2'
 end
