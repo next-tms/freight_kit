@@ -18,7 +18,7 @@ module Interstellar
   #   @see #save_request
   class Carrier
     attr_accessor :conf, :rates_with_excessive_length_fees, :test_mode, :tmpdir
-    attr_reader :last_request
+    attr_reader :last_request, :tariff
 
     alias test_mode? test_mode
 
@@ -31,6 +31,7 @@ module Interstellar
       @conf = nil
       @debug = options[:debug].blank? ? false : true
       @last_request = nil
+      @tariff = options[:tariff]
       @test_mode = options[:test]
       @tmpdir = options[:tmpdir] || Dir.tmpdir
 
@@ -117,14 +118,10 @@ module Interstellar
     #
     # @note Override with whatever you need to get the rates from the carrier.
     #
-    # @param origin [Interstellar::Location] Where the shipment will originate from.
-    # @param destination [Interstellar::Location] Where the package will go.
-    # @param packages [Array<Interstellar::Package>] The list of packages that will
-    #   be in the shipment.
-    # @param options [Hash] Carrier-specific parameters.
+    # @param shipment [Interstellar::Shipment] Shipment details.
     # @return [Interstellar::RateResponse] The response from the carrier, which
     #   includes 0 or more rate estimates for different shipping products
-    def find_rates(_origin, _destination, _packages, _options = {})
+    def find_rates(shipment:)
       raise NotImplementedError, "#find_rates is not supported by #{self.class.name}."
     end
 
