@@ -78,28 +78,28 @@ module Interstellar
       shipper_reference:
     )
       request = build_pickup_request(
-        accessorials: accessorials,
-        customer_reference: customer_reference,
-        delivery_from: delivery_from,
-        delivery_to: delivery_to,
-        destination: destination,
-        dispatcher_email: dispatcher_email,
-        dispatcher_name: dispatcher_name,
-        dispatcher_phone: dispatcher_phone,
-        origin: origin,
-        packages: packages,
-        pickup_from: pickup_from,
-        pickup_to: pickup_to,
-        receiver_contact_name: receiver_contact_name,
-        receiver_name: receiver_name,
-        receiver_phone: receiver_phone,
-        receiver_reference: receiver_reference,
-        scac: scac,
-        service: service,
-        shipper_contact_name: shipper_contact_name,
-        shipper_name: shipper_name,
-        shipper_phone: shipper_phone,
-        shipper_reference: shipper_reference
+        accessorials:,
+        customer_reference:,
+        delivery_from:,
+        delivery_to:,
+        destination:,
+        dispatcher_email:,
+        dispatcher_name:,
+        dispatcher_phone:,
+        origin:,
+        packages:,
+        pickup_from:,
+        pickup_to:,
+        receiver_contact_name:,
+        receiver_name:,
+        receiver_phone:,
+        receiver_reference:,
+        scac:,
+        service:,
+        shipper_contact_name:,
+        shipper_name:,
+        shipper_phone:,
+        shipper_reference:
       )
 
       parse_pickup_response(commit(request))
@@ -115,18 +115,12 @@ module Interstellar
 
     # Rates
 
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
+    def find_rates(shipment:)
       # Not necessary
       # validate_packages(packages)
 
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, commit(request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit(request))
     end
 
     def find_rates_implemented?
@@ -177,9 +171,9 @@ module Interstellar
 
       case method
       when :post
-        HTTParty.post(url, headers: headers, body: body)
+        HTTParty.post(url, headers:, body:)
       else
-        HTTParty.get(url, headers: headers)
+        HTTParty.get(url, headers:)
       end
     end
 
@@ -370,7 +364,7 @@ module Interstellar
       shipper_phone:,
       shipper_reference:
     )
-      accessorials = build_accessorials(accessorials: accessorials, packages: packages)
+      accessorials = build_accessorials(accessorials:, packages:)
 
       mode = @conf.dig(:services, :mappable, service.to_sym)
 
@@ -419,7 +413,7 @@ module Interstellar
         },
         Consignee: {
           AddressLine1: destination.to_hash[:street1],
-          City: destination.to_hash[:city],
+          City: destination.city,
           Contact: {
             Name: receiver_contact_name,
             Phone: receiver_phone,
@@ -429,8 +423,8 @@ module Interstellar
           CountryCode: 'USA',
           IsResidential: accessorials.include?(:residential_pickup),
           Name: receiver_name,
-          PostalCode: destination.to_hash[:postal_code],
-          StateProvince: destination.to_hash[:province]
+          PostalCode: destination.zip,
+          StateProvince: destination.state
         },
         Dates: {
           EarliestPickupDate: "#{pickup_from.iso8601[..-7]}Z",
@@ -469,7 +463,7 @@ module Interstellar
         ServiceFlags: accessorials,
         Shipper: {
           AddressLine1: origin.to_hash[:street1],
-          City: origin.to_hash[:city],
+          City: origin.city,
           Contact: {
             Name: shipper_contact_name,
             Phone: shipper_phone,
@@ -479,8 +473,8 @@ module Interstellar
           CountryCode: 'USA',
           IsResidential: accessorials.include?(:residential_pickup),
           Name: shipper_name,
-          PostalCode: origin.to_hash[:postal_code],
-          StateProvince: origin.to_hash[:province]
+          PostalCode: origin.zip,
+          StateProvince: origin.state
         },
         Status: 'pending'
       }.to_json
@@ -488,7 +482,7 @@ module Interstellar
       request = {
         url: request_url(:pickup),
         method: @conf.dig(:api, :methods, :pickup),
-        body: body
+        body:
       }
 
       request[:headers] = build_headers
@@ -503,15 +497,13 @@ module Interstellar
 
     # Rates
 
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
-      accessorials = build_accessorials(accessorials: options[:accessorials], packages: packages)
+    def build_rate_request(shipment:)
+      accessorials = build_accessorials(accessorials: shipment.accessorials, packages: shipment.packages)
 
       items = []
-      packages.each do |package|
+      shipment.packages.each do |package|
         items << {
-          Name: 'Freight',
+          Name: package.description,
           FreightClass: package.freight_class.to_s,
           Weight: package.pounds(:total).ceil.to_s,
           WeightUnits: 'lb',
@@ -532,37 +524,37 @@ module Interstellar
         },
         Items: items,
         PickupEvent: {
+          City: shipment.origin.city.upcase,
+          Country: shipment.origin.country_code(:alpha3),
           Date: pickup_date.strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'PLocationCode',
-          City: origin.to_hash[:city].upcase,
-          State: origin.to_hash[:province].upcase,
-          Zip: origin.to_hash[:postal_code].upcase,
-          Country: 'USA'
+          State: shipment.origin.state.upcase,
+          Zip: shipment.origin.zip.to_s.upcase
         },
         DropEvent: {
+          City: shipment.destination.city.upcase,
+          Country: shipment.destination.country_code(:alpha3),
           Date: (DateTime.now + 5.days).strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'DLocationCode',
-          City: destination.to_hash[:city].upcase,
-          State: destination.to_hash[:province].upcase,
-          Zip: destination.to_hash[:postal_code].upcase,
-          Country: 'USA',
           MaxPriceSheet: 6,
-          ShowInsurance: false
+          ShowInsurance: false,
+          State: shipment.destination.state.upcase,
+          Zip: shipment.destination.zip.to_s.upcase
         }
       }.to_json
 
       request = {
         url: request_url(:quote),
-        headers: build_headers(options),
+        headers: build_headers(@options),
         method: @conf.dig(:api, :methods, :quote),
-        body: body
+        body:
       }
 
       save_request(request)
       request
     end
 
-    def parse_rate_response(origin, destination, response)
+    def parse_rate_response(shipment:, response:)
       response = parse_response(response)
 
       raise UnserviceableError, 'No rates found' if response.blank?
@@ -591,11 +583,11 @@ module Interstellar
                   end
         transit_days = response_line['ServiceDays'].to_i
         rate_estimates << RateEstimate.new(
-          origin,
-          destination,
+          shipment.origin,
+          shipment.destination,
           { scac: response_line['Scac'], name: response_line['CarrierName'] },
           service,
-          transit_days: transit_days,
+          transit_days:,
           estimate_reference: nil,
           total_cost: cost,
           total_price: cost,
@@ -607,9 +599,9 @@ module Interstellar
       RateResponse.new(
         success,
         message,
-        { response: response },
+        { response: },
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end

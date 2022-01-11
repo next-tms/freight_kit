@@ -56,17 +56,11 @@ module Interstellar
 
     # Rates
 
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def find_rates(shipment:)
+      validate_packages(shipment.packages)
 
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
-      validate_packages(packages)
-
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, commit_soap(:rates, request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit_soap(:rates, request))
     end
 
     def find_rates_implemented?
@@ -158,24 +152,22 @@ module Interstellar
 
     # Rates
 
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
+    def build_rate_request(shipment:)
       service_delivery_options = [
         # API calls this invalid now
         # service_options: { service_code: 'SS' }
       ]
 
-      unless options[:accessorials].blank?
-        serviceable_accessorials?(options[:accessorials])
-        options[:accessorials].each do |a|
+      unless shipment.accessorials.blank?
+        serviceable_accessorials?(shipment.accessorials)
+        shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
             service_delivery_options << { service_options: { service_code: @conf.dig(:accessorials, :mappable)[a] } }
           end
         end
       end
 
-      longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
+      longest_dimension = shipment.packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
       if longest_dimension > 144
         service_delivery_options << { service_options: { service_code: 'EXL' } }
       elsif longest_dimension > 96
@@ -185,7 +177,16 @@ module Interstellar
       service_delivery_options = service_delivery_options.uniq.to_a
 
       shipment_detail = []
-      packages.each do |package|
+      shipment_box_count = 0
+      shipment_pallet_count = 0
+
+      shipment.packages.each do |package|
+        if package.packaging.type == 'pallet'
+          shipment_pallet_count += package.quantity
+        else
+          shipment_box_count += package.quantity
+        end
+
         package.quantity.times do
           shipment_detail << {
             'ActualClass' => package.freight_class,
@@ -196,16 +197,16 @@ module Interstellar
 
       request = {
         'request' => {
-          origin_zip: origin.to_hash[:postal_code].to_s,
-          destination_zip: destination.to_hash[:postal_code].to_s,
-          shipment_details: { shipment_detail: shipment_detail },
-          service_delivery_options: service_delivery_options,
-          origin_type: options[:origin_type] || 'B', # O for shipper, I for consignee, B for third party
-          payment_type: options[:payment_type] || 'P', # Prepaid
-          pallet_count: packages.size,
+          account: @options[:account],
+          destination_zip: shipment.destination.zip.to_s,
           # :linear_feet => linear_ft(packages),
-          pieces: packages.size,
-          account: options[:account]
+          origin_type: 'B', # O for shipper, I for consignee, B for third party
+          origin_zip: shipment.origin.zip.to_s,
+          pallet_count: shipment_pallet_count,
+          payment_type: 'P', # prepaid
+          pieces: shipment_box_count,
+          service_delivery_options:,
+          shipment_details: { shipment_detail: }
         }
       }
 
@@ -213,7 +214,7 @@ module Interstellar
       request
     end
 
-    def parse_rate_response(origin, destination, response)
+    def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
@@ -242,12 +243,12 @@ module Interstellar
             cost = (cost.to_f * 100).to_i
             rate_estimates = [
               RateEstimate.new(
-                origin,
-                destination,
+                shipment.origin,
+                shipment.destination,
                 { scac: self.class.scac.upcase, name: self.class.name },
                 :standard,
-                transit_days: transit_days,
-                estimate_reference: estimate_reference,
+                transit_days:,
+                estimate_reference:,
                 total_cost: cost,
                 total_price: cost,
                 currency: 'USD',
@@ -266,7 +267,7 @@ module Interstellar
         message,
         response.to_hash,
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end
@@ -303,9 +304,9 @@ module Interstellar
       state = parts[1].gsub('.', '').squeeze.strip.upcase
 
       Location.new(
-        city: city,
+        city:,
         province: state,
-        state: state,
+        state:,
         country: ActiveUtils::Country.find('USA')
       )
     end
@@ -400,19 +401,19 @@ module Interstellar
         shipment_events.last&.status,
         json,
         carrier: "#{@@scac}, #{@@name}",
-        json: json,
-        response: response,
+        json:,
+        response:,
         status: shipment_events.last&.status,
         type_code: shipment_events.last&.status,
         ship_time: parse_date(search_result.dig('Shipment', 'ProDateTime')),
-        scheduled_delivery_date: scheduled_delivery_date,
-        actual_delivery_date: actual_delivery_date,
+        scheduled_delivery_date:,
+        actual_delivery_date:,
         delivery_signature: nil,
-        shipment_events: shipment_events,
-        shipper_address: shipper_address,
+        shipment_events:,
+        shipper_address:,
         origin: shipper_address,
         destination: receiver_address,
-        tracking_number: tracking_number
+        tracking_number:
       )
     end
 

@@ -46,17 +46,11 @@ module Interstellar
 
     # Rates
 
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def find_rates(shipment:)
+      validate_packages(shipment.packages)
 
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
-      validate_packages(packages)
-
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, commit_soap(:rates, request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit_soap(:rates, request))
     end
 
     def find_rates_implemented?
@@ -195,20 +189,18 @@ module Interstellar
 
     # Rates
 
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
+    def build_rate_request(shipment:)
       accessorials = []
-      unless options[:accessorials].blank?
-        serviceable_accessorials?(options[:accessorials])
-        options[:accessorials].each do |a|
+      unless shipment.accessorials.blank?
+        serviceable_accessorials?(shipment.accessorials)
+        shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
             accessorials << @conf.dig(:accessorials, :mappable)[a]
           end
         end
       end
 
-      longest_dimension = packages.map { |p| [p.length(:in), p.width(:in)].max }.max.ceil
+      longest_dimension = shipment.packages.map { |p| [p.length(:in), p.width(:in)].max }.max.ceil
       if longest_dimension >= 336
         accessorials << 'X29'
       elsif longest_dimension >= 240 && longest_dimension < 336
@@ -222,25 +214,25 @@ module Interstellar
       accessorials = accessorials.uniq.join(',')
 
       shipment_detail = []
-      packages.each do |package|
+      shipment.packages.each do |package|
         shipment_detail << [package.quantity, package.freight_class, package.pounds(:total)].join('|')
       end
       shipment_detail = shipment_detail.join('|')
 
       request = {
         customer_code: @options[:account],
-        origin_zip: origin.to_hash[:postal_code].to_s.upcase,
-        destination_zip: destination.to_hash[:postal_code].to_s.upcase,
-        shipment_detail: shipment_detail,
+        origin_zip: shipment.origin.zip.to_s.upcase,
+        destination_zip: shipment.destination.zip.to_s.upcase,
+        shipment_detail:,
         rating_type: '', # per API documentation
-        accessorials: accessorials
+        accessorials:
       }
 
       save_request(request)
       request
     end
 
-    def parse_rate_response(origin, destination, response)
+    def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
@@ -250,9 +242,7 @@ module Interstellar
       else
         error = response.dig(:get_rates_response, :get_rates_result, :return_line)
 
-        if !error.blank? && error.downcase.include?('not a valid customer code')
-          raise InvalidCredentialsError, credentials_error
-        end
+        raise InvalidCredentialsError, error if !error.blank? && error.downcase.include?('not a valid customer code')
 
         raise UnserviceableError, error if !error.blank? && error.downcase.include?('not a direct service point')
 
@@ -275,12 +265,12 @@ module Interstellar
 
             rate_estimates = [
               RateEstimate.new(
-                origin,
-                destination,
+                shipment.origin,
+                shipment.destination,
                 { scac: self.class.scac.upcase, name: self.class.name },
                 :standard,
-                transit_days: transit_days,
-                estimate_reference: estimate_reference,
+                transit_days:,
+                estimate_reference:,
                 total_cost: cost,
                 total_price: cost,
                 currency: 'USD',
@@ -299,7 +289,7 @@ module Interstellar
         message,
         response.to_hash,
         rates: rate_estimates,
-        response: response,
+        response:,
         request: last_request
       )
     end
@@ -345,9 +335,9 @@ module Interstellar
       state = parts[1].squeeze.strip.upcase
 
       Location.new(
-        city: city,
+        city:,
         province: state,
-        state: state,
+        state:,
         country: ActiveUtils::Country.find('USA')
       )
     end
@@ -359,23 +349,23 @@ module Interstellar
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 
       shipper_address = Location.new(
-        street: search_result.dig(:shipperaddress).squeeze.strip.titleize,
-        city: search_result.dig(:shipper_city).squeeze.strip.titleize,
-        state: search_result.dig(:shipper_state).strip.upcase,
-        postal_code: search_result.dig(:shipper_zip).strip,
+        street: search_result[:shipperaddress].squeeze.strip.titleize,
+        city: search_result[:shipper_city].squeeze.strip.titleize,
+        state: search_result[:shipper_state].strip.upcase,
+        postal_code: search_result[:shipper_zip].strip,
         country: ActiveUtils::Country.find('USA')
       )
 
       receiver_address = Location.new(
-        street: search_result.dig(:consaddress).squeeze.strip.titleize,
-        city: search_result.dig(:cons_city).squeeze.strip.titleize,
-        state: search_result.dig(:cons_state).strip.upcase,
-        postal_code: search_result.dig(:cons_zip).strip,
+        street: search_result[:consaddress].squeeze.strip.titleize,
+        city: search_result[:cons_city].squeeze.strip.titleize,
+        state: search_result[:cons_state].strip.upcase,
+        postal_code: search_result[:cons_zip].strip,
         country: ActiveUtils::Country.find('USA')
       )
 
       actual_delivery_date = parse_date(search_result.dig('Shipment', 'DeliveredDateTime'))
-      pickup_date = parse_date(search_result.dig(:pickup_date))
+      pickup_date = parse_date(search_result[:pickup_date])
       scheduled_delivery_date = parse_date(search_result.dig('Shipment', 'ApptDateTime'))
       tracking_number = search_result.dig('Shipment', 'SearchItem')
 
@@ -389,7 +379,7 @@ module Interstellar
       api_events = search_result.dig(:tracking_status_response, :tracking_status_row).reverse
       api_events.each do |api_event|
         event_key = nil
-        comment = api_event.dig(:tracking_status)
+        comment = api_event[:tracking_status]
 
         @conf.dig(:events, :types).each do |key, val|
           if comment.downcase.include?(val)
@@ -412,7 +402,7 @@ module Interstellar
           location = parse_city(comment.split('Location:')[1])
         end
 
-        datetime_without_time_zone = parse_date(api_event.dig(:tracking_date))
+        datetime_without_time_zone = parse_date(api_event[:tracking_date])
 
         # status and type_code set automatically by ActiveFreight based on event
         shipment_events << ShipmentEvent.new(event_key, datetime_without_time_zone, location)
@@ -427,18 +417,18 @@ module Interstellar
         response,
         carrier: "#{@@scac}, #{@@name}",
         hash: response,
-        response: response,
-        status: status,
+        response:,
+        status:,
         type_code: status,
         ship_time: parse_date(search_result.dig('Shipment', 'ProDateTime')),
-        scheduled_delivery_date: scheduled_delivery_date,
-        actual_delivery_date: actual_delivery_date,
+        scheduled_delivery_date:,
+        actual_delivery_date:,
         delivery_signature: nil,
-        shipment_events: shipment_events,
-        shipper_address: shipper_address,
+        shipment_events:,
+        shipper_address:,
         origin: shipper_address,
         destination: receiver_address,
-        tracking_number: tracking_number,
+        tracking_number:,
         request: last_request
       )
     end

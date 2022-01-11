@@ -27,18 +27,12 @@ module Interstellar
     # Documents
 
     # Rates
-    def find_rates(origin, destination, packages, options = {})
-      options = @options.merge(options)
+    def find_rates(shipment:)
+      validate_packages(shipment.packages)
+      raise UnserviceableError, 'Must be fewer than 10 items altogether' if shipment.packages.sum(&:quantity) > 10
 
-      origin = Location.from(origin)
-      destination = Location.from(destination)
-      packages = Array(packages)
-
-      validate_packages(packages)
-      raise UnserviceableError, 'Must be fewer than 10 items altogether' if packages.sum(&:quantity) > 10
-
-      request = build_rate_request(origin, destination, packages, options)
-      parse_rate_response(origin, destination, commit_soap(:rates, request))
+      request = build_rate_request(shipment:)
+      parse_rate_response(shipment:, response: commit_soap(:rates, request))
     end
 
     def find_rates_implemented?
@@ -93,27 +87,25 @@ module Interstellar
     # Documents
 
     # Rates
-    def build_rate_request(origin, destination, packages, options = {})
-      options = @options.merge(options)
-
+    def build_rate_request(shipment:)
       accessorials = [{ 'AccessorialItem': { 'Code': 'SingleShipment' } }]
-      unless options[:accessorials].blank?
-        serviceable_accessorials?(options[:accessorials])
-        options[:accessorials].each do |a|
+      unless shipment.accessorials.blank?
+        serviceable_accessorials?(shipment.accessorials)
+        shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
             accessorials << { 'AccessorialItem': { 'Code': @conf.dig(:accessorials, :mappable)[a] } }
           end
         end
       end
 
-      longest_dimension = packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
+      longest_dimension = shipment.packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
       accessorials << { 'AccessorialItem': { 'Code': 'ExcessiveLength' } } if longest_dimension >= 96
 
       accessorials = accessorials.uniq
 
       details = []
       dimensions = []
-      packages.each do |package|
+      shipment.packages.each do |package|
         package.quantity.times do
           details << {
             'DetailItem': {
@@ -142,14 +134,14 @@ module Interstellar
         'request': {
           'Application': 'ThirdParty',
           'BillingTerms': 'Prepaid',
-          'OriginCity': origin.city,
-          'OriginState': origin.state,
-          'OriginZipcode': origin.to_hash[:postal_code].to_s.upcase,
-          'DestinationCity': destination.city,
-          'DestinationState': destination.state,
-          'DestinationZipcode': destination.to_hash[:postal_code].to_s.upcase,
+          'OriginCity': shipment.origin.city,
+          'OriginState': shipment.origin.state,
+          'OriginZipcode': shipment.origin.zip.to_s.upcase,
+          'DestinationCity': shipment.destination.city,
+          'DestinationState': shipment.destination.state,
+          'DestinationZipcode': shipment.destination.zip.to_s.upcase,
           'WeightUnits': 'LBS',
-          'TotalCube': packages.sum { |p| p.cubic_ft(:each) }.round(2),
+          'TotalCube': shipment.packages.sum { |p| p.cubic_ft(:each) }.round(2),
           'TotalCubeUnits': 'CUFT', # cubic ft
           'ExcessiveLengthTotalInches': longest_dimension.to_s,
           'Details': details,
@@ -158,10 +150,10 @@ module Interstellar
         }
       }
 
-      declared_value = if options[:declared_value_cents].blank?
+      declared_value = if shipment.declared_value_cents.blank?
                          nil
                        else
-                         (options[:declared_value_cents].to_f / 100).ceil
+                         (shipment.declared_value_cents.to_f / 100).ceil
                        end
 
       unless declared_value.blank?
@@ -179,7 +171,7 @@ module Interstellar
       request
     end
 
-    def parse_rate_response(origin, destination, response)
+    def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
@@ -212,8 +204,8 @@ module Interstellar
 
             rate_estimates = []
             rate_estimates << RateEstimate.new(
-              origin,
-              destination,
+              shipment.origin,
+              shipment.destination,
               { scac: self.class.scac.upcase, name: self.class.name },
               :standard,
               transit_days:,
@@ -232,8 +224,8 @@ module Interstellar
               if !service.values[0] == '0' && !service.values[0].blank?
                 cost = service.values[0].sub('.', '').to_i
                 rate_estimates << RateEstimate.new(
-                  origin,
-                  destination,
+                  shipment.origin,
+                  shipment.destination,
                   { scac: self.class.scac.upcase, name: self.class.name },
                   service.keys[0],
                   delivery_range:,
