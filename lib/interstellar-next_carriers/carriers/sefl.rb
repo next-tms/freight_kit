@@ -184,75 +184,58 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:, tries: 0)
-      raise Interstellar::ResponseError if tries > 10
-
-      success = true
-      message = ''
+      raise Interstellar::ResponseError, "API Error: Timeout after #{tries * 5} seconds" if tries > 10
 
       if response.body.blank?
-        if response.code == 401
-          raise Interstellar::InvalidCredentialsError, "API Error: Timeout after #{tries * 5} seconds"
-        else
-          success = false
-          message = 'API Error: Unknown response'
-        end
-      else
-        begin
-          response = JSON.parse(response.body)
-        rescue JSON::ParserError
-          sleep(5)
-          parse_rate_response(shipment:, response:, tries: tries + 1)
-        end
+        raise Interstellar::InvalidCredentialsError if response.code == 401
 
-        url = response['detailQuoteLocation'].gsub('\\', '')
-        request = build_request(:get_rate, url:)
-        save_request(request)
-        response = commit(request)
-
-        if response.body.blank?
-          if response.code == 401
-            raise Interstellar::InvalidCredentialsError
-          else
-            success = false
-            message = 'API Error: Unknown response'
-          end
-        else
-          begin
-            response = JSON.parse(response.body)
-          rescue JSON::ParserError
-            raise Interstellar::ResponseError
-          end
-          if response['errorMessage'].blank?
-            cost = response['rateQuote']
-            if cost
-              cost = cost.sub('.', '').to_i
-              estimate_reference = response['quoteNumber']
-              transit_days = response['transitTime'].to_i
-
-              rate_estimates = [
-                RateEstimate.new(
-                  shipment.origin,
-                  shipment.destination,
-                  { scac: self.class.scac.upcase, name: self.class.name },
-                  :standard,
-                  transit_days:,
-                  estimate_reference:,
-                  total_cost: cost,
-                  total_price: cost,
-                  currency: 'USD',
-                  with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-                )
-              ]
-            else
-              success = false
-              message = 'API Error: Cost is emtpy'
-            end
-          else
-            success = false
-            message = response['errorMessage']
-          end
-        end
+        raise Interstellar::ResponseError
       end
+
+      begin
+        response = JSON.parse(response.body)
+      rescue JSON::ParserError
+        sleep(5)
+        parse_rate_response(shipment:, response:, tries: tries + 1)
+      end
+
+      url = response['detailQuoteLocation'].gsub('\\', '')
+      request = build_request(:get_rate, url:)
+      save_request(request)
+      response = commit(request)
+
+      if response.body.blank?
+        raise Interstellar::InvalidCredentialsError if response.code == 401
+
+        raise Interstellar::ResponseError
+      end
+
+      response = JSON.parse(response.body)
+      raise Interstellar::ResponseError if response.blank?
+
+      error = response['errorMessage']
+      raise Interstellar::ResponseError, "API Error: #{error}" unless error.blank?
+
+      cost = response['rateQuote']&.sub('.', '')&.to_i
+      raise Interstellar::ResponseError, 'API Error: Cost is empty' if response.blank?
+
+      estimate_reference = response['quoteNumber']
+      transit_days = response['transitTime'].to_i
+
+      rate_estimates = [
+        RateEstimate.new(
+          shipment.origin,
+          shipment.destination,
+          { scac: self.class.scac.upcase, name: self.class.name },
+          :standard,
+          transit_days:,
+          estimate_reference:,
+          total_cost: cost,
+          total_price: cost,
+          currency: 'USD',
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        )
+      ]
 
       RateResponse.new(
         success,
