@@ -199,6 +199,13 @@ module Interstellar
         parse_rate_response(shipment:, response:, tries: tries + 1)
       end
 
+      error = response['errorMessage']
+      if error.include?('one point must be directly serviced')
+        raise Interstellar::UnserviceableError, error.sub(' by SEFL.', '')
+      else
+        raise Interstellar::ResponseError, error
+      end
+
       url = response['detailQuoteLocation'].gsub('\\', '')
       request = build_request(:get_rate, url:)
       save_request(request)
