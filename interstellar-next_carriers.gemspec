@@ -5,8 +5,8 @@ $:.unshift(lib) unless $:.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name = 'interstellar-next_carriers'
-  spec.version = '0.1.pre2'
-  spec.date = '2022-01-08'
+  spec.version = '0.1.pre3'
+  spec.date = '2022-01-12'
 
   spec.authors = [
     'Third Party Transportation Systems LLC'
@@ -25,6 +25,6 @@ Gem::Specification.new do |spec|
   spec.files.reject! { |fn| fn.include? 'CVS' }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'interstellar', '0.1.pre2'
+  spec.add_dependency 'interstellar', '0.1.pre3'
   spec.add_dependency 'interstellar-next_platforms', '0.1.pre2'
 end

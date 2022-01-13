@@ -54,52 +54,24 @@ module Interstellar
     # Pickups
 
     def create_pickup(
-      accessorials:,
-      customer_reference:,
       delivery_from:,
       delivery_to:,
-      destination:,
-      dispatcher_email:,
-      dispatcher_name:,
-      dispatcher_phone:,
-      origin:,
-      packages:,
+      dispatcher:,
       pickup_from:,
       pickup_to:,
-      receiver_contact_name:,
-      receiver_name:,
-      receiver_phone:,
-      receiver_reference:,
       scac:,
       service:,
-      shipper_contact_name:,
-      shipper_name:,
-      shipper_phone:,
-      shipper_reference:
+      shipment:
     )
       request = build_pickup_request(
-        accessorials:,
-        customer_reference:,
         delivery_from:,
         delivery_to:,
-        destination:,
-        dispatcher_email:,
-        dispatcher_name:,
-        dispatcher_phone:,
-        origin:,
-        packages:,
+        dispatcher:,
         pickup_from:,
         pickup_to:,
-        receiver_contact_name:,
-        receiver_name:,
-        receiver_phone:,
-        receiver_reference:,
         scac:,
         service:,
-        shipper_contact_name:,
-        shipper_name:,
-        shipper_phone:,
-        shipper_reference:
+        shipment:
       )
 
       parse_pickup_response(commit(request))
@@ -131,20 +103,18 @@ module Interstellar
 
     protected
 
-    def build_accessorials(accessorials:, packages:)
-      serviceable_accessorials?(accessorials)
+    def build_accessorials(shipment:)
+      serviceable_accessorials?(shipment.accessorials)
 
       parsed_accessorials = []
 
-      accessorials.each do |a|
+      shipment.accessorials.each do |a|
         unless @conf.dig(:accessorials, :unserviceable).include?(a)
           parsed_accessorials << { ServiceCode: @conf.dig(:accessorials, :mappable)[a] }
         end
       end
 
-      longest_dimension_ft = (packages.inject([]) do |_arr, p|
-                                [p.length(:in), p.width(:in)]
-                              end.max.ceil.to_f / 12).ceil.to_i
+      longest_dimension_ft = shipment.packages.map { |p| [p.width(:feet), p.length(:feet)].max }.max.ceil
       if longest_dimension_ft >= 8 && longest_dimension_ft < 30
         parsed_accessorials << { ServiceCode: "OVL#{longest_dimension_ft}" }
       end
@@ -341,42 +311,28 @@ module Interstellar
     # Pickups
 
     def build_pickup_request(
-      accessorials:,
-      customer_reference:,
       delivery_from:,
       delivery_to:,
-      destination:,
-      dispatcher_email:,
-      dispatcher_name:,
-      dispatcher_phone:,
-      origin:,
-      packages:,
+      dispatcher:,
       pickup_from:,
       pickup_to:,
-      receiver_contact_name:,
-      receiver_name:,
-      receiver_phone:,
-      receiver_reference:,
       scac:,
       service:,
-      shipper_contact_name:,
-      shipper_name:,
-      shipper_phone:,
-      shipper_reference:
+      shipment:
     )
-      accessorials = build_accessorials(accessorials:, packages:)
+      accessorials = build_accessorials(shipment:)
 
       mode = @conf.dig(:services, :mappable, service.to_sym)
 
-      shipper_phone = shipper_phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
+      shipper_phone = shipment.origin.contact.phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
       shipper_phone = shipper_phone[1..] if shipper_phone.length == 11
 
-      receiver_phone = receiver_phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
+      receiver_phone = shipment.destination.contact.phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
       receiver_phone = receiver_phone[1..] if receiver_phone.length == 11
 
       items = []
       i = 0
-      packages.each do |package|
+      shipment.packages.each do |package|
         # package_type = package.type.pallet? ? 'PALLET' : ''
         package_type = 'PALLET'
 
@@ -412,19 +368,19 @@ module Interstellar
           Type: 'SpecialInstructions'
         },
         Consignee: {
-          AddressLine1: destination.to_hash[:street1],
-          City: destination.city,
+          AddressLine1: shipment.destination.street1,
+          City: shipment.destination.city,
           Contact: {
-            Name: receiver_contact_name,
+            Name: shipment.destination.contact.name,
             Phone: receiver_phone,
             Fax: '',
             Email: ''
           },
-          CountryCode: 'USA',
-          IsResidential: accessorials.include?(:residential_pickup),
+          CountryCode: shipment.destination.country.code(:alpha3),
+          IsResidential: shipment.accessorials.include?(:residential_pickup),
           Name: receiver_name,
-          PostalCode: destination.zip,
-          StateProvince: destination.state
+          PostalCode: shipment.destination.zip,
+          StateProvince: shipment.destination.state
         },
         Dates: {
           EarliestPickupDate: "#{pickup_from.iso8601[..-7]}Z",
@@ -451,30 +407,30 @@ module Interstellar
         ReferenceNumbers: [
           {
             IsPrimary: true,
-            ReferenceNumber: shipper_reference.to_s,
+            ReferenceNumber: shipment.order_number.to_s,
             Type: 'Ship Ref'
           },
           {
             IsPrimary: false, # must have one true
-            ReferenceNumber: customer_reference.to_s,
+            ReferenceNumber: shipment.po_number.to_s,
             Type: 'PO Number'
           }
         ],
         ServiceFlags: accessorials,
         Shipper: {
-          AddressLine1: origin.to_hash[:street1],
-          City: origin.city,
+          AddressLine1: shipment.origin.street1,
+          City: shipment.origin.city,
           Contact: {
-            Name: shipper_contact_name,
+            Name: shipment.origin.contact.name,
             Phone: shipper_phone,
             Fax: '',
             Email: ''
           },
-          CountryCode: 'USA',
-          IsResidential: accessorials.include?(:residential_pickup),
-          Name: shipper_name,
-          PostalCode: origin.zip,
-          StateProvince: origin.state
+          CountryCode: shipment.origin.country.code(:alpha3),
+          IsResidential: shipment.accessorials.include?(:residential_pickup),
+          Name: shipment.origin.contact.company_name,
+          PostalCode: shipment.origin.zip,
+          StateProvince: shipment.origin.state
         },
         Status: 'pending'
       }.to_json
@@ -498,7 +454,7 @@ module Interstellar
     # Rates
 
     def build_rate_request(shipment:)
-      accessorials = build_accessorials(accessorials: shipment.accessorials, packages: shipment.packages)
+      accessorials = build_accessorials(shipment:)
 
       items = []
       shipment.packages.each do |package|

@@ -61,52 +61,24 @@ module Interstellar
     # Pickups
 
     def create_pickup(
-      accessorials:,
-      customer_reference:,
       delivery_from:,
       delivery_to:,
-      destination:,
-      dispatcher_email:,
-      dispatcher_name:,
-      dispatcher_phone:,
-      origin:,
-      packages:,
+      dispatcher:,
       pickup_from:,
       pickup_to:,
-      receiver_contact_name:,
-      receiver_name:,
-      receiver_phone:,
-      receiver_reference:,
       scac:,
       service:,
-      shipper_contact_name:,
-      shipper_name:,
-      shipper_phone:,
-      shipper_reference:
+      shipment:
     )
       request = build_pickup_request(
-        accessorials:,
-        customer_reference:,
         delivery_from:,
         delivery_to:,
-        destination:,
-        dispatcher_email:,
-        dispatcher_name:,
-        dispatcher_phone:,
-        origin:,
-        packages:,
+        dispatcher:,
         pickup_from:,
         pickup_to:,
-        receiver_contact_name:,
-        receiver_name:,
-        receiver_phone:,
-        receiver_reference:,
         scac:,
         service:,
-        shipper_contact_name:,
-        shipper_name:,
-        shipper_phone:,
-        shipper_reference:
+        shipment:
       )
 
       parse_pickup_response(commit(request))
@@ -255,36 +227,26 @@ module Interstellar
     # Pickups
 
     def build_pickup_request(
-      accessorials:,
-      customer_reference:,
       delivery_from:,
       delivery_to:,
-      destination:,
-      dispatcher_email:,
-      dispatcher_name:,
-      dispatcher_phone:,
-      origin:,
-      packages:,
+      dispatcher:,
       pickup_from:,
       pickup_to:,
-      receiver_contact_name:,
-      receiver_name:,
-      receiver_phone:,
-      receiver_reference:,
       scac:,
       service:,
-      shipper_contact_name:,
-      shipper_name:,
-      shipper_phone:,
-      shipper_reference:
+      shipment:
     )
+      pickup_accessorials, delivery_accessorials = build_accessorials(shipment.accessorials)
 
-      options = @options
-      pickup_accessorials, delivery_accessorials = build_accessorials(accessorials)
+      dispatcher_phone = dispatcher.phone.delete('^0-9')
+      shipper_phone = origin.contact.phone.delete('^0-9')
+      receiver_phone = destination.contact.phone.delete('^0-9')
 
-      dispatcher_phone = dispatcher_phone.delete('^0-9')
-      shipper_phone = shipper_phone.delete('^0-9')
-      receiver_phone = receiver_phone.delete('^0-9')
+      declared_value = if shipment.declared_value_cents.blank?
+                         '0'
+                       else
+                         format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
+                       end
 
       request = {
         headers: build_headers(options),
@@ -293,50 +255,50 @@ module Interstellar
         body: {
           testmode: test_mode? ? 'Y' : 'N',
           consignee: {
-            consigneeAddress1: destination.to_hash[:address1],
+            consigneeAddress1: destination.address1,
             consigneeAddress2: '',
-            consigneeCity: destination.to_hash[:city],
+            consigneeCity: destination.city,
             consigneeCloseTime: delivery_to.strftime('%H:%M:00'),
             consigneeContactEmail: '',
-            consigneeContactName: receiver_contact_name || 'Receiving',
+            consigneeContactName: shipment.destination.contact.name || 'Receiving',
             consigneeContactPhone: receiver_phone || '',
-            consigneeCountry: destination.country.code(:alpha2).to_s,
-            consigneeLocationName: receiver_name,
+            consigneeCountry: shipment.destination.country.code(:alpha2),
+            consigneeLocationName: shipment.destination.contact.name,
             consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
-            consigneeState: destination.to_hash[:province],
-            consigneeZipCode: destination.zip.to_s
+            consigneeState: shipment.destination.state,
+            consigneeZipCode: shipment.destination.zip.to_s
           },
           shipper: {
-            shipperAddress1: origin.to_hash[:address1],
+            shipperAddress1: shipment.origin.address1,
             shipperAddress2: '',
-            shipperCity: origin.to_hash[:city],
+            shipperCity: shipment.origin.city,
             shipperCloseTime: pickup_to.strftime('%H:%M:00'),
             shipperContactEmail: '',
-            shipperContactName: shipper_contact_name || 'Shipping',
+            shipperContactName: shipment.origin.contact.name || 'Shipping',
             shipperContactPhone: shipper_phone || '',
-            shipperCountry: origin.country.code(:alpha2).to_s,
-            shipperLocationName: shipper_name,
+            shipperCountry: shipment.origin.country.code(:alpha2),
+            shipperLocationName: shipment.origin.contact.name,
             shipperOpenTime: pickup_from.strftime('%H:%M:00'),
-            shipperState: origin.to_hash[:province],
-            shipperZipCode: origin.zip.to_s
+            shipperState: shipment.origin.state,
+            shipperZipCode: shipment.origin.zip.to_s
           },
           orderDetails: {
             airbillNumber: '00000000',
-            billToCustomerNumber: options[:account]&.to_s || '',
-            customerReferenceNumber: '00000000',
-            declaredValue: '0',
-            description: 'Testing',
+            billToCustomerNumber: @options[:account]&.to_s || '',
+            customerReferenceNumber: shipment.po_number,
+            declaredValue: declared_value,
+            description: shipment.packages.map(&:description).reject(&:blank?).uniq.join(', '),
             destinationAirportCode: '',
             guaranteedService: 'N',
             hazmat: packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
-            inBondShipment: 'N',
+            inBondShipment: declared_value.positive? ? 'Y' : 'N',
             orderAction: 'CREATE',
             originAirportCode: '',
             shippingDate: pickup_from.strftime('%Y-%m-%d'),
-            shipperCustomerNumber: options[:account]&.to_s || '',
+            shipperCustomerNumber: @options[:account]&.to_s || '',
             specialInstructions: '',
             dimensions: {
-              dimension: packages.map do |package|
+              dimension: shipment.packages.map do |package|
                 {
                   height: package.inches(:height).ceil.to_s,
                   length: package.inches(:length).ceil.to_s,
@@ -345,15 +307,15 @@ module Interstellar
                 }
               end
             },
-            freightDetails: { freightDetail: build_freight_details(packages) },
+            freightDetails: { freightDetail: build_freight_details(shipment.packages) },
             delivery: {
               airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
               deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
             },
             emergencyContact: {
-              email: dispatcher_email,
-              name: dispatcher_name,
-              phone: dispatcher_phone
+              email: dispatcher.email,
+              name: dispatcher.name,
+              phone: dispatcher.phone
             },
             pickup: {
               airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
@@ -362,8 +324,8 @@ module Interstellar
             },
             referenceNumbers: {
               referenceNumber: [
-                shipper_reference,
-                receiver_reference,
+                shipment.order_number,
+                shipment.po_number,
                 ''
               ]
             }
