@@ -16,12 +16,6 @@ module Interstellar # :nodoc:
       province: %i[province_code state_code territory_code region_code province state territory region]
     }.freeze
 
-    alias postal postal_code
-    alias region province
-    alias state province
-    alias territory province
-    alias zip postal_code
-
     attr_accessor :contact,
                   :country,
                   :postal_code,
@@ -32,6 +26,12 @@ module Interstellar # :nodoc:
                   :address3
 
     attr_reader :address_type
+
+    alias postal postal_code
+    alias region province
+    alias state province
+    alias territory province
+    alias zip postal_code
 
     def initialize(options = {})
       @country = if options[:country].nil? || options[:country].is_a?(ActiveUtils::Country)
