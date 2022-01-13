@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_model/forbidden_attributes_protection'
 require 'active_model/attribute_assignment'
 
@@ -20,6 +22,7 @@ require 'interstellar/model'
 require 'interstellar/response'
 require 'interstellar/address_validation_response'
 require 'interstellar/carrier'
+require 'interstellar/contact'
 require 'interstellar/delivery_date_estimate'
 require 'interstellar/delivery_date_estimates_response'
 require 'interstellar/location'
