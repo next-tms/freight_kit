@@ -51,52 +51,24 @@ module Interstellar
     # Pickups
 
     def create_pickup(
-      accessorials:,
-      customer_reference:,
       delivery_from:,
       delivery_to:,
-      destination:,
-      dispatcher_email:,
-      dispatcher_name:,
-      dispatcher_phone:,
-      origin:,
-      packages:,
+      dispatcher:,
       pickup_from:,
       pickup_to:,
-      receiver_contact_name:,
-      receiver_name:,
-      receiver_phone:,
-      receiver_reference:,
       scac:,
       service:,
-      shipper_contact_name:,
-      shipper_name:,
-      shipper_phone:,
-      shipper_reference:
+      shipment:
     )
       parse_pickup_response(
-        accessorials:,
-        customer_reference:,
         delivery_from:,
         delivery_to:,
-        destination:,
-        dispatcher_email:,
-        dispatcher_name:,
-        dispatcher_phone:,
-        origin:,
-        packages:,
+        dispatcher:,
         pickup_from:,
         pickup_to:,
-        receiver_contact_name:,
-        receiver_name:,
-        receiver_phone:,
-        receiver_reference:,
         scac:,
         service:,
-        shipper_contact_name:,
-        shipper_name:,
-        shipper_phone:,
-        shipper_reference:
+        shipment:
       )
     end
 
@@ -263,30 +235,15 @@ module Interstellar
     # Pickups
 
     def parse_pickup_response(
-      accessorials:,
-      customer_reference:,
       delivery_from:,
       delivery_to:,
-      destination:,
-      dispatcher_email:,
-      dispatcher_name:,
-      dispatcher_phone:,
-      origin:,
-      packages:,
+      dispatcher:,
       pickup_from:,
       pickup_to:,
-      receiver_contact_name:,
-      receiver_name:,
-      receiver_phone:,
-      receiver_reference:,
       scac:,
       service:,
-      shipper_contact_name:,
-      shipper_name:,
-      shipper_phone:,
-      shipper_reference:
+      shipment:
     )
-      options = @options
       browser = Watir::Browser.new(*options[:watir_args])
       browser.goto(build_url(:pickup))
 
@@ -310,7 +267,7 @@ module Interstellar
       browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li[2]/span[2]').wait_until(&:present?).click
       browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[6]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/div/span/img').wait_until(&:present?).click
 
-      shipper_name = shipper_name.upcase.squish.strip
+      shipper_name = origin.contact.company_name.upcase.squish.strip
       new_customer = true
 
       browser.select_list(id: 'DPSC').wait_until(&:present?).click
@@ -322,26 +279,26 @@ module Interstellar
         browser.option(text: '<new>').click
 
         browser.text_field(name: 'SHPNAM').set(shipper_name.upcase)
-        browser.text_field(name: 'SHPAD1').set(origin.address1.upcase)
-        browser.text_field(name: 'SHPCTY').set(origin.city.upcase)
-        browser.text_field(name: 'SHPSTA').set(origin.state.upcase[..1])
-        browser.text_field(name: 'SHPZIP').set(origin.zip)
+        browser.text_field(name: 'SHPAD1').set(shipment.origin.address1.upcase)
+        browser.text_field(name: 'SHPCTY').set(shipment.origin.city.upcase)
+        browser.text_field(name: 'SHPSTA').set(shipment.origin.state.upcase[..1])
+        browser.text_field(name: 'SHPZIP').set(shipment.origin.zip)
       end
 
       browser.text_field(name: 'DPADAT').set(pickup_from.to_date.strftime('%m/%d/%Y'))
       browser.text_field(name: 'DPATIM').set(pickup_from.strftime('%H:%M'))
       browser.text_field(name: 'DPCTIM').set(pickup_to.strftime('%H:%M'))
 
-      total_weight = packages.map { |p| p.pounds(:total) }.sum.ceil
+      total_weight = shipment.packages.map { |p| p.pounds(:total) }.sum.ceil
 
       browser.text_field(name: 'DSTWT_1').set(total_weight)
-      browser.text_field(name: 'DSDZIP_1').set(destination.zip)
-      browser.text_field(name: 'DSTPC_1').set(packages.map(&:quantity).sum)
-      browser.text_field(name: 'DSPLT_1').set(packages.map(&:quantity).sum)
+      browser.text_field(name: 'DSDZIP_1').set(shipment.destination.zip)
+      browser.text_field(name: 'DSTPC_1').set(shipment.packages.map(&:quantity).sum)
+      browser.text_field(name: 'DSPLT_1').set(shipment.packages.map(&:quantity).sum)
 
-      browser.checkbox(name: 'DSHAZ_1').check if packages.map(&:hazmat?).include?(true)
+      browser.checkbox(name: 'DSHAZ_1').check if shipment.packages.map(&:hazmat?).include?(true)
 
-      browser.checkbox(name: 'DSLIFT_1').check if accessorials.include?(:liftgate_pickup)
+      browser.checkbox(name: 'DSLIFT_1').check if shipment.accessorials.include?(:liftgate_pickup)
 
       browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div/div[1]/div/button[2]/span').click
 
