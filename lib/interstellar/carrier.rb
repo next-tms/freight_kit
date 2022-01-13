@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Interstellar
   # Carrier is the abstract base class for all supported carriers.
   #
@@ -139,55 +141,31 @@ module Interstellar
     # @note Override with whatever you need to register a shipment, and obtain
     #   shipping labels if supported by the carrier.
     #
-    # @param accessorials [Array<Symbol>] The list of accessorials.
     # @param customer_reference [String] The customer reference (PO #).
     # @param delivery_from [ActiveSupport::TimeWithZone] Local date, time and time zone that
     #   delivery hours begin.
     # @param delivery_to [ActiveSupport::TimeWithZone] Local date, time and time zone that
     #   delivery hours end.
-    # @param destination [Interstellar::Location] Where the package will go.
-    # @param origin [Interstellar::Location] Where the shipment will originate from.
-    # @param packages [Array<Interstellar::Package>] The list of packages.
+    # @param dispatcher [Interstellar::Contact] The dispatcher.
     # @param pickup_from [ActiveSupport::TimeWithZone] Local date, time and time zone that
     #   pickup hours begin.
     # @param pickup_to [ActiveSupport::TimeWithZone] Local date, time and time zone that
     #   pickup hours end.
-    # @param receiver_contact_name [String] The on-site contact for the receiving business.
-    # @param receiver_name [String] The receiving business name.
-    # @param receiver_phone [String] The phone number for the on-site contact for the
-    #   receiving business.
-    # @param service [String] The carrier SCAC code (can be `nil`; only used for brokers).
+    # @param scac [String] The carrier SCAC code (can be `nil`; only used for brokers).
     # @param service [Symbol] The service type.
-    # @param shipper_contact_name [String] The on-site contact for the sending business.
-    # @param shipper_name [String] The sending business name.
-    # @param shipper_phone [String] The phone number for the on-site contact for the
-    #   sending business.
+    # @param shipment [Interstellar::Shipment] The shipment including `#destination.contact`, `#origin.contact`.
     # @return [Interstellar::ShipmentResponse] The response from the carrier. This
     #   response should include a shipment identifier or tracking_number if successful,
     #   and potentially shipping labels.
     def create_pickup(
-      accessorials:,
-      customer_reference:,
       delivery_from:,
       delivery_to:,
-      destination:,
-      dispatcher_name:,
-      dispatcher_email:,
-      dispatcher_phone:,
-      origin:,
-      packages:,
+      dispatcher:,
       pickup_from:,
       pickup_to:,
-      receiver_contact_name:,
-      receiver_name:,
-      receiver_phone:,
-      receiver_reference:,
       scac:,
       service:,
-      shipper_contact_name:,
-      shipper_name:,
-      shipper_phone:,
-      shipper_reference:
+      shipment:
     )
       raise NotImplementedError, "#create_pickup is not supported by #{self.class.name}."
     end
