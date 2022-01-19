@@ -316,7 +316,7 @@ module Interstellar
       return nil if str.blank?
 
       Location.new(
-        city: str.squeeze.strip.titleize,
+        city: str.squish.strip.titleize,
         state: nil,
         country: ActiveUtils::Country.find('USA')
       )
@@ -331,8 +331,8 @@ module Interstellar
 
       parts = comment.split(delimiters[0])[0].split(delimiters[1])[1].split(',')
 
-      city = parts[0].squeeze.strip.titleize
-      state = parts[1].squeeze.strip.upcase
+      city = parts[0].squish.strip.titleize
+      state = parts[1].squish.strip.upcase
 
       Location.new(
         city:,
@@ -349,16 +349,16 @@ module Interstellar
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 
       shipper_address = Location.new(
-        street: search_result[:shipperaddress].squeeze.strip.titleize,
-        city: search_result[:shipper_city].squeeze.strip.titleize,
+        street: search_result[:shipperaddress].squish.strip.titleize,
+        city: search_result[:shipper_city].squish.strip.titleize,
         state: search_result[:shipper_state].strip.upcase,
         postal_code: search_result[:shipper_zip].strip,
         country: ActiveUtils::Country.find('USA')
       )
 
       receiver_address = Location.new(
-        street: search_result[:consaddress].squeeze.strip.titleize,
-        city: search_result[:cons_city].squeeze.strip.titleize,
+        street: search_result[:consaddress].squish.strip.titleize,
+        city: search_result[:cons_city].squish.strip.titleize,
         state: search_result[:cons_state].strip.upcase,
         postal_code: search_result[:cons_zip].strip,
         country: ActiveUtils::Country.find('USA')

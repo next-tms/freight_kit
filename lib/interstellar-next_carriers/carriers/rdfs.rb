@@ -300,8 +300,8 @@ module Interstellar
         return nil
       end
 
-      city = parts[0].squeeze.strip.titleize
-      state = parts[1].gsub('.', '').squeeze.strip.upcase
+      city = parts[0].squish.strip.titleize
+      state = parts[1].gsub('.', '').squish.strip.upcase
 
       Location.new(
         city:,
