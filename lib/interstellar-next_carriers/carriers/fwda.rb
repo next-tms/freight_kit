@@ -291,7 +291,7 @@ module Interstellar
             destinationAirportCode: '',
             guaranteedService: 'N',
             hazmat: shipment.packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
-            inBondShipment: declared_value.positive? ? 'Y' : 'N',
+            inBondShipment: declared_value.to_f.positive? ? 'Y' : 'N',
             orderAction: 'CREATE',
             originAirportCode: '',
             shippingDate: pickup_from.strftime('%Y-%m-%d'),
