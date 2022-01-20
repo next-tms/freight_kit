@@ -525,18 +525,20 @@ module Interstellar
         end
       end
 
+      shipment_events = []
+      status = nil
+
       ship_time = parse_date(response.dig(:tracktrace_response, :return, :currentstatus, :shipdate))
+      shipment_events << ShipmentEvent.new(:picked_up, "#{ship_time} 00:00:00", shipper_address)
+
       scheduled_delivery_date = parse_date(response.dig(:tracktrace_response, :return, :currentstatus,
                                                         :estdeliverydate))
       tracking_number = response.dig(:tracktrace_response, :return, :pronumber)
 
-      shipment_events = []
-      status = nil
-
       api_events = response.dig(:tracktrace_response, :return, :history)
       api_events = [api_events] if api_events.is_a?(Hash)
 
-      api_events.each do |api_event|
+      api_events.each_with_index do |api_event, index|
         event = nil
         @conf.dig(:events, :types).each do |key, val|
           if api_event[:description].downcase.include? val
@@ -552,6 +554,18 @@ module Interstellar
         location = shipper_address if location.state.blank? && %i[picked_up
                                                                   pickup_information_sent_to_carrier].include?(event)
         location = receiver_address if location.state.blank? && %i[delivered out_for_delivery].include?(event)
+
+        # Do not consider out for delivery when out for delivery and interlined dates match
+        if event == :out_for_delivery
+          next_api_event = api_events[index + 1]
+
+          break if next_api_event.blank?
+
+          if next_api_event[:description].include?('INTERLINE') && next_api_event[:date] == api_event[:date]
+            shipment_events << ShipmentEvent.new(:departed, datetime_without_time_zone, location)
+            next
+          end
+        end
 
         status = event
 
