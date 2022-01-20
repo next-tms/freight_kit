@@ -239,8 +239,8 @@ module Interstellar
       pickup_accessorials, delivery_accessorials = build_accessorials(shipment.accessorials)
 
       dispatcher_phone = dispatcher.phone.delete('^0-9')
-      shipper_phone = origin.contact.phone.delete('^0-9')
-      receiver_phone = destination.contact.phone.delete('^0-9')
+      shipper_phone = shipment.origin.contact.phone.delete('^0-9')
+      receiver_phone = shipment.destination.contact.phone.delete('^0-9')
 
       declared_value = if shipment.declared_value_cents.blank?
                          '0'
@@ -255,9 +255,9 @@ module Interstellar
         body: {
           testmode: test_mode? ? 'Y' : 'N',
           consignee: {
-            consigneeAddress1: destination.address1,
+            consigneeAddress1: shipment.destination.address1,
             consigneeAddress2: '',
-            consigneeCity: destination.city,
+            consigneeCity: shipment.destination.city,
             consigneeCloseTime: delivery_to.strftime('%H:%M:00'),
             consigneeContactEmail: '',
             consigneeContactName: shipment.destination.contact.name || 'Receiving',
