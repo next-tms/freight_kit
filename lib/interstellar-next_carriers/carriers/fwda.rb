@@ -206,9 +206,9 @@ module Interstellar
 
       response = case method
                  when :post
-                   HTTParty.post(url, headers:, body:)
+                   HTTParty.post(url, headers:, body:, debug_output: $stdout)
                  else
-                   HTTParty.get(url, headers:)
+                   HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
       json = JSON.parse(response.body)
@@ -262,7 +262,7 @@ module Interstellar
             consigneeContactEmail: '',
             consigneeContactName: shipment.destination.contact.name || 'Receiving',
             consigneeContactPhone: receiver_phone || '',
-            consigneeCountry: shipment.destination.country.code(:alpha2),
+            consigneeCountry: shipment.destination.country.code(:alpha2).value,
             consigneeLocationName: shipment.destination.contact.name,
             consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
             consigneeState: shipment.destination.state,
@@ -276,7 +276,7 @@ module Interstellar
             shipperContactEmail: '',
             shipperContactName: shipment.origin.contact.name || 'Shipping',
             shipperContactPhone: shipper_phone || '',
-            shipperCountry: shipment.origin.country.code(:alpha2),
+            shipperCountry: shipment.origin.country.code(:alpha2).value,
             shipperLocationName: shipment.origin.contact.name,
             shipperOpenTime: pickup_from.strftime('%H:%M:00'),
             shipperState: shipment.origin.state,
