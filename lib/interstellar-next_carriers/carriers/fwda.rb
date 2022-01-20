@@ -249,9 +249,9 @@ module Interstellar
                        end
 
       request = {
-        headers: build_headers(options),
+        headers: build_headers(@options),
         method: @conf.dig(:api, :methods, :pickup),
-        url: build_url(:pickup, options),
+        url: build_url(:pickup, @options),
         body: {
           testmode: test_mode? ? 'Y' : 'N',
           consignee: {
