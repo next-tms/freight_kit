@@ -290,7 +290,7 @@ module Interstellar
             description: shipment.packages.map(&:description).reject(&:blank?).uniq.join(', '),
             destinationAirportCode: '',
             guaranteedService: 'N',
-            hazmat: packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
+            hazmat: shipment.packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
             inBondShipment: declared_value.positive? ? 'Y' : 'N',
             orderAction: 'CREATE',
             originAirportCode: '',
