@@ -267,7 +267,7 @@ module Interstellar
       browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/ul[2]/li[2]/span[2]').wait_until(&:present?).click
       browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[6]/div/table/tbody/tr/td[1]/table/tbody/tr/td[2]/div/span/img').wait_until(&:present?).click
 
-      shipper_name = origin.contact.company_name.upcase.squish.strip
+      shipper_name = shipment.origin.contact.company_name.upcase.squish.strip
       new_customer = true
 
       browser.select_list(id: 'DPSC').wait_until(&:present?).click
