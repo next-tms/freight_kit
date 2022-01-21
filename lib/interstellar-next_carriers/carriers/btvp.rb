@@ -244,7 +244,7 @@ module Interstellar
       service:,
       shipment:
     )
-      browser = Watir::Browser.new(*options[:watir_args])
+      browser = Watir::Browser.new(*@options[:watir_args])
       browser.goto(build_url(:pickup))
 
       browser.text_field(name: 'userid').set(@options[:username])
