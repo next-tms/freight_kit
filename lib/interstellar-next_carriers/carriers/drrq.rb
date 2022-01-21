@@ -368,7 +368,7 @@ module Interstellar
           Type: 'SpecialInstructions'
         },
         Consignee: {
-          AddressLine1: shipment.destination.street1,
+          AddressLine1: shipment.destination.address1,
           City: shipment.destination.city,
           Contact: {
             Name: shipment.destination.contact.name,
@@ -418,7 +418,7 @@ module Interstellar
         ],
         ServiceFlags: accessorials,
         Shipper: {
-          AddressLine1: shipment.origin.street1,
+          AddressLine1: shipment.origin.address1,
           City: shipment.origin.city,
           Contact: {
             Name: shipment.origin.contact.name,
