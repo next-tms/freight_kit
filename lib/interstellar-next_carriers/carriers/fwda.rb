@@ -111,6 +111,15 @@ module Interstellar
 
     # Tracking
 
+    def find_tracking_info(tracking_number, *)
+      request = build_tracking_request(tracking_number)
+      parse_tracking_response(commit(request))
+    end
+
+    def find_tracking_info_implemented?
+      true
+    end
+
     protected
 
     def build_accessorials(accessorials)
@@ -160,7 +169,9 @@ module Interstellar
 
     def build_url(action, options = {})
       options = @options.merge(options)
-      "#{base_url}#{@conf.dig(:api, :endpoints, action)}"
+      url = "#{base_url}#{@conf.dig(:api, :endpoints, action)}"
+
+      url.gsub('%TRACKING_NUMBER%', options[:tracking_number]) if options[:tracking_number]
     end
 
     def base_url
@@ -174,7 +185,8 @@ module Interstellar
         return JSON_HEADERS.merge(
           'user': options[:username],
           'password': options[:password],
-          'customerId': options[:username]&.upcase
+          'customerId': options[:username]&.upcase,
+          'billToAccountNumber': options[:account]
         )
       end
 
@@ -212,12 +224,13 @@ module Interstellar
                  end
 
       json = JSON.parse(response.body)
-      error = json['errorMessage']
+      error = json.is_a?(Array) ? nil : json['errorMessage']
 
       return json if error.blank?
 
       raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('not authorized')
       raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('shipper client does not exist')
+      raise Interstellar::ShipmentNotFoundError, error if error.downcase.include?('no history found')
 
       raise Interstellar::ResponseError, error
     end
@@ -432,5 +445,88 @@ module Interstellar
     end
 
     # Tracking
+
+    def build_tracking_request(tracking_number)
+      request = {
+        url: build_url(:track, @options.deep_merge({ tracking_number: })),
+        headers: build_headers(@options),
+        method: @conf.dig(:api, :methods, :track),
+        body: {
+          billToCustomerNumber: @options[:account],
+          referenceNumber: tracking_number.to_s
+        }.to_json
+      }
+
+      save_request(request)
+      request
+    end
+
+    def parse_date(date)
+      date ? DateTime.strptime(date, '%m/%d/%y %H:%M').to_s(:db) : nil
+    end
+
+    def parse_tracking_response(response)
+      actual_delivery_date = nil
+      receiver_address = nil
+      scheduled_delivery_date = nil
+      ship_time = nil
+      shipper_address = nil
+      status = nil
+      tracking_number = nil
+
+      shipment_events = []
+
+      api_events = response
+      api_events.each do |api_event|
+        event = nil
+        @conf.dig(:events, :types).each do |key, val|
+          if api_event['statusCode'].upcase == val
+            event = key
+            break
+          end
+        end
+        next if event.blank?
+
+        datetime_without_time_zone = parse_date(api_event['recordDate'])
+
+        location = Location.new(
+          city: api_event['city'].titleize,
+          state: api_event['state'].upcase,
+          zip_code: api_event['zip'].upcase,
+          country: ActiveUtils::Country.find(api_event['country'])
+        )
+
+        actual_delivery_date = datetime_without_time_zone if event == :delivered
+        scheduled_delivery_date = datetime_without_time_zone if event == :delivered
+
+        receiver_address = location if event == :delivered
+        shipper_address = location if event == :picked_up
+
+        shipment_events << ShipmentEvent.new(event, datetime_without_time_zone, location)
+      end
+
+      shipment_events = shipment_events.sort_by(&:time)
+      tracking_number = api_events.last['airbillNumber']
+
+      TrackingResponse.new(
+        true,
+        shipment_events.last&.status,
+        { array: response },
+        carrier: "#{@@scac}, #{@@name}",
+        response:,
+        status:,
+        type_code: status,
+        ship_time:,
+        scheduled_delivery_date:,
+        actual_delivery_date:,
+        delivery_signature: nil,
+        shipment_events:,
+        shipper_address:,
+        origin: shipper_address,
+        destination: receiver_address,
+        tracking_number:,
+        request: last_request
+      )
+    end
   end
 end

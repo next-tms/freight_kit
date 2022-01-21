@@ -109,13 +109,24 @@
   :endpoints:
     :pickup: /ltlservices/v2/rest/waybills/book/json
     :rates: /ltlservices/v2/rest/waybills/quote/json
+    :track: /ltlservices/v2/rest/waybills/%TRACKING_NUMBER%/statuses
   :methods:
     :pickup: :post
     :rates: :post
+    :track: :get
   :use_ssl: true
 :attributes:
   :rates:
     :with_excessive_length_fees: false
+:events:
+  :types:
+    :arrived_at_terminal: ARR
+    :delivered: DLV
+    :departed: DEP
+    :located: ARRD
+    :out_for_delivery: OUTDV
+    :picked_up: PUP
+    :pickup_information_sent_to_carrier: DPUP
 :services:
   :types:
     - :standard_ltl
