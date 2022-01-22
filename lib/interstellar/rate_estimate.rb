@@ -1,23 +1,20 @@
-module Interstellar
+# frozen_string_literal: true
 
+module Interstellar
   # Class representing a shipping option with estimated price.
   #
-  # @!attribute origin
-  #   The origin of the shipment
-  #   @return [Interstellar::Location]
-  #
-  # @!attribute destination
-  #   The destination of the shipment
-  #   @return [Interstellar::Location]
+  # @!attribute shipment
+  #   The shipment
+  #   @return [Interstellar::Shipment]
   #
   # @!attribute package_rates
   #   A list of rates for all the packages in the shipment
   #   @return [Array<{:rate => Integer, :package => Interstellar::Package}>]
   #
   # @!attribute carrier
-  #   The name of the carrier (e.g. 'USPS', 'FedEx')
-  #   @return [String]
-  #   @see Interstellar::Carrier.name
+  #   The carrier.
+  #   @return [Interstellar::Carrier]
+  #   @see Interstellar::Carrier
   #
   # @!attribute service_name
   #   The name of the shipping service (e.g. 'First Class Ground')
@@ -79,46 +76,22 @@ module Interstellar
   #   Breakdown of a shipping rate's price with amounts in cents.
   #   @return [Array<{ group: String, code: String, name: String, description: String, amount: Integer }>]
   #
-  class RateEstimate
-    attr_accessor :carrier, :charge_items, :compare_price, :currency,
-                  :delivery_category, :delivery_date, :delivery_range,
-                  :description, :destination, :estimate_reference, :expires_at,
-                  :insurance_price, :messages, :negotiated_rate, :origin,
-                  :package_rates, :phone_required, :pickup_time, :service_code,
-                  :service_name, :shipment_options, :shipping_date, :transit_days,
-                  :with_excessive_length_fees
+  # @!attribute scac
+  #   SCAC code of the carrier. It may differ from the `Carrier` providing the quote when
+  #   the `Carrier` is acting as a broker.
+  #   @return [String]
+  #
+  class RateEstimate < Model
+    attr_accessor :carrier, :charge_items, :compare_price, :declared_value_cents, :delivery_category, :delivery_date,
+                  :description, :estimate_reference, :expires_at, :insurance_price, :messages, :negotiated_rate,
+                  :package_rates, :phone_required, :pickup_time, :scac, :service_code, :service_name, :shipment,
+                  :shipment_options, :shipping_date, :transit_days, :with_excessive_length_fees
 
-    def initialize(origin, destination, carrier, service_name, options = {})
-      self.charge_items = options[:charge_items] || []
-      self.compare_price = options[:compare_price]
-      self.currency = options[:currency]
-      self.delivery_category = options[:delivery_category]
-      self.delivery_range = options[:delivery_range]
-      self.description = options[:description]
-      self.estimate_reference = options[:estimate_reference]
-      self.expires_at = options[:expires_at]
-      self.insurance_price = options[:insurance_price]
-      self.messages = options[:messages] || []
-      self.negotiated_rate = options[:negotiated_rate]
-      self.origin = origin
-      self.destination = destination
-      self.carrier = carrier
-      self.service_name = service_name
-      self.package_rates = if options[:package_rates]
-                             options[:package_rates].map { |p| p.update(rate: Package.cents_from(p[:rate])) }
-                           else
-                             Array(options[:packages]).map { |p| { package: p } }
-                           end
-      self.phone_required = options[:phone_required]
-      self.pickup_time = options[:pickup_time]
-      self.service_code = options[:service_code]
-      self.shipment_options = options[:shipment_options] || []
-      self.shipping_date = options[:shipping_date]
-      self.transit_days = options[:transit_days]
-      self.total_price = options[:total_price]
-      self.with_excessive_length_fees = options.dig(:with_excessive_length_fees)
+    attr_writer :currency, :delivery_range, :total_price
 
-      self.delivery_date = @delivery_range.last
+    def initialize(attributes = {})
+      assign_attributes(attributes)
+      super
     end
 
     # The total price of the shipments in cents.
@@ -138,10 +111,11 @@ module Interstellar
     def add(package, rate = nil)
       cents = Package.cents_from(rate)
       if cents.nil? && total_price.nil?
-        raise ArgumentError, 'New packages must have valid rate information since this RateEstimate has no total_price set.'
+        raise ArgumentError,
+              'New packages must have valid rate information since this RateEstimate has no total_price set.'
       end
 
-      @package_rates << { package: package, rate: cents }
+      @package_rates << { package:, rate: cents }
       self
     end
 
@@ -159,36 +133,12 @@ module Interstellar
 
     protected
 
-    def delivery_range=(delivery_range)
+    def delivery_range
       @delivery_range = delivery_range ? delivery_range.map { |date| date_for(date) }.compact : []
     end
 
-    def total_price=(total_price)
-      @total_price = Package.cents_from(total_price)
-    end
-
-    def negotiated_rate=(negotiated_rate)
-      @negotiated_rate = negotiated_rate ? Package.cents_from(negotiated_rate) : nil
-    end
-
-    def compare_price=(compare_price)
-      @compare_price = compare_price ? Package.cents_from(compare_price) : nil
-    end
-
-    def currency=(currency)
-      @currency = ActiveUtils::CurrencyCode.standardize(currency)
-    end
-
-    def phone_required=(phone_required)
-      @phone_required = !!phone_required
-    end
-
-    def shipping_date=(shipping_date)
-      @shipping_date = date_for(shipping_date)
-    end
-
-    def insurance_price=(insurance_price)
-      @insurance_price = Package.cents_from(insurance_price)
+    def currency
+      ActiveUtils::CurrencyCode.standardize(currency)
     end
 
     private
