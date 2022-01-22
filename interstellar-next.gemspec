@@ -4,7 +4,7 @@ lib = File.expand_path('../lib/', __FILE__)
 $:.unshift(lib) unless $:.include?(lib)
 
 Gem::Specification.new do |spec|
-  spec.name = 'interstellar-next_carriers'
+  spec.name = 'interstellar-next'
   spec.version = '0.1.pre3'
   spec.date = '2022-01-12'
 
@@ -15,9 +15,9 @@ Gem::Specification.new do |spec|
     'hello@next-tms.com'
   ]
 
-  spec.summary = 'This library is an Interstellar Carrier plug-in that enables Next TMS partner carrier services'
+  spec.summary = 'This library is an Interstellar plug-in that enables Next TMS partner carrier services'
   spec.description = spec.summary
-  spec.homepage = 'https://github.com/next-tms/interstellar-next_carriers'
+  spec.homepage = 'https://github.com/next-tms/interstellar-next'
 
   spec.files = Dir['lib/**/*']
   spec.files += Dir['configuration/carriers/*.yml']
