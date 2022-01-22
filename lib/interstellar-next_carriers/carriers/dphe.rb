@@ -349,7 +349,7 @@ module Interstellar
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 
       shipper_address = Location.new(
-        street: search_result[:shipperaddress].squish.strip.titleize,
+        street: search_result[:shipperaddress]&.squish&.strip&.titleize,
         city: search_result[:shipper_city].squish.strip.titleize,
         state: search_result[:shipper_state].strip.upcase,
         postal_code: search_result[:shipper_zip].strip,
@@ -357,7 +357,7 @@ module Interstellar
       )
 
       receiver_address = Location.new(
-        street: search_result[:consaddress].squish.strip.titleize,
+        street: search_result[:consaddress]&.squish&.strip&.titleize,
         city: search_result[:cons_city].squish.strip.titleize,
         state: search_result[:cons_state].strip.upcase,
         postal_code: search_result[:cons_zip].strip,
