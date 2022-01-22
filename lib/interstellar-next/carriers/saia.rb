@@ -204,15 +204,15 @@ module Interstellar
 
             rate_estimates = []
             rate_estimates << RateEstimate.new(
-              shipment.origin,
-              shipment.destination,
-              { scac: self.class.scac.upcase, name: self.class.name },
-              :standard,
-              transit_days:,
-              estimate_reference:,
-              total_cost: cost,
-              total_price: cost,
+              carrier: self,
+              carrier_name: self.class.name,
               currency: 'USD',
+              estimate_reference:,
+              scac: self.class.scac.upcase,
+              service_name: :standard,
+              shipment:,
+              total_price: cost,
+              transit_days:,
               with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
             )
 
@@ -224,15 +224,15 @@ module Interstellar
               if !service.values[0] == '0' && !service.values[0].blank?
                 cost = service.values[0].sub('.', '').to_i
                 rate_estimates << RateEstimate.new(
-                  shipment.origin,
-                  shipment.destination,
-                  { scac: self.class.scac.upcase, name: self.class.name },
-                  service.keys[0],
+                  carrier_name: self.class.name,
+                  carrier: self,
+                  currency: 'USD',
                   delivery_range:,
                   estimate_reference:,
-                  total_cost: cost,
+                  scac: self.class.scac.upcase,
+                  service_name: service.keys[0],
+                  shipment:,
                   total_price: cost,
-                  currency: 'USD',
                   with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
                 )
               end
