@@ -538,16 +538,16 @@ module Interstellar
                     :standard
                   end
         transit_days = response_line['ServiceDays'].to_i
+
         rate_estimates << RateEstimate.new(
-          shipment.origin,
-          shipment.destination,
-          { scac: response_line['Scac'], name: response_line['CarrierName'] },
-          service,
-          transit_days:,
-          estimate_reference: nil,
-          total_cost: cost,
-          total_price: cost,
+          carrier: self,
+          carrier_name: response_line['CarrierName'],
           currency: 'USD',
+          scac: response_line['Scac']&.upcase,
+          service_name: service,
+          shipment:,
+          total_price: cost,
+          transit_days:,
           with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
         )
       end

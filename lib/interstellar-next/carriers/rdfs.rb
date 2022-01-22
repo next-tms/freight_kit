@@ -243,15 +243,15 @@ module Interstellar
             cost = (cost.to_f * 100).to_i
             rate_estimates = [
               RateEstimate.new(
-                shipment.origin,
-                shipment.destination,
-                { scac: self.class.scac.upcase, name: self.class.name },
-                :standard,
-                transit_days:,
-                estimate_reference:,
-                total_cost: cost,
-                total_price: cost,
+                carrier: self,
+                carrier_name: self.class.name,
                 currency: 'USD',
+                estimate_reference:,
+                scac: self.class.scac.upcase,
+                service_name: :standard,
+                shipment:,
+                total_price: cost,
+                transit_days:,
                 with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
               )
             ]

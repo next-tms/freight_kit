@@ -167,14 +167,15 @@ module Interstellar
       raise Interstellar::ResponseError, 'Cost is blank' if cost.blank?
 
       transit_days = response[:transit_days].to_i
+
       rate = RateEstimate.new(
-        shipment.origin,
-        shipment.destination,
-        { scac: self.class.scac.upcase, name: self.class.name },
-        :standard,
+        carrier: self,
+        carrier_name: self.class.name,
         currency: 'USD',
-        estimate_reference: nil,
-        total_cost: cost,
+        estimate_reference:,
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
         total_price: cost,
         transit_days:,
         with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
