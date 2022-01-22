@@ -23,19 +23,19 @@ module Interstellar
   end
 end
 
-Interstellar::Carriers.register :BTVP, 'interstellar-nexts/carriers/btvp'
-Interstellar::Carriers.register :CLNI, 'interstellar-nexts/carriers/clni'
-Interstellar::Carriers.register :DPHE, 'interstellar-nexts/carriers/dphe'
-Interstellar::Carriers.register :DRRQ, 'interstellar-nexts/carriers/drrq'
-Interstellar::Carriers.register :FWDA, 'interstellar-nexts/carriers/fwda'
-Interstellar::Carriers.register :PENS, 'interstellar-nexts/carriers/pens'
-Interstellar::Carriers.register :RDFS, 'interstellar-nexts/carriers/rdfs'
-Interstellar::Carriers.register :SAIA, 'interstellar-nexts/carriers/saia'
-Interstellar::Carriers.register :SEFL, 'interstellar-nexts/carriers/sefl'
-Interstellar::Carriers.register :WRDS, 'interstellar-nexts/carriers/wrds'
+Interstellar::Carriers.register :BTVP, 'interstellar-next/carriers/btvp'
+Interstellar::Carriers.register :CLNI, 'interstellar-next/carriers/clni'
+Interstellar::Carriers.register :DPHE, 'interstellar-next/carriers/dphe'
+Interstellar::Carriers.register :DRRQ, 'interstellar-next/carriers/drrq'
+Interstellar::Carriers.register :FWDA, 'interstellar-next/carriers/fwda'
+Interstellar::Carriers.register :PENS, 'interstellar-next/carriers/pens'
+Interstellar::Carriers.register :RDFS, 'interstellar-next/carriers/rdfs'
+Interstellar::Carriers.register :SAIA, 'interstellar-next/carriers/saia'
+Interstellar::Carriers.register :SEFL, 'interstellar-next/carriers/sefl'
+Interstellar::Carriers.register :WRDS, 'interstellar-next/carriers/wrds'
 
 # Based on Platform
-Interstellar::Carriers.register :CTBV, 'interstellar-nexts/carriers/ctbv'
-Interstellar::Carriers.register :JFJTransportation, 'interstellar-nexts/carriers/jfj_transportation'
-Interstellar::Carriers.register :FCSY, 'interstellar-nexts/carriers/fcsy'
-Interstellar::Carriers.register :TOTL, 'interstellar-nexts/carriers/totl'
+Interstellar::Carriers.register :CTBV, 'interstellar-next/carriers/ctbv'
+Interstellar::Carriers.register :JFJTransportation, 'interstellar-next/carriers/jfj_transportation'
+Interstellar::Carriers.register :FCSY, 'interstellar-next/carriers/fcsy'
+Interstellar::Carriers.register :TOTL, 'interstellar-next/carriers/totl'
