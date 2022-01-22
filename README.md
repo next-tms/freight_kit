@@ -1,6 +1,13 @@
 # Interstellar Next TMS Carriers
 
-This library is an [Interstellar](https://github.com/next-tms/interstellar) Carrier plug-in that enables the following coverage:
+This library is an [Interstellar](https://github.com/next-tms/interstellar) plug-in that enables the following:
+
+## Platforms
+
+* [Carrier Logistics](https://carrierlogistics.com)
+* [Next TMS](https://next-tms.com)
+
+## Carriers
 
 |Carrier                            |BOL|POD|Rates|Tracking|
 |-----------------------------------|---|---|-----|--------|
@@ -24,6 +31,5 @@ Using bundler, add to the `Gemfile`:
 
 ```ruby
 gem 'interstellar'
-gem 'interstellar-next_platforms'
 gem 'interstellar-next_carriers'
 ```
