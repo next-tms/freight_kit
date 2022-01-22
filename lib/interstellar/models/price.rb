@@ -7,6 +7,10 @@ module Interstellar
   #   Where did the cost come from?
   #   @return [Symbol] One of :api, :library, :tariff
   #
+  # @!attribute description
+  #   Description.
+  #   @return [String]
+  #
   # @!attribute objects
   #   Array of objects that the price applies to.
   #   @return [Array]
@@ -16,7 +20,7 @@ module Interstellar
   #   @return [Integer]
   #
   class Price < Model
-    attr_accessor :objects
+    attr_accessor :description, :objects
     attr_writer :blame, :cents
 
     def initialize(attributes = {})
