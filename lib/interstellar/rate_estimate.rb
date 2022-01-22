@@ -76,16 +76,22 @@ module Interstellar
   #   Breakdown of a shipping rate's price with amounts in cents.
   #   @return [Array<{ group: String, code: String, name: String, description: String, amount: Integer }>]
   #
+  # @!attribute carrier_name
+  #   Name of the carrier. It may differ from the `Carrier` providing the quote when
+  #   the `Carrier` is acting as a broker.
+  #   @return [String]
+  #
+  #
   # @!attribute scac
   #   SCAC code of the carrier. It may differ from the `Carrier` providing the quote when
   #   the `Carrier` is acting as a broker.
   #   @return [String]
   #
   class RateEstimate < Model
-    attr_accessor :carrier, :charge_items, :compare_price, :declared_value_cents, :delivery_category, :delivery_date,
-                  :description, :estimate_reference, :expires_at, :insurance_price, :messages, :negotiated_rate,
-                  :package_rates, :phone_required, :pickup_time, :scac, :service_code, :service_name, :shipment,
-                  :shipment_options, :shipping_date, :transit_days, :with_excessive_length_fees
+    attr_accessor :carrier, :carrier_name, :charge_items, :compare_price, :declared_value_cents, :delivery_category,
+                  :delivery_date, :description, :estimate_reference, :expires_at, :insurance_price, :messages,
+                  :negotiated_rate, :package_rates, :phone_required, :pickup_time, :scac, :service_code, :service_name,
+                  :shipment, :shipment_options, :shipping_date, :transit_days, :with_excessive_length_fees
 
     attr_writer :currency, :delivery_range, :total_price
 
