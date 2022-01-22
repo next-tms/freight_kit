@@ -1,4 +1,4 @@
-# Interstellar Next TMS Carriers
+# Interstellar: Next TMS
 
 This library is an [Interstellar](https://github.com/next-tms/interstellar) plug-in that enables the following:
 
@@ -31,5 +31,5 @@ Using bundler, add to the `Gemfile`:
 
 ```ruby
 gem 'interstellar'
-gem 'interstellar-next_carriers'
+gem 'interstellar-next'
 ```
