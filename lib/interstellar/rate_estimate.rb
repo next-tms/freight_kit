@@ -97,7 +97,6 @@ module Interstellar
 
     def initialize(attributes = {})
       assign_attributes(attributes)
-      super
     end
 
     # The total price of the shipments in cents.
