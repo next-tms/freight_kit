@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'interstellar/errors/error'
 require 'interstellar/errors/http_error'
 require 'interstellar/errors/invalid_credentials_error'
 require 'interstellar/errors/expired_credentials_error'
