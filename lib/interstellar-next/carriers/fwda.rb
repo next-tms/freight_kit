@@ -169,9 +169,11 @@ module Interstellar
 
     def build_url(action, options = {})
       options = @options.merge(options)
-      url = "#{base_url}#{@conf.dig(:api, :endpoints, action)}"
 
+      url = "#{base_url}#{@conf.dig(:api, :endpoints, action)}"
       url.gsub('%TRACKING_NUMBER%', options[:tracking_number]) if options[:tracking_number]
+
+      url
     end
 
     def base_url
