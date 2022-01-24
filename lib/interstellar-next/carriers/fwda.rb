@@ -171,7 +171,7 @@ module Interstellar
       options = @options.merge(options)
 
       url = "#{base_url}#{@conf.dig(:api, :endpoints, action)}"
-      url.gsub('%TRACKING_NUMBER%', options[:tracking_number]) if options[:tracking_number]
+      url = url.gsub('%TRACKING_NUMBER%', options[:tracking_number]) if options[:tracking_number]
 
       url
     end
