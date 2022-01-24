@@ -172,7 +172,7 @@ module Interstellar
         carrier: self,
         carrier_name: self.class.name,
         currency: 'USD',
-        estimate_reference:,
+        estimate_reference: nil,
         scac: self.class.scac.upcase,
         service_name: :standard,
         shipment:,
