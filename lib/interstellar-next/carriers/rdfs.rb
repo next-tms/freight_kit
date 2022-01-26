@@ -110,6 +110,10 @@ module Interstellar
         soap_header: build_soap_header(action),
         message: request
       ).body.to_json
+    rescue Savon::SOAPFault => e
+      error = e.to_hash.dig(:fault, :detail, :error, :error_message)
+
+      { error: }
     end
 
     def parse_date(date)
@@ -218,49 +222,51 @@ module Interstellar
       success = true
       message = ''
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      else
-        response = JSON.parse(response)
-        if response[:error]
-          success = false
-          message = response[:error]
-        else
-          cost = response.dig('rate_quote_by_account_response', 'rate_quote_by_account_result', 'net_charge')
-          transit_days = response.dig(
-            'rate_quote_by_account_response',
-            'rate_quote_by_account_result',
-            'routing_info',
-            'estimated_transit_days'
-          ).to_i
-          estimate_reference = response.dig(
-            'rate_quote_by_account_response',
-            'rate_quote_by_account_result',
-            'quote_number'
-          )
-          if cost
-            cost = (cost.to_f * 100).to_i
-            rate_estimates = [
-              RateEstimate.new(
-                carrier: self,
-                carrier_name: self.class.name,
-                currency: 'USD',
-                estimate_reference:,
-                scac: self.class.scac.upcase,
-                service_name: :standard,
-                shipment:,
-                total_price: cost,
-                transit_days:,
-                with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-              )
-            ]
-          else
-            success = false
-            message = 'API Error: Cost is emtpy'
-          end
+      raise Interstellar::ResponseError, 'API Error: Unknown response' unless response
+
+      response = JSON.parse(response) unless response.is_a?(Hash)
+
+      unless response[:error].blank?
+        if response[:error].downcase.include?('no standard service')
+          raise Interstellar::UnserviceableError, response[:error]
         end
+
+        raise Interstellar::ResponseError, response[:error]
       end
+
+      cost = response.dig('rate_quote_by_account_response', 'rate_quote_by_account_result', 'net_charge')
+
+      raise Interstellar::ResponseError, 'API Error: Cost is empty' if cost.blank?
+
+      cost = (cost.to_f * 100).to_i
+
+      transit_days = response.dig(
+        'rate_quote_by_account_response',
+        'rate_quote_by_account_result',
+        'routing_info',
+        'estimated_transit_days'
+      ).to_i
+
+      estimate_reference = response.dig(
+        'rate_quote_by_account_response',
+        'rate_quote_by_account_result',
+        'quote_number'
+      )
+
+      rate_estimates = [
+        RateEstimate.new(
+          carrier: self,
+          carrier_name: self.class.name,
+          currency: 'USD',
+          estimate_reference:,
+          scac: self.class.scac.upcase,
+          service_name: :standard,
+          shipment:,
+          total_price: cost,
+          transit_days:,
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        )
+      ]
 
       RateResponse.new(
         success,
