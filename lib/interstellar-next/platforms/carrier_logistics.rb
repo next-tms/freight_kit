@@ -344,6 +344,10 @@ module Interstellar
       success = true
       message = ''
 
+      if response&.is_a?(String) && response&.include?('WebSpeed error')
+        raise Interstellar::ResponseError, 'API Error: Temporary error (CarrierLogistics WebSpeed error)'
+      end
+
       if !response
         success = false
         message = 'API Error: Unknown response'
