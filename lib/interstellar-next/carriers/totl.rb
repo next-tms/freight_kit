@@ -70,6 +70,8 @@ module Interstellar
       else
         cost = response.dig('ratequote', 'quotetotal').delete(',').delete('.').to_i
         transit_days = response.dig('ratequote', 'busdays').to_i
+        estimate_reference = response.dig('ratequote', 'quotenumber')
+
         if cost
           # Carrier-specific pricing structure
           oversized_pallets_price = 0
