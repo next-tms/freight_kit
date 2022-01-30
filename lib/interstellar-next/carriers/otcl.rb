@@ -94,39 +94,6 @@ module Interstellar
 
     protected
 
-    def build_accessorials(accessorials)
-      delivery_accessorials = []
-      pickup_accessorials = []
-
-      unless accessorials.blank?
-        serviceable_accessorials?(accessorials)
-        accessorials.each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            if @conf.dig(:accessorials, :mappable, :pickup).include?(a)
-              pickup_accessorials << @conf.dig(:accessorials, :mappable, :pickup)[a]
-            elsif delivery_accessorials << @conf.dig(:accessorials, :mappable, :delivery)[a]
-            end
-          end
-        end
-      end
-
-      if !delivery_accessorials.blank? && delivery_accessorials.include?('RDE')
-        # Remove duplicate delivery appointment accessorial when residential delivery (included with RDE)
-        delivery_accessorials -= ['ADE']
-      end
-
-      if !pickup_accessorials.blank? && pickup_accessorials.include?('RPU')
-        # Remove duplicate pickup appointment accessorial when residential pickup (included with RPU)
-        pickup_accessorials -= ['APP']
-      end
-
-      # API doesn't like empty arrays
-      delivery_accessorials = nil if delivery_accessorials.blank?
-      pickup_accessorials = nil if pickup_accessorials.blank?
-
-      [pickup_accessorials&.uniq, delivery_accessorials&.uniq]
-    end
-
     def build_url(action, options = {})
       env = @test_mode ? :test : :production
 
