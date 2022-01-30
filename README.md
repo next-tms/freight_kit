@@ -17,6 +17,7 @@ This library is an [Interstellar](https://github.com/next-tms/interstellar) plug
 |Dependable Highway Express         |✓  |✓  |✓    |✓       |
 |Forward Air                        |   |✓  |✓    |✓       |
 |Frontline Freight                  |✓  |✓  |✓    |✓       |
+|OnTrac                             |   |   |✓    |        |
 |Peninsula Truck Lines              |   |   |✓    |        |
 |Roadrunner Transportation Services |✓  |✓  |✓    |✓       |
 |Saia                               |   |   |✓    |✓       |
