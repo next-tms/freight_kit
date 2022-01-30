@@ -151,7 +151,7 @@ module Interstellar
     end
 
     def commit(request)
-      response = HTTParty.get(request[:url], debug_output: $stdout)
+      response = HTTParty.get(request[:url])
       response.parsed_response if response&.parsed_response
     end
 
@@ -210,7 +210,15 @@ module Interstellar
 
     def parse_rate_response(shipment:, response:)
       raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
-      raise Interstellar::ResponseError, "API Error: #{error} if response.blank?" unless response[:error].blank?
+      raise Interstellar::ResponseError, "API Error: #{response[:error]}" unless response[:error].blank?
+
+      error = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Error')
+
+      unless error.blank?
+        raise Interstellar::UnserviceableError, error if error.downcase.include?('not serviced')
+
+        raise Interstellar::ResponseError, "API Error: #{error}"
+      end
 
       rate = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Rates', 'Rate')
       raise Interstellar::ResponseError, 'API Error: Blank response' if rate.blank?
