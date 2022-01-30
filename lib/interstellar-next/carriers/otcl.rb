@@ -170,6 +170,8 @@ module Interstellar
       total_weight = shipment.packages.map { |p| p.pounds(:total) }.sum
 
       i = 1
+      package_param_parts = []
+
       shipment.packages.each do |package|
         package.quantity.times do
           declared_value = if shipment.declared_value_cents.blank?
@@ -197,9 +199,11 @@ module Interstellar
           parts << '0' # not a letter
           parts << '0' # always 0 per documentation
 
-          params << "{#{parts.join(';')}}"
+          package_param_parts << parts.join(';')
         end
       end
+
+      params << package_param_parts.join(',')
 
       build_request(:rates, { params: })
     end
