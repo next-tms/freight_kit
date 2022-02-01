@@ -55,7 +55,22 @@ module Interstellar
       ).call(
         @conf.dig(:api, :actions, action),
         message: request
-      ).body.to_json
+      ).body
+    end
+
+    def parse_amount(amount)
+      negative = amount.start_with?('-$') || amount.start_with?('-')
+
+      %w[$ - ,].each do |char|
+        amount = amount.sub(char, '')
+      end
+
+      return 0 if amount.blank?
+
+      amount = (amount.to_f * 100).to_i
+      return amount unless negative
+
+      amount * -1
     end
 
     def request_url(action)
@@ -72,7 +87,7 @@ module Interstellar
       request = {
         accessorial_list: '', # TODO: Fix this!
         account: @options[:account],
-        class_list: shipment.packages.map(&:quantity).join(','),
+        class_list: shipment.packages.map(&:freight_class).join(','),
         customer_type: @options[:customer_type].blank? ? 'B' : @options[:customer_type],
         destination_zip: shipment.destination.zip.to_s,
         none_palletized_mode: shipment.packages.map(&:packaging).map(&:pallet?).any?(false) ? 'Y' : 'N',
@@ -91,57 +106,84 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      success = true
-      message = ''
+      raise ResponseError, 'API Error: Unknown response' if response.blank?
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      else
-        response = JSON.parse(response)
-        error = response.dig('create_pens_rate_quote_response', 'create_pens_rate_quote_result', 'errors', 'message')
-        if !error.blank?
-          success = false
-          message = error
-        else
-          result = response.dig('create_pens_rate_quote_response', 'create_pens_rate_quote_result')
+      error = response.dig(:create_pens_rate_quote_response, :create_pens_rate_quote_result, :errors, :message)
 
-          service_type = :standard
-          api_service_type = result.dig('quote', 'transit_type')
-          @conf.dig(:services, :mappable).each do |key, val|
-            service_type = key if api_service_type.downcase.include?(val)
-          end
-
-          cost = result.dig('quote', 'gross_charge').sub(',', '').sub('.', '').to_i
-          transit_days = service_type == :next_day_ltl ? 1 : nil # TODO: Detect correctly
-          estimate_reference = result.dig('quote', 'quote_number')
-          if cost
-            rate_estimates = [
-              RateEstimate.new(
-                carrier: self,
-                carrier_name: self.class.name,
-                currency: 'USD',
-                estimate_reference:,
-                scac: self.class.scac.upcase,
-                service_name: :standard,
-                shipment:,
-                total_price: cost,
-                transit_days:,
-                with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-              )
-            ]
-          else
-            success = false
-            message = 'API Error: Cost is emtpy'
-          end
+      unless error.blank?
+        if error.include?('[RatingService.ValidateZipCodes]')
+          raise Interstellar::UnserviceableError, 'Origin or destination has no service available'
         end
+
+        raise ResponseError, "API Error: #{error}"
       end
 
+      result = response.dig(:create_pens_rate_quote_response, :create_pens_rate_quote_result)
+
+      raise ResponseError, 'API Error: Cost is blank' if result.dig(:quote, :gross_charge).blank?
+
+      service_type = :standard
+      api_service_type = result.dig(:quote, :transit_type)
+
+      @conf.dig(:services, :mappable).each do |key, val|
+        service_type = key if api_service_type.downcase.include?(val)
+      end
+
+      transit_days = service_type == :next_day_ltl ? 1 : nil # TODO: Detect correctly
+
+      estimate_reference = result.dig('quote', 'quote_number')
+
+      prices = []
+
+      prices << Price.new(
+        blame: :api,
+        cents: parse_amount(result.dig(:quote, :gross_charge)),
+        description: 'Charge based on class and weight'
+      )
+
+      accessorial_details = result.dig(:quote, :accessorial_detail)
+      accessorial_details = [accessorial_details] if accessorial_details.is_a?(Hash)
+
+      accessorial_details.each do |accessorial_detail|
+        accessorial_item = accessorial_detail[:accessorial_item]
+
+        prices << Price.new(
+          blame: :api,
+          cents: parse_amount(accessorial_item[:charge]),
+          description: accessorial_item[:description]&.capitalize
+        )
+      end
+
+      prices << Price.new(
+        blame: :api,
+        cents: parse_amount(result.dig(:quote, :discount_amount)),
+        description: 'Discount'
+      )
+
+      prices << Price.new(
+        blame: :api,
+        cents: parse_amount(result.dig(:quote, :fsc_amount)),
+        description: 'Fuel surcharge'
+      )
+
       RateResponse.new(
-        success,
-        message,
+        true,
+        'OK',
         response.to_hash,
-        rates: rate_estimates,
+        rates: [
+          RateEstimate.new(
+            carrier: self,
+            carrier_name: self.class.name,
+            currency: 'USD',
+            estimate_reference:,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            prices:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         response:,
         request: last_request
       )
