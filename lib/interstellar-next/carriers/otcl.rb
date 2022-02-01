@@ -162,6 +162,10 @@ module Interstellar
       response.parsed_response if response&.parsed_response
     end
 
+    def palletized?(packages)
+      packages.map(&:packaging).map(&:pallet?).none?(false)
+    end
+
     # Documents
 
     # Pickups
@@ -177,9 +181,9 @@ module Interstellar
       shipment:
     )
 
-      dispatcher_phone = dispatcher.phone.delete('^0-9')
-      shipper_phone = shipment.origin.contact.phone.delete('^0-9')
-      receiver_phone = shipment.destination.contact.phone.delete('^0-9')
+      dispatcher_phone = dispatcher.phone.sub('+1', '').delete('^0-9')
+      shipper_phone = shipment.origin.contact.phone.sub('+1', '').delete('^0-9')
+      receiver_phone = shipment.destination.contact.phone.sub('+1', '').delete('^0-9')
 
       declared_value = if shipment.declared_value_cents.blank?
                          '0'
@@ -187,8 +191,7 @@ module Interstellar
                          format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
                        end
 
-      palletized = !shipment.packages.map(&:packaging).map(&:pallet?).any?(false)
-      service = palletized ? 'H' : 'C'
+      raise UnserviceableError, 'Palletized freight unsupported' if palletized?(shipment.packages)
 
       base_api_shipment = {
         'consignee': {
@@ -198,7 +201,7 @@ module Interstellar
           'Addr3': '',
           'City': shipment.destination.city,
           'Contact': shipment.destination.contact.name || 'Shipping',
-          'Phone': shipment.destination.contact.phone || '',
+          'Phone': receiver_phone || '',
           'State': shipment.destination.state,
           'Zip': shipment.destination.zip.to_s
         },
@@ -224,7 +227,7 @@ module Interstellar
         'Reference3': '',
         'Residential': shipment.accessorials.include?(:residential_delivery) ? 'true' : 'false',
         'SaturdayDel': 'false',
-        'Service': palletized ? 'H' : 'C', # TODO: Double-check this
+        'Service': 'C',
         'ShipDate': pickup_from.to_date.to_s,
         'ShipEmail': dispatcher.email,
         'SignatureRequired': 'true',
@@ -270,6 +273,8 @@ module Interstellar
     def build_rate_request(shipment:)
       serviceable_accessorials?(shipment.accessorials)
 
+      raise UnserviceableError, 'Palletized freight unsupported' if palletized?(shipment.packages)
+
       params = ''.dup
       params << 'packages='
 
@@ -287,8 +292,6 @@ module Interstellar
                            end
 
           declared_value = declared_value.to_s
-          palletized = !shipment.packages.map(&:packaging).map(&:pallet?).any?(false)
-          service = palletized ? 'H' : 'C'
 
           parts = []
 
@@ -301,7 +304,7 @@ module Interstellar
           parts << declared_value
           parts << package.pounds(:each)
           parts << "#{package.inches(:length).ceil}X#{package.inches(:width).ceil}X#{package.inches(:height).ceil}"
-          parts << service
+          parts << 'C'
           parts << '0' # not a letter
           parts << '0' # always 0 per documentation
 
@@ -338,12 +341,9 @@ module Interstellar
       transit_days = rate['TransitDays'].to_i
       service = case rate['Service']
                 when 'C'
-                  :standard
                 when 'H'
-                  :standard
-                else
-                  :standard
                 end
+      :standard
 
       RateResponse.new(
         true,
