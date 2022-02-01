@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Interstellar
   class Packaging
     VALID_TYPES = %i[
@@ -17,11 +19,7 @@ module Interstellar
       tote
     ].freeze
 
-    PALLET_TYPES = %i[
-      crate
-      pallet
-      tote
-    ].freeze
+    PALLET_TYPES = %i[crate drum pallet tote].freeze
 
     attr_accessor :type
 
@@ -30,8 +28,8 @@ module Interstellar
       options.symbolize_keys!
       @options = options
 
-      if !VALID_TYPES.include?(type)
-        raise ArgumentError.new("Package#new: `type` should be one of #{VALID_TYPES.join(', ')}")
+      unless VALID_TYPES.include?(type)
+        raise ArgumentError, "Package#new: `type` should be one of #{VALID_TYPES.join(', ')}"
       end
 
       @type = type
@@ -47,6 +45,7 @@ module Interstellar
 
     def box_or_pallet_type
       return :pallet if pallet?
+
       box? ? :box : nil
     end
   end
