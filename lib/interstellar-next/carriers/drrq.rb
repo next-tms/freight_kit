@@ -515,8 +515,6 @@ module Interstellar
 
       raise UnserviceableError, 'No rates found' if response.blank?
 
-      success = true
-      message = ''
       rate_estimates = []
 
       response.each do |response_line|
@@ -540,21 +538,21 @@ module Interstellar
         transit_days = response_line['ServiceDays'].to_i
 
         rate_estimates << RateEstimate.new(
-          carrier: self,
           carrier_name: response_line['CarrierName'],
+          carrier: self,
           currency: 'USD',
+          prices: [Price.new(blame: :api, cents: cost, description: response_line['CarrierName'])],
           scac: response_line['Scac']&.upcase,
           service_name: service,
           shipment:,
-          total_price: cost,
           transit_days:,
           with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
         )
       end
 
       RateResponse.new(
-        success,
-        message,
+        true,
+        'OK',
         { response: },
         rates: rate_estimates,
         response:,
