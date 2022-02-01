@@ -96,6 +96,21 @@ module Interstellar
       "#{scheme}#{@conf.dig(:api, :domains, action)}#{@conf.dig(:api, :endpoints, action)}"
     end
 
+    def parse_amount(amount)
+      negative = amount.include?('(') && amount.include?(')')
+
+      %w[$ , ( )].each do |char|
+        amount = amount.sub(char, '')
+      end
+
+      return 0 if amount.blank?
+
+      amount = (amount.to_f * 100).to_i
+      return amount unless negative
+
+      amount * -1
+    end
+
     # Documents
 
     def parse_document_response(action, tracking_number, options = {})
@@ -233,65 +248,74 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      success = true
-      message = ''
+      raise ResponseError, 'Unknown response' if response.blank?
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      else
-        error = response.dig(:get_rates_response, :get_rates_result, :return_line)
+      error = response.dig(:get_rates_response, :get_rates_result, :return_line)
 
-        raise InvalidCredentialsError, error if !error.blank? && error.downcase.include?('not a valid customer code')
-
-        raise UnserviceableError, error if !error.blank? && error.downcase.include?('not a direct service point')
+      unless error.blank?
+        raise InvalidCredentialsError, error if error.downcase.include?('not a valid customer code')
+        raise UnserviceableError, error if error.downcase.include?('not a direct service point')
 
         error = response.dig(:get_rates_response, :get_rates_result, :rate_error)
-        quote_number = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number)
+        raise ResponseError, "API Error: #{error}"
+      end
 
-        # NOTE: error can be set to false by API
-        if error || !quote_number
-          raise Interstellar::UnserviceableError, error if error.downcase.include?('not a direct service point')
+      quote_number = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number)
+      raise Interstellar::UnserviceableError if quote_number.blank?
 
-          success = false
-          message = error
-        else
-          cost = response.dig(:get_rates_response, :get_rates_result, :totals)
+      if response.dig(:get_rates_response, :get_rates_result, :totals).blank?
+        raise Interstellar::ResponseError, 'API Error: Cost is empty'
+      end
 
-          if cost
-            cost = cost.sub('$', '').sub(',', '').sub('.', '').to_i
-            transit_days = response.dig(:get_rates_response, :get_rates_result, :transit_days).to_i
-            estimate_reference = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number)
+      transit_days = response.dig(:get_rates_response, :get_rates_result, :transit_days)&.to_i
+      estimate_reference = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number)
 
-            rate_estimates = [
-              RateEstimate.new(
-                carrier: self,
-                carrier_name: self.class.name,
-                currency: 'USD',
-                estimate_reference:,
-                scac: self.class.scac.upcase,
-                service_name: :standard,
-                shipment:,
-                total_price: cost,
-                transit_days:,
-                with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-              )
-            ]
-          else
-            success = false
-            message = 'API Error: Cost is emtpy'
-          end
-        end
+      prices = []
+
+      shipment_details = response.dig(
+        :get_rates_response,
+        :get_rates_result,
+        :shipment_detail_response,
+        :shipment_detail_row
+      )
+
+      shipment_details.each do |shipment_detail|
+        next if shipment_detail[:charge].blank?
+        next if shipment_detail[:description] == 'Totals'
+
+        cents = parse_amount(shipment_detail[:charge])
+        description = shipment_detail_description(shipment_detail)
+
+        prices << Price.new(blame: :api, cents:, description:)
       end
 
       RateResponse.new(
-        success,
-        message,
-        response.to_hash,
-        rates: rate_estimates,
+        true,
+        'OK',
+        response,
+        rates: [
+          RateEstimate.new(
+            carrier_name: self.class.name,
+            carrier: self,
+            currency: 'USD',
+            estimate_reference:,
+            prices:,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         response:,
         request: last_request
       )
+    end
+
+    def shipment_detail_description(shipment_detail)
+      return '' if shipment_detail[:description].blank?
+
+      shipment_detail[:description].capitalize.squish
     end
 
     # Tracking
