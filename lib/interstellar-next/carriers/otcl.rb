@@ -122,6 +122,19 @@ module Interstellar
       response.parsed_response if response&.parsed_response
     end
 
+    def serviceable_states?(states)
+      valid_states = %w[AZ CA CO ID NV OR UT WA]
+
+      invalid_states = []
+      states.each do |state|
+        invalid_states << state unless valid_states.include?(state)
+      end
+
+      return true if invalid_states.blank?
+
+      raise Interstellar::UnserviceableError, "No service to #{invalid_states.join(', ')}"
+    end
+
     # Documents
 
     # Pickups
@@ -130,6 +143,7 @@ module Interstellar
 
     def build_rate_request(shipment:)
       serviceable_accessorials?(shipment.accessorials)
+      serviceable_states?([shipment.origin.state, shipment.destination.state])
 
       params = ''.dup
       params << 'packages='
