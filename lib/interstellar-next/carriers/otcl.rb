@@ -245,6 +245,7 @@ module Interstellar
                 'Width': package.width(:inches).ceil,
                 'Height': package.height(:inches).ceil
               },
+              'UID': SecureRandom.uuid,
               'Weight': package.pounds(:each).ceil
             }
           )
@@ -257,7 +258,7 @@ module Interstellar
         url: build_url(:pickup),
         body: {
           'Shipments': api_shipments
-        }.to_xml(root: 'OnTracShipmentRequest')
+        }.to_xml(root: 'OnTracShipmentRequest', skip_types: true)
       }
 
       save_request(request)
