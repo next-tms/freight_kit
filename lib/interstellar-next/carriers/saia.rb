@@ -182,6 +182,8 @@ module Interstellar
         case error
         when 'DNF'
           raise Interstellar::UnserviceableError, "#{error}: #{message}"
+        when 'S10'
+          raise Interstellar::UnserviceableError, "#{error}: #{message}"
         end
 
         if message.downcase.include?('must not exceed 10 lines')
