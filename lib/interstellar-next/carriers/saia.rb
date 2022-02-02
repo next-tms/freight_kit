@@ -172,85 +172,100 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      success = true
-      message = ''
+      raise ResponseError, 'API Error: Unknown response' if response.blank?
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      else
-        error = response.dig(:create_response, :create_result, :code)
+      error = response.dig(:create_response, :create_result, :code)
 
-        if !error.blank?
-          message = response.dig(:create_response, :create_result, :message)
+      unless error.blank?
+        message = response.dig(:create_response, :create_result, :message)
 
-          case error
-          when 'DNF'
-            raise Interstellar::UnserviceableError, "#{error}: #{message}"
-          else
-            if message.downcase.include?('must not exceed 10 lines')
-              raise Interstellar::UnserviceableError, "#{error}: #{message}"
-            else
-              raise Interstellar::ResponseError, "#{error}: #{message}"
-            end
-          end
-        else
-          response = response.dig(:create_response, :create_result)
-          cost = response[:total_invoice]
-          if cost
-            cost = cost.sub('.', '').to_i
-            transit_days = response[:standard_service_days].to_i
-            estimate_reference = response[:quote_number]
-
-            rate_estimates = []
-            rate_estimates << RateEstimate.new(
-              carrier: self,
-              carrier_name: self.class.name,
-              currency: 'USD',
-              estimate_reference:,
-              scac: self.class.scac.upcase,
-              service_name: :standard,
-              shipment:,
-              total_price: cost,
-              transit_days:,
-              with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-            )
-
-            [
-              { guaranteed_ltl: response[:guarantee_amount] },
-              { guaranteed_ltl_am: response[:guarantee_amount12pm] },
-              { guaranteed_ltl_pm: response[:guarantee_amount2pm] }
-            ].each do |service|
-              if !service.values[0] == '0' && !service.values[0].blank?
-                cost = service.values[0].sub('.', '').to_i
-                rate_estimates << RateEstimate.new(
-                  carrier_name: self.class.name,
-                  carrier: self,
-                  currency: 'USD',
-                  delivery_range:,
-                  estimate_reference:,
-                  scac: self.class.scac.upcase,
-                  service_name: service.keys[0],
-                  shipment:,
-                  total_price: cost,
-                  with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-                )
-              end
-              rate_estimates
-            end
-          else
-            success = false
-            message = 'API Error: Cost is emtpy'
-          end
+        case error
+        when 'DNF'
+          raise Interstellar::UnserviceableError, "#{error}: #{message}"
         end
+
+        if message.downcase.include?('must not exceed 10 lines')
+          raise Interstellar::UnserviceableError, "#{error}: #{message}"
+        end
+
+        raise Interstellar::ResponseError, "#{error}: #{message}"
+      end
+
+      result = response.dig(:create_response, :create_result)
+
+      raise ResponseError, 'API Error: Cost is blank' if result[:total_invoice].blank?
+
+      transit_days = result[:standard_service_days].to_i
+      estimate_reference = result[:quote_number]
+
+      rate_accessorial_items = result.dig(:rate_accessorials, :rate_accessorial_item)
+      prices = []
+
+      rate_accessorial_items.each do |rate_accessorial_item|
+        prices << Price.new(
+          blame: :api,
+          cents: (rate_accessorial_item[:amount].to_f * 100).to_i,
+          description: rate_accessorial_item[:description].titleize.squish
+        )
+      end
+
+      standard_ltl_cents = (result[:total_invoice].to_f * 100).to_i - prices.sum(&:cents)
+
+      rate_estimates = []
+
+      rate_estimates << RateEstimate.new(
+        carrier: self,
+        carrier_name: self.class.name,
+        currency: 'USD',
+        estimate_reference:,
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
+        prices: [
+          Price.new(
+            blame: :api,
+            cents: standard_ltl_cents,
+            description: 'Freight'
+          )
+        ] + prices,
+        transit_days:,
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+      )
+
+      [
+        { guaranteed_ltl: result[:guarantee_amount] },
+        { guaranteed_ltl_am: result[:guarantee_amount12pm] },
+        { guaranteed_ltl_pm: result[:guarantee_amount2pm] }
+      ].each do |service|
+        next if service.values[0] == '0' || service.values[0].blank?
+
+        cents = (service.values[0].to_f * 100).to_i
+
+        rate_estimates << RateEstimate.new(
+          carrier_name: self.class.name,
+          carrier: self,
+          currency: 'USD',
+          estimate_reference:,
+          scac: self.class.scac.upcase,
+          service_name: service.keys[0],
+          shipment:,
+          prices: [
+            Price.new(
+              blame: :api,
+              cents: standard_ltl_cents + cents,
+              description: 'Freight'
+            )
+          ] + prices,
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        )
       end
 
       RateResponse.new(
-        success,
-        message,
-        response.to_hash,
+        true,
+        'OK',
+        result.to_hash,
         rates: rate_estimates,
-        response:,
+        result:,
         request: last_request
       )
     end
