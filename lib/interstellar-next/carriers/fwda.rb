@@ -233,6 +233,7 @@ module Interstellar
       raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('not authorized')
       raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('shipper client does not exist')
       raise Interstellar::ShipmentNotFoundError, error if error.downcase.include?('no history found')
+      raise Interstellar::UnserviceableError, error if error.downcase.include?('not serviced')
 
       raise Interstellar::ResponseError, error
     end
