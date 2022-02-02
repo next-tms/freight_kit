@@ -77,6 +77,8 @@ module Interstellar
     # The total price of the shipment in cents.
     # @return [Integer]
     def total_cents
+      return 0 if @prices.blank?
+
       @prices.sum(&:cents)
     end
   end
