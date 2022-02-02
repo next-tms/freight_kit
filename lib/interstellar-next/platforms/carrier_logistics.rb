@@ -395,6 +395,7 @@ module Interstellar
       prices = []
 
       ratequote_lines.each do |ratequote_line|
+        next if ratequote_line['chrg'].blank?
         next if ratequote_line['chargedesc'] == 'FREIGHT'
 
         cents = parse_amount(ratequote_line['chrg'])
