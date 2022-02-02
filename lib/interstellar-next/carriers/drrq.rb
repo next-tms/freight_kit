@@ -378,7 +378,7 @@ module Interstellar
           },
           CountryCode: shipment.destination.country.code(:alpha3),
           IsResidential: shipment.accessorials.include?(:residential_pickup),
-          Name: receiver_name,
+          Name: shipment.destination.contact.company_name,
           PostalCode: shipment.destination.zip,
           StateProvince: shipment.destination.state
         },
