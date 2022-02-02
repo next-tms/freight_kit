@@ -207,7 +207,7 @@ module Interstellar
         prices << Price.new(
           blame: :api,
           cents: (rate_accessorial_item[:amount].to_f * 100).to_i,
-          description: rate_accessorial_item[:description].titleize.squish
+          description: rate_accessorial_item[:description]&.titleize&.squish
         )
       end
 
