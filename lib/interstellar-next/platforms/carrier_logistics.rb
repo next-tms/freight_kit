@@ -152,6 +152,7 @@ module Interstellar
     end
 
     # Tracking
+
     def parse_city_state(str)
       return nil if str.blank?
 
@@ -299,6 +300,32 @@ module Interstellar
     end
 
     # Rates
+
+    def parse_amount(amount)
+      negative = amount.include?('-')
+
+      %w[$ , -].each do |char|
+        amount = amount.sub(char, '')
+      end
+
+      return 0 if amount.blank?
+
+      amount = (amount.to_f * 100).to_i
+      return amount unless negative
+
+      amount * -1
+    end
+
+    def ratequote_line_description(ratequote_line)
+      description = ratequote_line['chargedesc'] || ''
+      description = description.capitalize
+
+      code = ratequote_line['chargecode']&.upcase || ''
+      description = "#{description} (#{code})" unless code.blank?
+
+      description.squish
+    end
+
     def build_rate_params(shipment:)
       params = ''.dup
       params << 'xmlv=yes' # must be first
@@ -341,62 +368,81 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      success = true
-      message = ''
+      raise Interstellar::ResponseError, 'API Error: Unknown response' if response.blank?
 
       if response&.is_a?(String) && response&.include?('WebSpeed error')
         raise Interstellar::ResponseError, 'API Error: Temporary error (CarrierLogistics WebSpeed error)'
       end
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      elsif !response.dig('error', 'errormessage').blank?
-        error = response.dig('error', 'errormessage')
+      error = response.dig('error', 'errormessage')
+
+      unless error.blank?
         raise Interstellar::InvalidCredentialsError if error.downcase.include?('invalid username/password')
         raise Interstellar::UnserviceableError, error if error.downcase.include?('is not available')
         raise Interstellar::UnserviceableError, error if error.downcase.include?('out of the serviceable area')
 
-        success = false
-        message = error
-      else
-        cost = response.dig('ratequote', 'quotetotal').delete(',').delete('.').to_i
+        raise ResponseError, "API Error: #{error}"
+      end
 
-        if overlength_fees_require_tariff?
-          shipment.packages.each do |package|
-            cost += overlength_fee(@options[:tariff], package)
-          end
+      raise ResponseError, 'Cost is blank' if response.dig('ratequote', 'quotetotal').blank?
+
+      total_cents = parse_amount(response.dig('ratequote', 'quotetotal'))
+
+      transit_days = response.dig('ratequote', 'busdays').to_i
+      estimate_reference = response.dig('ratequote', 'quotenumber')
+
+      ratequote_lines = response.dig('ratequote', 'ratequoteline')
+      prices = []
+
+      ratequote_lines.each do |ratequote_line|
+        next if ratequote_line['chargedesc'] == 'FREIGHT'
+
+        cents = parse_amount(ratequote_line['chrg'])
+        next if cents.zero?
+
+        prices << Price.new(
+          blame: :api,
+          cents:,
+          description: ratequote_line_description(ratequote_line)
+        )
+      end
+
+      prices = [
+        Price.new(
+          blame: :api,
+          cents: total_cents - prices.sum(&:cents),
+          description: 'Freight'
+        )
+      ] + prices
+
+      if overlength_fees_require_tariff?
+        cents = 0
+
+        shipment.packages.each do |package|
+          cents += overlength_fee(@options[:tariff], package)
         end
 
-        transit_days = response.dig('ratequote', 'busdays').to_i
-        estimate_reference = response.dig('ratequote', 'quotenumber')
-
-        if cost
-          rate_estimates = [
-            RateEstimate.new(
-              carrier: self,
-              carrier_name: self.class.name,
-              currency: 'USD',
-              estimate_reference:,
-              scac: self.class.scac.upcase,
-              service_name: :standard,
-              shipment:,
-              total_price: cost,
-              transit_days:,
-              with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-            )
-          ]
-        else
-          success = false
-          message = 'API Error: Cost is emtpy'
-        end
+        prices << Price.new(blame: :tariff, cents:, description: 'Overlength fees') unless cents.zero?
       end
 
       RateResponse.new(
-        success,
-        message,
+        true,
+        'OK',
         response.to_hash,
-        rates: rate_estimates,
+        rates: [
+          RateEstimate.new(
+            carrier: self,
+            carrier_name: self.class.name,
+            currency: 'USD',
+            estimate_reference:,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            prices:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         response:,
         request: last_request
       )

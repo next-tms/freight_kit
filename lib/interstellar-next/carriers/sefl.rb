@@ -200,34 +200,70 @@ module Interstellar
       end
 
       error = response['errorMessage']
-      if error.include?('one point must be directly serviced')
-        raise Interstellar::UnserviceableError, error.sub(' by SEFL.', '')
-      else
-        raise Interstellar::ResponseError, error
+
+      unless error.blank?
+        if error.include?('one point must be directly serviced')
+          raise Interstellar::UnserviceableError, error.sub(' by SEFL.', '')
+        else
+          raise Interstellar::ResponseError, "API Error: #{error}"
+        end
       end
 
       url = response['detailQuoteLocation'].gsub('\\', '')
       request = build_request(:get_rate, url:)
-      save_request(request)
-      response = commit(request)
 
-      if response.body.blank?
-        raise Interstellar::InvalidCredentialsError if response.code == 401
+      tries = 0
 
-        raise Interstellar::ResponseError
+      until tries > 10
+        save_request(request)
+        response = commit(request)
+
+        if response.body.blank?
+          raise Interstellar::InvalidCredentialsError if response.code == 401
+
+          raise Interstellar::ResponseError
+        end
+
+        response = JSON.parse(response.body)
+        raise Interstellar::ResponseError if response.blank?
+
+        error = response['errorMessage']
+
+        unless error.blank?
+          if error.downcase.include?('not yet been processed')
+            sleep(5)
+            tries += 1
+          else
+            raise Interstellar::ResponseError, "API Error: #{error}"
+          end
+        end
+
+        tries = 50
       end
 
-      response = JSON.parse(response.body)
-      raise Interstellar::ResponseError if response.blank?
-
-      error = response['errorMessage']
-      raise Interstellar::ResponseError, "API Error: #{error}" unless error.blank?
-
-      cost = response['rateQuote']&.sub('.', '')&.to_i
-      raise Interstellar::ResponseError, 'API Error: Cost is empty' if response.blank?
+      raise Interstellar::ResponseError, 'API Error: Cost is empty' if response['rateQuote'].blank?
 
       estimate_reference = response['quoteNumber']
       transit_days = response['transitTime'].to_i
+
+      details = response['details']
+      prices = []
+
+      # return details
+
+      details.each do |detail|
+        next if detail['typeCharge'].include?('TTL') || detail['typeCharge'].include?('NFC')
+
+        cents = detail['charges'].squish
+        cents = cents.blank? ? 0 : (cents.to_f * 100).to_i
+        next if cents.zero?
+
+        description = detail['description'].squish
+
+        cents *= -1 if detail['description'].include?('DISCOUNT')
+
+        prices << Price.new(blame: :api, cents:, description:)
+      end
 
       rate_estimates = [
         RateEstimate.new(
@@ -238,15 +274,15 @@ module Interstellar
           scac: self.class.scac.upcase,
           service_name: :standard,
           shipment:,
-          total_price: cost,
+          prices:,
           transit_days:,
           with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
         )
       ]
 
       RateResponse.new(
-        success,
-        message,
+        true,
+        'OK',
         response.to_hash,
         rates: rate_estimates,
         response:,

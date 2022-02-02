@@ -401,48 +401,59 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      success = true
-      message = ''
+      raise ResponseError, 'API Error: Unknown response' if response.blank?
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      elsif response.key?('errorMessage')
-        success = false
-        message = response['errorMessage']
-      else
-        cost = response['quoteTotal']
-        if cost
-          cost = (cost.to_f * 100).to_i
-          transit_days = response['transitDaysTotal']
+      error = response.key?('errorMessage')
+      raise ResponseError, error unless error.blank?
 
-          rate_estimates = [
-            RateEstimate.new(
-              carrier: self,
-              carrier_name: self.class.name,
-              currency: 'USD',
-              scac: self.class.scac.upcase,
-              service_name: :standard,
-              shipment:,
-              total_price: cost,
-              transit_days:,
-              with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-            )
-          ]
-        else
-          success = false
-          message = 'API Error: Cost is emtpy'
-        end
+      raise ResponseError, 'API Error: Cost is blank' if response['quoteTotal'].blank?
+
+      transit_days = response['transitDaysTotal']
+
+      charge_line_items = response.dig('chargeLineItems', 'chargeLineItem')
+      prices = []
+
+      charge_line_items.each do |charge_line_item|
+        cents = (charge_line_item['amount'] * 100).to_i
+        next if cents.zero?
+
+        description = charge_line_item_description(charge_line_item)
+
+        prices << Price.new(blame: :api, cents:, description:)
       end
 
       RateResponse.new(
-        success,
-        message,
+        true,
+        'OK',
         response.to_hash,
-        rates: rate_estimates,
+        rates: [
+          RateEstimate.new(
+            carrier: self,
+            carrier_name: self.class.name,
+            currency: 'USD',
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            prices:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         response:,
         request: last_request
       )
+    end
+
+    def charge_line_item_description(charge_line_item)
+      description = charge_line_item['description'] || ''
+      description = description.gsub('-', '')
+      description = description.capitalize
+
+      code = charge_line_item['code']&.upcase || ''
+      description = "#{description} (#{code})" unless code.blank?
+      description = description.gsub('Fsc', 'FSC') if description.include?('Fsc')
+
+      description.squish
     end
 
     # Tracking

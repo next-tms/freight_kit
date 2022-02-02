@@ -53,73 +53,101 @@ module Interstellar
     # Rates
 
     def parse_rate_response(shipment:, response:)
-      success = true
-      message = ''
+      raise Interstellar::ResponseError, 'API Error: Unknown response' if response.blank?
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      elsif !response.dig('error', 'errormessage').blank?
-        error = response.dig('error', 'errormessage')
+      if response.is_a?(String) && response.include?('WebSpeed error')
+        raise Interstellar::ResponseError, 'API Error: Temporary error (CarrierLogistics WebSpeed error)'
+      end
+
+      error = response.dig('error', 'errormessage')
+
+      unless error.blank?
         raise Interstellar::InvalidCredentialsError if error.downcase.include?('invalid username/password')
         raise Interstellar::UnserviceableError, error if error.downcase.include?('is not available')
         raise Interstellar::UnserviceableError, error if error.downcase.include?('out of the serviceable area')
 
-        success = false
-        message = error
-      else
-        cost = response.dig('ratequote', 'quotetotal').delete(',').delete('.').to_i
-        transit_days = response.dig('ratequote', 'busdays').to_i
-        estimate_reference = response.dig('ratequote', 'quotenumber')
+        raise ResponseError, "API Error: #{error}"
+      end
 
-        if cost
-          # Carrier-specific pricing structure
-          oversized_pallets_price = 0
-          shipment.packages.each do |package|
-            short_side, long_side = nil
-            if !package.length(:in).blank? && !package.width(:in).blank? && !package.height(:in).blank?
-              long_side = package.length(:in) > package.width(:in) ? package.length(:in) : package.width(:in)
-              short_side = package.length(:in) < package.width(:in) ? package.length(:in) : package.width(:in)
-            end
+      raise ResponseError, 'Cost is blank' if response.dig('ratequote', 'quotetotal').blank?
 
-            next unless short_side &&
-                        long_side &&
-                        package.height(:in) &&
-                        (
-                          short_side > 40 ||
-                          long_side > 48 ||
-                          package.height(:in) > 84
-                        )
+      total_cents = parse_amount(response.dig('ratequote', 'quotetotal'))
 
-            oversized_pallets_price += 1500
-          end
-          cost += oversized_pallets_price
+      transit_days = response.dig('ratequote', 'busdays').to_i
+      estimate_reference = response.dig('ratequote', 'quotenumber')
 
-          rate_estimates = [
-            RateEstimate.new(
-              carrier: self,
-              carrier_name: self.class.name,
-              currency: 'USD',
-              estimate_reference:,
-              scac: self.class.scac.upcase,
-              service_name: :standard,
-              shipment:,
-              total_price: cost,
-              transit_days:,
-              with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-            )
-          ]
-        else
-          success = false
-          message = 'API Error: Cost is emtpy'
+      ratequote_lines = response.dig('ratequote', 'ratequoteline')
+      prices = []
+
+      ratequote_lines.each do |ratequote_line|
+        next if ratequote_line['chargedesc'] == 'FREIGHT'
+
+        cents = parse_amount(ratequote_line['chrg'])
+        next if cents.zero?
+
+        prices << Price.new(
+          blame: :api,
+          cents:,
+          description: ratequote_line_description(ratequote_line)
+        )
+      end
+
+      prices = [
+        Price.new(
+          blame: :api,
+          cents: total_cents - prices.sum(&:cents),
+          description: 'Freight'
+        )
+      ] + prices
+
+      # Carrier-specific pricing structure
+      oversized_pallets_cents = 0
+
+      shipment.packages.each do |package|
+        short_side, long_side = nil
+        if !package.length(:in).blank? && !package.width(:in).blank? && !package.height(:in).blank?
+          long_side = package.length(:in) > package.width(:in) ? package.length(:in) : package.width(:in)
+          short_side = package.length(:in) < package.width(:in) ? package.length(:in) : package.width(:in)
         end
+
+        next unless short_side &&
+                    long_side &&
+                    package.height(:in) &&
+                    (
+                      short_side > 40 ||
+                      long_side > 48 ||
+                      package.height(:in) > 84
+                    )
+
+        oversized_pallets_cents += 1500
+      end
+
+      unless oversized_pallets_cents.zero?
+        prices << Price.new(
+          blame: :library,
+          cents: oversized_pallets_cents,
+          description: 'Overlength fees'
+        )
       end
 
       RateResponse.new(
-        success,
-        message,
+        true,
+        'OK',
         response.to_hash,
-        rates: rate_estimates,
+        rates: [
+          RateEstimate.new(
+            carrier: self,
+            carrier_name: self.class.name,
+            currency: 'USD',
+            estimate_reference:,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            prices:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         response:,
         request: last_request
       )

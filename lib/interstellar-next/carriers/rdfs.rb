@@ -109,11 +109,26 @@ module Interstellar
         @conf.dig(:api, :actions, action),
         soap_header: build_soap_header(action),
         message: request
-      ).body.to_json
+      ).body
     rescue Savon::SOAPFault => e
       error = e.to_hash.dig(:fault, :detail, :error, :error_message)
 
       { error: }
+    end
+
+    def parse_amount(amount)
+      negative = amount.start_with?('-$') || amount.start_with?('-')
+
+      %w[$ - ,].each do |char|
+        amount = amount.sub(char, '')
+      end
+
+      return 0 if amount.blank?
+
+      amount = (amount.to_f * 100).to_i
+      return amount unless negative
+
+      amount * -1
     end
 
     def parse_date(date)
@@ -219,12 +234,7 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      success = true
-      message = ''
-
       raise Interstellar::ResponseError, 'API Error: Unknown response' unless response
-
-      response = JSON.parse(response) unless response.is_a?(Hash)
 
       unless response[:error].blank?
         if response[:error].downcase.include?('no standard service')
@@ -234,45 +244,52 @@ module Interstellar
         raise Interstellar::ResponseError, response[:error]
       end
 
-      cost = response.dig('rate_quote_by_account_response', 'rate_quote_by_account_result', 'net_charge')
+      result = response.dig(:rate_quote_by_account_response, :rate_quote_by_account_result)
 
-      raise Interstellar::ResponseError, 'API Error: Cost is empty' if cost.blank?
+      raise Interstellar::ResponseError, 'API Error: Cost is empty' if result[:net_charge].blank?
 
-      cost = (cost.to_f * 100).to_i
+      estimate_reference = result.dig(:quote_number)
+      rate_details = result.dig(:rate_details, :quote_detail)
+      transit_days = result.dig(:routing_info, :estimated_transit_days).to_i
 
-      transit_days = response.dig(
-        'rate_quote_by_account_response',
-        'rate_quote_by_account_result',
-        'routing_info',
-        'estimated_transit_days'
-      ).to_i
+      prices = []
 
-      estimate_reference = response.dig(
-        'rate_quote_by_account_response',
-        'rate_quote_by_account_result',
-        'quote_number'
-      )
+      rate_details.each do |rate_detail|
+        if rate_detail[:description].blank?
+          prices << Price.new(
+            blame: :api,
+            cents: parse_amount(rate_detail[:charge]),
+            description: 'Freight'
+          )
 
-      rate_estimates = [
-        RateEstimate.new(
-          carrier: self,
-          carrier_name: self.class.name,
-          currency: 'USD',
-          estimate_reference:,
-          scac: self.class.scac.upcase,
-          service_name: :standard,
-          shipment:,
-          total_price: cost,
-          transit_days:,
-          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          next
+        end
+
+        prices << Interstellar::Price.new(
+          blame: :api,
+          cents: parse_amount(rate_detail[:charge]),
+          description: rate_detail[:description]&.capitalize
         )
-      ]
+      end
 
       RateResponse.new(
-        success,
-        message,
-        response.to_hash,
-        rates: rate_estimates,
+        true,
+        'OK',
+        response,
+        rates: [
+          RateEstimate.new(
+            carrier: self,
+            carrier_name: self.class.name,
+            currency: 'USD',
+            estimate_reference:,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            prices:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         response:,
         request: last_request
       )

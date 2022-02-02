@@ -392,79 +392,124 @@ module Interstellar
       request
     end
 
+    def rate_item_description(rate_item)
+      description = rate_item[:description] || ''
+      description = description.gsub('-', '')
+      description = description.sub('disc.on', 'discount on')
+      description = description.capitalize
+
+      code = rate_item[:acccode]&.upcase || ''
+      description = "#{description} (#{code})" unless code.blank?
+
+      description.squish
+    end
+
     def parse_rate_response(shipment:, response:)
       success = true
       message = ''
 
-      if !response
-        success = false
-        message = 'API Error: Unknown response'
-      elsif !response.dig(:getquote_response, :return, :rating, :errorcode).blank?
+      raise Interstellar::ResponseError, 'API Error: Unknown response' if response.blank?
+
+      unless response.dig(:getquote_response, :return, :rating, :errorcode).blank?
         error_code = response.dig(:getquote_response, :return, :rating, :errorcode)
 
         case error_code
         when 'NOSVC'
-          raise Interstellar::UnserviceableError,
-                'Origin or destination has no service available'
+          raise Interstellar::UnserviceableError, 'Origin or destination has no service available'
         when 'BADCONZIP'
-          raise Interstellar::UnserviceableError,
-                'Invalid destination ZIP code'
+          raise Interstellar::UnserviceableError, 'Invalid destination ZIP code'
         end
 
-        success = false
-        message = error_code
-      else
-        cost = (response.dig(:getquote_response, :return, :rating, :amount).to_f * 100).to_i
-
-        shipment.packages.each do |package|
-          cost += overlength_fee(@options[:tariff], package)
-        end
-
-        transit_days = response.dig(
-          :getquote_response,
-          :return,
-          :service,
-          :days
-        ).to_i
-
-        # Calculate real transit time based on information we have about the destination service days
-        %i[mon tue wed thu fri].each do |weekday|
-          transit_days += 1 if response.dig(:getquote_response, :return, :service, :destination, weekday) == 'N'
-        end
-
-        estimate_reference = response.dig(
-          :getquote_response,
-          :return,
-          :rating,
-          :quotenumber
-        )
-
-        if cost
-          rate_estimates = [
-            RateEstimate.new(
-              carrier: self,
-              carrier_name: self.class.name,
-              currency: 'USD',
-              estimate_reference:,
-              scac: self.class.scac.upcase,
-              service_name: :standard,
-              shipment:,
-              total_price: cost,
-              transit_days:,
-              with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-            )
-          ]
-        else
-          success = false
-          message = 'API Error: Cost is emtpy'
-        end
+        raise Interstellar::ResponseError, "API Error: #{error_code}"
       end
+
+      if response.dig(:getquote_response, :return, :rating, :amount).blank?
+        raise Interstellar::ResponseError, 'API Error: Cost is empty'
+      end
+
+      freight_price = nil
+      prices = []
+
+      rate_items = response.dig(:getquote_response, :return, :rateitem)
+
+      rate_items.each do |rate_item|
+        next if ['FREIGHT', '-- MINIMUM FREIGHT CHARGES  --'].include?(rate_item[:description])
+        next if ['Sub Total', 'GrandTotal'].include?(rate_item[:acccode])
+
+        cents = (rate_item[:amount].to_f * 100).to_i
+        description = rate_item_description(rate_item)
+
+        prices << Price.new(blame: :api, cents:, description:)
+      end
+
+      rate_items.each do |rate_item|
+        next unless rate_item[:description] == 'FREIGHT'
+
+        cents = (rate_item[:amount].to_f * 100).to_i
+        description = rate_item_description(rate_item)
+
+        freight_price = Price.new(blame: :api, cents:, description:)
+      end
+
+      rate_items.each do |rate_item|
+        next unless rate_item[:description] == '-- MINIMUM FREIGHT CHARGES  --'
+
+        cents = (rate_item[:amount].to_f * 100).to_i
+        description = rate_item_description(rate_item)
+
+        freight_price = Price.new(blame: :api, cents:, description:)
+      end
+
+      prices = [freight_price] + prices
+
+      shipment.packages.each do |package|
+        cents = overlength_fee(@options[:tariff], package)
+        next unless cents.positive?
+
+        prices << Price.new(
+          blame: :tariff,
+          cents:,
+          description: 'Overlength fee'
+        )
+      end
+
+      transit_days = response.dig(
+        :getquote_response,
+        :return,
+        :service,
+        :days
+      ).to_i
+
+      # Calculate real transit time based on information we have about the destination service days
+      %i[mon tue wed thu fri].each do |weekday|
+        transit_days += 1 if response.dig(:getquote_response, :return, :service, :destination, weekday) == 'N'
+      end
+
+      estimate_reference = response.dig(
+        :getquote_response,
+        :return,
+        :rating,
+        :quotenumber
+      )
 
       RateResponse.new(
         success,
         message,
         response,
-        rates: rate_estimates,
+        rates: [
+          RateEstimate.new(
+            carrier_name: self.class.name,
+            carrier: self,
+            currency: 'USD',
+            estimate_reference:,
+            prices:,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         response:,
         request: last_request
       )
