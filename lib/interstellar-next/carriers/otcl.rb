@@ -83,15 +83,6 @@ module Interstellar
 
     # Tracking
 
-    def find_tracking_info(tracking_number, *)
-      request = build_tracking_request(tracking_number)
-      parse_tracking_response(commit(request))
-    end
-
-    def find_tracking_info_implemented?
-      true
-    end
-
     protected
 
     def build_url(action, options = {})
