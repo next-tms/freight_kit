@@ -193,8 +193,6 @@ module Interstellar
         service_delivery_options << { service_options: { service_code: 'EXM' } }
       end
 
-      service_delivery_options = service_delivery_options.uniq.to_a
-
       shipment_detail = []
       shipment_box_count = 0
       shipment_pallet_count = 0
