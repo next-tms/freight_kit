@@ -186,11 +186,18 @@ module Interstellar
         end
       end
 
-      longest_dimension = shipment.packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
-      if longest_dimension > 144
-        service_delivery_options << { service_options: { service_code: 'EXL' } }
-      elsif longest_dimension > 96
-        service_delivery_options << { service_options: { service_code: 'EXM' } }
+      shipment.packages.each do |package|
+        longest_dimension = [package.width(:inches), package.length(:inches)].max.ceil
+
+        next unless longest_dimension > 96
+
+        package.quantity.times do
+          if longest_dimension > 144
+            service_delivery_options << { service_options: { service_code: 'EXL' } }
+          elsif longest_dimension > 96
+            service_delivery_options << { service_options: { service_code: 'EXM' } }
+          end
+        end
       end
 
       shipment_detail = []
