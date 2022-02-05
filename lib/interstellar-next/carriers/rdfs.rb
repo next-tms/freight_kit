@@ -278,11 +278,8 @@ module Interstellar
       end
 
       RateResponse.new(
-        true,
-        'OK',
-        response,
         rates: [
-          RateEstimate.new(
+          Rate.new(
             carrier: self,
             carrier_name: self.class.name,
             currency: 'USD',
@@ -295,8 +292,8 @@ module Interstellar
             with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
           )
         ],
-        response:,
-        request: last_request
+        request: last_request,
+        response:
       )
     end
 
@@ -425,22 +422,16 @@ module Interstellar
       shipment_events = shipment_events.sort_by(&:time)
 
       TrackingResponse.new(
-        true,
-        shipment_events.last&.status,
-        json,
-        carrier: "#{@@scac}, #{@@name}",
-        json:,
-        response:,
-        status: shipment_events.last&.status,
-        type_code: shipment_events.last&.status,
-        ship_time: parse_date(search_result.dig('Shipment', 'ProDateTime')),
-        scheduled_delivery_date:,
         actual_delivery_date:,
-        delivery_signature: nil,
-        shipment_events:,
-        shipper_address:,
-        origin: shipper_address,
+        carrier: self,
         destination: receiver_address,
+        origin: shipper_address,
+        request: last_request,
+        response:,
+        scheduled_delivery_date:,
+        ship_time: parse_date(search_result.dig('Shipment', 'ProDateTime')),
+        shipment_events:,
+        status: shipment_events.last&.status,
         tracking_number:
       )
     end

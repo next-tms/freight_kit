@@ -225,24 +225,18 @@ module Interstellar
       shipment_events = shipment_events.sort_by(&:time)
 
       TrackingResponse.new(
-        true,
-        status,
-        { html: html.to_s },
-        carrier: "#{@@scac}, #{@@name}",
-        html:,
-        response: html.to_s,
-        status:,
-        type_code: status,
-        ship_time:,
-        scheduled_delivery_date:,
         actual_delivery_date:,
-        delivery_signature: nil,
+        carrier: self,
+        destination: receiver_address,
+        origin: shipper_address,
+        request: last_request,
+        response: html.to_s,
+        scheduled_delivery_date:,
+        ship_time:,
         shipment_events:,
         shipper_address:,
-        origin: shipper_address,
-        destination: receiver_address,
-        tracking_number:,
-        request: last_request
+        status:,
+        tracking_number:
       )
     end
   end

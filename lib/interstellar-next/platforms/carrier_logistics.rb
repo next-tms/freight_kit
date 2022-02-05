@@ -205,24 +205,11 @@ module Interstellar
         warn status
 
         return TrackingResponse.new(
-          true,
-          nil,
-          { html: html.to_s },
-          carrier: "#{self.class.scac}, #{self.class.name}",
-          html:,
+          carrier: self,
+          request: last_request,
           response: html.to_s,
           status:,
-          type_code: nil,
-          ship_time: nil,
-          scheduled_delivery_date: nil,
-          actual_delivery_date: nil,
-          delivery_signature: nil,
-          shipment_events: [],
-          shipper_address: nil,
-          origin: nil,
-          destination: nil,
-          tracking_number:,
-          request: last_request
+          tracking_number:
         )
       end
 
@@ -278,24 +265,17 @@ module Interstellar
       shipment_events = shipment_events.sort_by(&:time)
 
       TrackingResponse.new(
-        true,
-        status,
-        { html: html.to_s },
-        carrier: "#{self.class.scac}, #{self.class.name}",
-        html:,
-        response: html.to_s,
-        status:,
-        type_code: status,
-        ship_time:,
-        scheduled_delivery_date:,
         actual_delivery_date:,
-        delivery_signature: nil,
-        shipment_events:,
-        shipper_address:,
-        origin: shipper_address,
+        carrier: self,
         destination: receiver_address,
-        tracking_number:,
-        request: last_request
+        origin: shipper_address,
+        request: last_request,
+        response: html.to_s,
+        scheduled_delivery_date:,
+        ship_time:,
+        shipment_events:,
+        status:,
+        tracking_number:
       )
     end
 
@@ -427,11 +407,8 @@ module Interstellar
       end
 
       RateResponse.new(
-        true,
-        'OK',
-        response.to_hash,
         rates: [
-          RateEstimate.new(
+          Rate.new(
             carrier: self,
             carrier_name: self.class.name,
             currency: 'USD',
@@ -444,8 +421,8 @@ module Interstellar
             with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
           )
         ],
-        response:,
-        request: last_request
+        request: last_request,
+        response:
       )
     end
   end

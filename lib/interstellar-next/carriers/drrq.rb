@@ -515,7 +515,7 @@ module Interstellar
 
       raise UnserviceableError, 'No rates found' if response.blank?
 
-      rate_estimates = []
+      rates = []
 
       response.each do |response_line|
         next if response_line['Message'] # Signifies error
@@ -537,7 +537,7 @@ module Interstellar
                   end
         transit_days = response_line['ServiceDays'].to_i
 
-        rate_estimates << RateEstimate.new(
+        rates << Rate.new(
           carrier_name: response_line['CarrierName'],
           carrier: self,
           currency: 'USD',
@@ -550,14 +550,7 @@ module Interstellar
         )
       end
 
-      RateResponse.new(
-        true,
-        'OK',
-        { response: },
-        rates: rate_estimates,
-        response:,
-        request: last_request
-      )
+      RateResponse.new(rates:, request: last_request, response:)
     end
 
     # Tracking
