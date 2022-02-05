@@ -421,22 +421,41 @@ module Interstellar
         raise Interstellar::ResponseError, "API Error: #{error_code}"
       end
 
-      if response.dig(:getquote_response, :return, :rating, :amount).blank?
-        raise Interstellar::ResponseError, 'API Error: Cost is empty'
-      end
+      total_cents = response.dig(:getquote_response, :return, :rating, :amount)
+
+      raise Interstellar::ResponseError, 'API Error: Cost is empty' if total_cents.blank?
+
+      total_cents = (total_cents.to_f * 100).to_i
 
       freight_price = nil
       prices = []
 
       rate_items = response.dig(:getquote_response, :return, :rateitem)
 
+      # Confusing API sometimes returns lines of freight with high costs and then later includes includes lines that
+      # override the high cost without adding a discount, etc
       rate_items.each do |rate_item|
         next if ['Sub Total', 'GrandTotal'].include?(rate_item[:acccode])
+
+        # Exclude lines that are just the packages repeated back to us
+        next unless rate_item[:pallets] == '0' && rate_item[:pieces] == '0'
 
         cents = (rate_item[:amount].to_f * 100).to_i
         description = rate_item_description(rate_item)
 
         prices << Price.new(blame: :api, cents:, description:)
+      end
+
+      # Since we expected the low-cost overriding lines earlier, we need to handle situations where those lines do not
+      # appear
+      if prices.sum(&:cents) < total_cents
+        prices = [
+          Price.new(
+            blame: :api,
+            cents: total_cents - prices.sum(&:cents),
+            description: 'Freight'
+          )
+        ] + prices
       end
 
       shipment.packages.each do |package|
