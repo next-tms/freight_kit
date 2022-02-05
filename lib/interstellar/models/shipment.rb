@@ -14,6 +14,22 @@ module Interstellar
   class Shipment < Model
     attr_accessor :accessorials, :declared_value_cents, :destination, :origin, :order_number, :packages, :po_number
 
+    def loose?
+      return false if @packages.blank?
+
+      packages.map(&:packaging).map(&:pallet?).none?(true)
+    end
+
+    def loose_and_palletized?
+      !loose? && !palletized?
+    end
+
+    def palletized?
+      return false if @packages.blank?
+
+      packages.map(&:packaging).map(&:pallet?).none?(false)
+    end
+
     def valid?
       return false if @accessorials.nil?
       return false unless @destination.is_a?(Location)
