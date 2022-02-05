@@ -265,7 +265,7 @@ module Interstellar
       RateResponse.new(
         rates:,
         request: last_request,
-        result:
+        response:
       )
     end
 
