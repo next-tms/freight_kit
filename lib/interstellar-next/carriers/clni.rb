@@ -143,10 +143,7 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      success = true
-      message = ''
-
-      raise Interstellar::ResponseError, pretty_error if response.blank?
+      raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
 
       error = response.dig(:get_rating_response, :get_rating_result, :rating_output, :message)
 
@@ -160,11 +157,24 @@ module Interstellar
         raise Interstellar::ResponseError, pretty_error
       end
 
-      response = response.dig(:get_rating_response, :get_rating_result, :rating_output)
-      raise Interstellar::ResponseError, pretty_error if response.blank?
+      result = response.dig(:get_rating_response, :get_rating_result, :rating_output)
+      raise Interstellar::ResponseError, 'API Error: Blank response' if result.blank?
 
-      cost = response[:standard_total_rate]&.sub('.', '')&.to_i
-      raise Interstellar::ResponseError, 'Cost is blank' if cost.blank?
+      cents = parse_amount(result[:standard_total_rate])
+      raise Interstellar::ResponseError, 'Cost is blank' if cents.blank?
+
+      prices = []
+      prices << Price.new(blame: :api, cents:, description: 'Freight')
+
+      accessorial_outputs = result.dig(:accessorial_output, :accessorial_output)
+
+      accessorial_outputs.each do |accessorial_output|
+        prices << Price.new(
+          blame: :api,
+          cents: 0,
+          description: accessorial_output_description(accessorial_output)
+        )
+      end
 
       transit_days = response[:transit_days].to_i
 
@@ -176,19 +186,37 @@ module Interstellar
         scac: self.class.scac.upcase,
         service_name: :standard,
         shipment:,
-        total_price: cost,
+        prices:,
         transit_days:,
         with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       RateResponse.new(
-        success,
-        message,
+        true,
+        'OK',
         response.to_hash,
         rates: [rate],
         response:,
         request: last_request
       )
+    end
+
+    def accessorial_output_description(accessorial_output)
+      return '' if accessorial_output[:accessorial_desc].blank?
+
+      description = accessorial_output[:accessorial_desc]
+      description = description.capitalize
+      description.gsub('Smc', 'SMC')
+    end
+
+    def parse_amount(amount)
+      %w[$ ,].each do |char|
+        amount = amount.sub(char, '')
+      end
+
+      return 0 if amount.blank?
+
+      amount = (amount.to_f * 100).to_i
     end
 
     # Tracking
