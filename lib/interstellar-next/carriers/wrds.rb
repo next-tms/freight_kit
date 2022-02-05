@@ -102,15 +102,15 @@ module Interstellar
       end
 
       browser.text_field(name: 'ctl00$cphMain$txtProNumber').set(tracking_number)
-      browser.button(name: 'ctl00$cphMain$btnSearchProNumber').click
-      browser.element(xpath: '/html/body/form/div[3]/div/div/table/tbody/tr[2]/td[1]/a').click
-      browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[16]/td[2]/a').click
+      browser.button(name: 'ctl00$cphMain$btnSearchProNumber').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/form/div[3]/div/div/table/tbody/tr[2]/td[1]/a').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[16]/td[2]/a').wait_until(&:present?).click
 
       image_url = nil
       browser.switch_window.use do
         page_count = browser.element(xpath: '/html/body/form/div[3]/b/span').text.strip.to_i
         (page_count - 1).times do
-          browser.element(xpath: '/html/body/form/div[3]/input[2]').click
+          browser.element(xpath: '/html/body/form/div[3]/input[2]').wait_until(&:present?).click
         end
         image_url = browser.element(css: '#cphMain_imgImage').attribute_value('src')
       end
@@ -154,8 +154,8 @@ module Interstellar
       browser.goto build_url(:track)
 
       browser.text_field(name: 'ctl00$cphMain$txtProNumber').set(tracking_number)
-      browser.button(name: 'ctl00$cphMain$btnSearchProNumber').click
-      browser.element(xpath: '/html/body/form/div[3]/div/div/table/tbody/tr[2]/td[1]/a').click
+      browser.button(name: 'ctl00$cphMain$btnSearchProNumber').wait_until(&:present?).click
+      browser.element(xpath: '/html/body/form/div[3]/div/div/table/tbody/tr[2]/td[1]/a').wait_until(&:present?).click
 
       html = browser.table(id: 'cphMain_grvLogNotes').inner_html
       html = Nokogiri::HTML(html)
