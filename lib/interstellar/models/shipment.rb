@@ -14,10 +14,6 @@ module Interstellar
   class Shipment < Model
     attr_accessor :accessorials, :declared_value_cents, :destination, :origin, :order_number, :packages, :po_number
 
-    def initialize(attributes = {})
-      assign_attributes(attributes)
-    end
-
     def valid?
       return false if @accessorials.nil?
       return false unless @destination.is_a?(Location)
