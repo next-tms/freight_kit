@@ -118,7 +118,7 @@
       :quote: connectapi-stage.tfwwi.com
   :endpoints:
     :bol: /services/api/v1/Shipment/documentExtract?primaryReferenceBol=%TRACKING_NUMBER%
-    :pickup: services/api/v1/Shipment/Import
+    :pickup: /services/api/v1/Shipment/Import
     :pod: /MercuryGate/login/mgLogin.jsp?inline=true
     :quote: /services/api/v1/RateShop/RateRequest
   :methods:
