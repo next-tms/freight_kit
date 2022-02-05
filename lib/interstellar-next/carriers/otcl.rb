@@ -136,6 +136,10 @@ module Interstellar
       serviceable_accessorials?(shipment.accessorials)
       serviceable_states?([shipment.origin.state, shipment.destination.state])
 
+      if shipment.packages.map(&:packaging).map(&:pallet?).any?(true)
+        raise Interstellar::UnserviceableError, 'Only non-palletized freight can be quoted'
+      end
+
       params = ''.dup
       params << 'packages='
 
@@ -184,9 +188,16 @@ module Interstellar
       raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
       raise Interstellar::ResponseError, "API Error: #{response[:error]}" unless response[:error].blank?
 
-      error = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Error')
+      error = response.dig('OnTracRateResponse', 'Shipments', 'Error') ||
+              response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Error')
 
       unless error.blank?
+        error = error.capitalize
+
+        raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('invalid username')
+
+        raise Interstellar::UnserviceableError, error if error.downcase.include?('no valid service')
+
         raise Interstellar::UnserviceableError, error if error.downcase.include?('not serviced')
 
         raise Interstellar::ResponseError, "API Error: #{error}"
