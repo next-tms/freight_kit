@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require 'active_model/forbidden_attributes_protection'
-require 'active_model/attribute_assignment'
-
+require 'active_model'
 require 'active_support/all'
 require 'active_utils'
 
@@ -22,20 +20,13 @@ require 'interstellar/errors'
 require 'interstellar/model'
 require 'interstellar/models'
 
-require 'interstellar/response'
-require 'interstellar/address_validation_response'
 require 'interstellar/carrier'
 require 'interstellar/contact'
-require 'interstellar/delivery_date_estimate'
-require 'interstellar/delivery_date_estimates_response'
 require 'interstellar/location'
 require 'interstellar/package_item'
 require 'interstellar/package'
 require 'interstellar/packaging'
 require 'interstellar/platform'
-require 'interstellar/rate_response'
 require 'interstellar/shipment_event'
 require 'interstellar/shipment_packer'
-require 'interstellar/shipping_response'
 require 'interstellar/tariff'
-require 'interstellar/tracking_response'

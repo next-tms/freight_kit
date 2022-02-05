@@ -23,10 +23,6 @@ module Interstellar
     attr_accessor :description, :objects
     attr_writer :blame, :cents
 
-    def initialize(attributes = {})
-      assign_attributes(attributes)
-    end
-
     def blame
       return @blame if %i[api library tariff].include?(@blame)
 

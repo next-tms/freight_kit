@@ -52,7 +52,7 @@ module Interstellar
   #   When the rate estimate `Price`s include applicable excessive length fees.
   #   @return [Integer]
   #
-  class RateEstimate < Model
+  class Rate < Model
     attr_accessor :carrier,
                   :carrier_name,
                   :estimate_reference,
@@ -65,10 +65,6 @@ module Interstellar
                   :with_excessive_length_fees
 
     attr_writer :currency
-
-    def initialize(attributes = {})
-      assign_attributes(attributes)
-    end
 
     def currency
       ActiveUtils::CurrencyCode.standardize(@currency)
