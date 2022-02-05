@@ -395,13 +395,11 @@ module Interstellar
     def rate_item_description(rate_item)
       description = rate_item[:description] || ''
       description = description.gsub('-', '')
+      description = description.squish
       description = description.sub('disc.on', 'discount on')
       description = description.capitalize
-
-      code = rate_item[:acccode]&.upcase || ''
-      description = "#{description} (#{code})" unless code.blank?
-
-      description.squish
+      description = description.sub('zip code', 'ZIP code')
+      description = description.sub('Zip code', 'ZIP code')
     end
 
     def parse_rate_response(shipment:, response:)
@@ -433,7 +431,6 @@ module Interstellar
       rate_items = response.dig(:getquote_response, :return, :rateitem)
 
       rate_items.each do |rate_item|
-        next if ['FREIGHT', '-- MINIMUM FREIGHT CHARGES  --'].include?(rate_item[:description])
         next if ['Sub Total', 'GrandTotal'].include?(rate_item[:acccode])
 
         cents = (rate_item[:amount].to_f * 100).to_i
@@ -441,26 +438,6 @@ module Interstellar
 
         prices << Price.new(blame: :api, cents:, description:)
       end
-
-      rate_items.each do |rate_item|
-        next unless rate_item[:description] == 'FREIGHT'
-
-        cents = (rate_item[:amount].to_f * 100).to_i
-        description = rate_item_description(rate_item)
-
-        freight_price = Price.new(blame: :api, cents:, description:)
-      end
-
-      rate_items.each do |rate_item|
-        next unless rate_item[:description] == '-- MINIMUM FREIGHT CHARGES  --'
-
-        cents = (rate_item[:amount].to_f * 100).to_i
-        description = rate_item_description(rate_item)
-
-        freight_price = Price.new(blame: :api, cents:, description:)
-      end
-
-      prices = [freight_price] + prices
 
       shipment.packages.each do |package|
         cents = overlength_fee(@options[:tariff], package)
