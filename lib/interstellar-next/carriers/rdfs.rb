@@ -242,8 +242,8 @@ module Interstellar
       raise Interstellar::ResponseError, 'API Error: Unknown response' unless response
 
       unless response[:error].blank?
-        if response[:error].downcase.include?('no standard service')
-          raise Interstellar::UnserviceableError, response[:error]
+        ['no standard service', 'not in the standard pickup area'].each do |message|
+          raise Interstellar::UnserviceableError, response[:error] if response[:error].downcase.include?(message)
         end
 
         raise Interstellar::ResponseError, response[:error]
