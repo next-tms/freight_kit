@@ -212,11 +212,8 @@ module Interstellar
                 end
 
       RateResponse.new(
-        true,
-        '',
-        response,
         rates: [
-          RateEstimate.new(
+          Rate.new(
             carrier: self,
             carrier_name: self.class.name,
             currency: 'USD',
@@ -228,8 +225,8 @@ module Interstellar
             with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
           )
         ],
-        response:,
-        request: last_request
+        request: last_request,
+        response:
       )
     end
 

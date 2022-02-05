@@ -213,9 +213,9 @@ module Interstellar
 
       standard_ltl_cents = (result[:total_invoice].to_f * 100).to_i - prices.sum(&:cents)
 
-      rate_estimates = []
+      rates = []
 
-      rate_estimates << RateEstimate.new(
+      rates << Rate.new(
         carrier: self,
         carrier_name: self.class.name,
         currency: 'USD',
@@ -243,7 +243,7 @@ module Interstellar
 
         cents = (service.values[0].to_f * 100).to_i
 
-        rate_estimates << RateEstimate.new(
+        rates << Rate.new(
           carrier_name: self.class.name,
           carrier: self,
           currency: 'USD',
@@ -263,12 +263,9 @@ module Interstellar
       end
 
       RateResponse.new(
-        true,
-        'OK',
-        result.to_hash,
-        rates: rate_estimates,
-        result:,
-        request: last_request
+        rates:,
+        request: last_request,
+        result:
       )
     end
 
@@ -365,24 +362,18 @@ module Interstellar
       shipment_events = shipment_events&.sort_by(&:time)
 
       TrackingResponse.new(
-        true,
-        shipment_events&.last&.status,
-        response,
-        carrier: "#{@@scac}, #{@@name}",
-        hash: response,
-        response:,
-        status: shipment_events&.last&.status,
-        type_code: shipment_events&.last&.status,
-        ship_time: pickup_date,
-        scheduled_delivery_date:,
         actual_delivery_date:,
-        delivery_signature: nil,
-        shipment_events:,
-        shipper_address:,
-        origin: shipper_address,
+        carrier: self,
         destination: receiver_address,
-        tracking_number:,
-        request: last_request
+        origin: shipper_address,
+        request: last_request,
+        response:,
+        response:,
+        scheduled_delivery_date:,
+        ship_time: pickup_date,
+        shipment_events:,
+        status: shipment_events&.last&.status,
+        tracking_number:
       )
     end
   end

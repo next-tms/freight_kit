@@ -265,28 +265,23 @@ module Interstellar
         prices << Price.new(blame: :api, cents:, description:)
       end
 
-      rate_estimates = [
-        RateEstimate.new(
-          carrier: self,
-          carrier_name: self.class.name,
-          currency: 'USD',
-          estimate_reference:,
-          scac: self.class.scac.upcase,
-          service_name: :standard,
-          shipment:,
-          prices:,
-          transit_days:,
-          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-        )
-      ]
-
       RateResponse.new(
-        true,
-        'OK',
-        response.to_hash,
-        rates: rate_estimates,
-        response:,
-        request: last_request
+        rates: [
+          Rate.new(
+            carrier: self,
+            carrier_name: self.class.name,
+            currency: 'USD',
+            estimate_reference:,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            prices:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
+        request: last_request,
+        response:
       )
     end
 

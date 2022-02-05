@@ -178,24 +178,21 @@ module Interstellar
 
       transit_days = response[:transit_days].to_i
 
-      rate = RateEstimate.new(
-        carrier: self,
-        carrier_name: self.class.name,
-        currency: 'USD',
-        estimate_reference: nil,
-        scac: self.class.scac.upcase,
-        service_name: :standard,
-        shipment:,
-        prices:,
-        transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-      )
-
       RateResponse.new(
-        true,
-        'OK',
-        response.to_hash,
-        rates: [rate],
+        rates: [
+          Rate.new(
+            carrier: self,
+            carrier_name: self.class.name,
+            currency: 'USD',
+            estimate_reference: nil,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            prices:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         response:,
         request: last_request
       )
