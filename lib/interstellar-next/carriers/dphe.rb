@@ -251,13 +251,13 @@ module Interstellar
       raise ResponseError, 'Unknown response' if response.blank?
 
       error = response.dig(:get_rates_response, :get_rates_result, :return_line)
+      error ||= response.dig(:get_rates_response, :get_rates_result, :rate_error)
 
-      if !error.blank? && error != 'false'
+      if error
         raise InvalidCredentialsError, error if error.downcase.include?('not a valid customer code')
         raise UnserviceableError, error if error.downcase.include?('not a direct service point')
 
-        error = response.dig(:get_rates_response, :get_rates_result, :rate_error)
-        raise ResponseError, "API Error: #{error}"
+        raise ResponseError, "API Error: #{error}" if error
       end
 
       quote_number = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number)
