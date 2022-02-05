@@ -136,9 +136,9 @@ module Interstellar
       serviceable_accessorials?(shipment.accessorials)
       serviceable_states?([shipment.origin.state, shipment.destination.state])
 
-      if shipment.packages.map(&:packaging).map(&:pallet?).any?(true)
-        raise Interstellar::UnserviceableError, 'Only non-palletized freight can be quoted'
-      end
+      # API supports non-loose items (see below) but per OnTrac it shouldn't be quoted. We'll raise an error here but
+      # leave the support baked-in below anyway.
+      raise Interstellar::UnserviceableError, 'Only non-palletized freight can be quoted' unless shipment.loose?
 
       params = ''.dup
       params << 'packages='
@@ -157,8 +157,7 @@ module Interstellar
                            end
 
           declared_value = declared_value.to_s
-          palletized = !shipment.packages.map(&:packaging).map(&:pallet?).any?(false)
-          service = palletized ? 'H' : 'C'
+          service = shipment.palletized ? 'H' : 'C'
 
           parts = []
 
@@ -215,12 +214,9 @@ module Interstellar
       transit_days = rate['TransitDays'].to_i
       service = case rate['Service']
                 when 'C'
-                  :standard
                 when 'H'
-                  :standard
-                else
-                  :standard
                 end
+      :standard
 
       RateResponse.new(
         rates: [
