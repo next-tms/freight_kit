@@ -252,7 +252,7 @@ module Interstellar
 
       error = response.dig(:get_rates_response, :get_rates_result, :return_line)
 
-      unless error.blank?
+      if !error.blank? && error != 'false'
         raise InvalidCredentialsError, error if error.downcase.include?('not a valid customer code')
         raise UnserviceableError, error if error.downcase.include?('not a direct service point')
 
