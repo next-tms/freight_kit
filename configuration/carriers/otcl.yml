@@ -102,10 +102,13 @@
   :domain: www.shipontrac.net
   :endpoints:
     :production:
+      :pickup: /OnTracWebServices/OnTracServices.svc/V4/%ACCOUNT_NUMBER%/shipments
       :rates: /OnTracWebServices/OnTracServices.svc/V4/%ACCOUNT_NUMBER%/rates
     :test:
+      :pickup: /OnTracTestWebServices/OnTracServices.svc/V4/%ACCOUNT_NUMBER%/shipments
       :rates: /OnTracTestWebServices/OnTracServices.svc/V4/%ACCOUNT_NUMBER%/rates
   :methods:
+    :pickup: :post
     :rates: :get
 :attributes:
   :rates:

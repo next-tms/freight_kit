@@ -60,6 +60,35 @@ module Interstellar
 
     # Pickups
 
+    def create_pickup(
+      delivery_from:,
+      delivery_to:,
+      dispatcher:,
+      pickup_from:,
+      pickup_to:,
+      scac:,
+      service:,
+      shipment:
+    )
+      request = build_pickup_request(
+        delivery_from:,
+        delivery_to:,
+        dispatcher:,
+        pickup_from:,
+        pickup_to:,
+        scac:,
+        service:,
+        shipment:
+      )
+
+      commit(request)
+      # parse_pickup_response(commit(request))
+    end
+
+    def create_pickup_implemented?
+      true
+    end
+
     def pickup_number_is_tracking_number?
       true
     end
@@ -109,7 +138,18 @@ module Interstellar
     end
 
     def commit(request)
-      response = HTTParty.get(request[:url])
+      body = request[:body]
+      headers = request[:headers]
+      method = request[:method]
+      url = request[:url]
+
+      response = case method
+                 when :post
+                   HTTParty.post(url, headers:, body:, debug_output: $stdout)
+                 else
+                   HTTParty.get(url, headers:, debug_output: $stdout)
+                 end
+
       response.parsed_response if response&.parsed_response
     end
 
@@ -130,6 +170,105 @@ module Interstellar
 
     # Pickups
 
+    def build_pickup_request(
+      delivery_from:,
+      delivery_to:,
+      dispatcher:,
+      pickup_from:,
+      pickup_to:,
+      scac:,
+      service:,
+      shipment:
+    )
+
+      dispatcher_phone = dispatcher.phone.sub('+1', '').delete('^0-9')
+      shipper_phone = shipment.origin.contact.phone.sub('+1', '').delete('^0-9')
+      receiver_phone = shipment.destination.contact.phone.sub('+1', '').delete('^0-9')
+
+      declared_value = if shipment.declared_value_cents.blank?
+                         '0'
+                       else
+                         format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
+                       end
+
+      raise UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
+
+      base_api_shipment = {
+        'consignee': {
+          'Name': shipment.destination.contact.company_name,
+          'Addr1': shipment.destination.address1,
+          'Addr2': '',
+          'Addr3': '',
+          'City': shipment.destination.city,
+          'Contact': shipment.destination.contact.name || 'Shipping',
+          'Phone': receiver_phone || '',
+          'State': shipment.destination.state,
+          'Zip': shipment.destination.zip.to_s
+        },
+        'shipper': {
+          'Name': shipment.origin.contact.company_name,
+          'Addr1': shipment.origin.address1,
+          'City': shipment.origin.city,
+          'State': shipment.origin.state,
+          'Zip': shipment.origin.zip,
+          'Contact': shipment.origin.contact.name || 'Shipping',
+          'Phone': shipper_phone
+        },
+        'BillTo': '0',
+        'CargoType': '0',
+        'COD': '0',
+        'CODType': 'NONE',
+        'Declared': declared_value,
+        'DelEmail': dispatcher.email,
+        'Instructions': '',
+        'LabelType': '0',
+        'Reference': shipment.order_number,
+        'Reference2': shipment.po_number,
+        'Reference3': '',
+        'Residential': shipment.accessorials.include?(:residential_delivery) ? 'true' : 'false',
+        'SaturdayDel': 'false',
+        'Service': 'C',
+        'ShipDate': pickup_from.to_date.to_s,
+        'ShipEmail': dispatcher.email,
+        'SignatureRequired': 'true',
+        'Tracking': ''
+      }.freeze
+
+      api_shipments = []
+
+      shipment.packages.each do |package|
+        package.quantity.times do
+          api_shipments << base_api_shipment.merge(
+            {
+              'DIM': {
+                'Length': package.length(:inches).ceil,
+                'Width': package.width(:inches).ceil,
+                'Height': package.height(:inches).ceil
+              },
+              'UID': SecureRandom.uuid,
+              'Weight': package.pounds(:each).ceil
+            }
+          )
+        end
+      end
+
+      request = {
+        headers: XML_HEADERS,
+        method: @conf.dig(:api, :methods, :pickup),
+        url: build_url(:pickup),
+        body: {
+          'Shipments': api_shipments
+        }.to_xml(root: 'OnTracShipmentRequest', skip_types: true)
+      }
+
+      save_request(request)
+      request
+    end
+
+    def parse_pickup_response(response)
+      response
+    end
+
     # Rates
 
     def build_rate_request(shipment:)
@@ -138,7 +277,7 @@ module Interstellar
 
       # API supports non-loose items (see below) but per OnTrac it shouldn't be quoted. We'll raise an error here but
       # leave the support baked-in below anyway.
-      raise Interstellar::UnserviceableError, 'Only non-palletized freight can be quoted' unless shipment.loose?
+      raise Interstellar::UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
 
       params = ''.dup
       params << 'packages='
@@ -170,7 +309,7 @@ module Interstellar
           parts << declared_value
           parts << package.pounds(:each)
           parts << "#{package.inches(:length).ceil}X#{package.inches(:width).ceil}X#{package.inches(:height).ceil}"
-          parts << service
+          parts << 'C'
           parts << '0' # not a letter
           parts << '0' # always 0 per documentation
 
