@@ -41,8 +41,7 @@ module Interstellar
         raise NotImplementedError, "#{self.class.name}: #serviceable_accessorials? not supported"
       end
 
-      serviceable_accessorials = @conf.dig(:accessorials, :mappable, :delivery).keys +
-                                 @conf.dig(:accessorials, :mappable, :pickup).keys +
+      serviceable_accessorials = @conf.dig(:accessorials, :mappable).keys +
                                  @conf.dig(:accessorials, :unquotable)
       serviceable_count = (serviceable_accessorials & accessorials).size
 
@@ -70,6 +69,19 @@ module Interstellar
       service:,
       shipment:
     )
+      request = build_shipment_request(
+        delivery_from:,
+        delivery_to:,
+        dispatcher:,
+        pickup_from:,
+        pickup_to:,
+        scac:,
+        service:,
+        shipment:
+      )
+
+      labels = parse_shipment_response(commit(request))
+
       request = build_pickup_request(
         delivery_from:,
         delivery_to:,
@@ -81,8 +93,7 @@ module Interstellar
         shipment:
       )
 
-      commit(request)
-      # parse_pickup_response(commit(request))
+      parse_pickup_response(commit(request))
     end
 
     def create_pickup_implemented?
@@ -150,6 +161,11 @@ module Interstellar
                    HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
+      pp 'Response'
+      pp response
+      pp 'parsed_response'
+      pp response&.parsed_response
+
       response.parsed_response if response&.parsed_response
     end
 
@@ -171,6 +187,55 @@ module Interstellar
     # Pickups
 
     def build_pickup_request(
+      delivery_from:,
+      delivery_to:,
+      dispatcher:,
+      pickup_from:,
+      pickup_to:,
+      scac:,
+      service:,
+      shipment:
+    )
+
+      dispatcher_phone = dispatcher.phone.sub('+1', '').delete('^0-9')
+      shipper_phone = shipment.origin.contact.phone.sub('+1', '').delete('^0-9')
+      receiver_phone = shipment.destination.contact.phone.sub('+1', '').delete('^0-9')
+
+      declared_value = if shipment.declared_value_cents.blank?
+                         '0'
+                       else
+                         format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
+                       end
+
+      raise UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
+
+      request_body = {
+        'Address': shipment.origin.address1,
+        'City': shipment.origin.city,
+        'CloseAt': pickup_to.strftime('%H:%M:00'),
+        'Contact': shipment.origin.contact.name || 'Shipping',
+        'Date': pickup_from.to_date,
+        'DelZip': shipment.destination.zip,
+        'Instructions': '',
+        'Name': shipment.origin.contact.company_name,
+        'Phone': shipper_phone,
+        'ReadyAt': pickup_from.strftime('%H:%M:00'),
+        'State': shipment.origin.state,
+        'Zip': shipment.origin.zip
+      }.freeze
+
+      request = {
+        headers: XML_HEADERS,
+        method: @conf.dig(:api, :methods, :pickups),
+        url: build_url(:pickups),
+        body: request_body.to_xml(root: 'OnTracPickupRequest', skip_types: true)
+      }
+
+      save_request(request)
+      request
+    end
+
+    def build_shipment_request(
       delivery_from:,
       delivery_to:,
       dispatcher:,
@@ -221,7 +286,7 @@ module Interstellar
         'Declared': declared_value,
         'DelEmail': dispatcher.email,
         'Instructions': '',
-        'LabelType': '0',
+        'LabelType': '1', # PDF label
         'Reference': shipment.order_number,
         'Reference2': shipment.po_number,
         'Reference3': '',
@@ -254,8 +319,8 @@ module Interstellar
 
       request = {
         headers: XML_HEADERS,
-        method: @conf.dig(:api, :methods, :pickup),
-        url: build_url(:pickup),
+        method: @conf.dig(:api, :methods, :shipments),
+        url: build_url(:shipments),
         body: {
           'Shipments': api_shipments
         }.to_xml(root: 'OnTracShipmentRequest', skip_types: true)
@@ -266,7 +331,47 @@ module Interstellar
     end
 
     def parse_pickup_response(response)
-      response
+      raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
+
+      error = response.dig('OnTracPickupResponse', 'Error')
+
+      unless error.blank?
+        error = error.capitalize
+
+        raise Interstellar::ResponseError, "API Error: #{error}"
+      end
+
+      response.dig('OnTracPickupResponse', 'Tracking')
+    end
+
+    def parse_shipment_response(response)
+      raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
+
+      error = response.dig('OnTracRateResponse', 'Shipments', 'Error') ||
+              response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Error')
+
+      unless error.blank?
+        error = error.capitalize
+
+        raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('invalid username')
+
+        raise Interstellar::UnserviceableError, error if error.downcase.include?('no valid service')
+
+        raise Interstellar::UnserviceableError, error if error.downcase.include?('not serviced')
+
+        raise Interstellar::ResponseError, "API Error: #{error}"
+      end
+
+      base64_labels = response.dig('OnTracShipmentResponse', 'Shipments', 'Shipment')&.map { |s| s['Label'] }
+      raise Interstellar::ResponseError, 'API Error: Blank label' if base64_labels.blank?
+
+      labels = []
+
+      base64_labels.each do |base64_label|
+        labels << Label.new(data: base64_label)
+      end
+
+      labels
     end
 
     # Rates
@@ -324,7 +429,6 @@ module Interstellar
 
     def parse_rate_response(shipment:, response:)
       raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
-      raise Interstellar::ResponseError, "API Error: #{response[:error]}" unless response[:error].blank?
 
       error = response.dig('OnTracRateResponse', 'Shipments', 'Error') ||
               response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Error')
