@@ -14,6 +14,6 @@ module Interstellar
   #    @return [String]
   #
   class PickupResponse < Response
-    attr_reader :labels, :pickup_number
+    attr_accessor :labels, :pickup_number
   end
 end
