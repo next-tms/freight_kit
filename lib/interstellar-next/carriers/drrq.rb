@@ -448,7 +448,10 @@ module Interstellar
     end
 
     def parse_pickup_response(response)
-      parse_response(response)&.dig('PrimaryReference')
+      pickup_number = parse_response(response)&.dig('PrimaryReference')
+      error = pickup_number.blank? ? Interstellar::ResponseError.new('API Error: Unknown response') : nil
+
+      Interstellar::PickupResponse.new(error:, pickup_number:)
     end
 
     # Rates

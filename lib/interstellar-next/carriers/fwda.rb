@@ -354,7 +354,10 @@ module Interstellar
     end
 
     def parse_pickup_response(response)
-      response['airbillNumber']
+      pickup_number = response['airbillNumber']
+
+      error = pickup_number.blank? ? Interstellar::ResponseError.new('API Error: Unknown response') : nil
+      Interstellar::PickupResponse.new(error:, pickup_number:)
     end
 
     # Rates
