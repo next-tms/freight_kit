@@ -366,7 +366,10 @@ module Interstellar
         raise Interstellar::ResponseError, "API Error: #{error}"
       end
 
-      base64_labels = response.dig('OnTracShipmentResponse', 'Shipments', 'Shipment')&.map { |s| s['Label'] }
+      api_shipments = response.dig('OnTracShipmentResponse', 'Shipments', 'Shipment')
+      api_shipments = [api_shipments] unless api_shipments.is_a?(Array)
+
+      base64_labels = api_shipments&.map { |s| s['Label'] }
       raise Interstellar::ResponseError, 'API Error: Blank label' if base64_labels.blank?
 
       labels = []
