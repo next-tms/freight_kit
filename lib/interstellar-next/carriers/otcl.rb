@@ -452,6 +452,7 @@ module Interstellar
       transit_days = nil
 
       api_shipments = response.dig('OnTracRateResponse', 'Shipments', 'Shipment')
+      api_shipments = [api_shipments] unless api_shipments.is_a?(Array)
 
       api_shipments.each do |api_shipment|
         api_rate = api_shipment.dig('Rates', 'Rate')
