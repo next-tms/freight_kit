@@ -405,7 +405,7 @@ module Interstellar
                            end
 
           declared_value = declared_value.to_s
-          service = shipment.palletized ? 'H' : 'C'
+          service = shipment.palletized? ? 'H' : 'C'
 
           parts = []
 
