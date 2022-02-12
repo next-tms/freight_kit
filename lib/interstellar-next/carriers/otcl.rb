@@ -434,8 +434,7 @@ module Interstellar
     def parse_rate_response(shipment:, response:)
       raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
 
-      error = response.dig('OnTracRateResponse', 'Shipments', 'Error') ||
-              response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Error')
+      error = response.dig('OnTracRateResponse', 'Shipments', 'Error')
 
       unless error.blank?
         error = error.capitalize
@@ -449,32 +448,34 @@ module Interstellar
         raise Interstellar::ResponseError, "API Error: #{error}"
       end
 
-      rate = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Rates', 'Rate')
-      raise Interstellar::ResponseError, 'API Error: Blank response' if rate.blank?
+      prices = []
+      transit_days = nil
 
-      rate_estimates = []
+      api_shipments = response.dig('OnTracRateResponse', 'Shipments', 'Shipment')
 
-      cost = rate['TotalCharge']&.to_f
-      raise Interstellar::ResponseError, 'API Error: Cost is empty' if cost.blank?
+      api_shipments.each do |api_shipment|
+        api_rate = api_shipment.dig('Rates', 'Rate')
+        api_transit_days = api_rate['TransitDays'].to_i
 
-      cost = (cost * 100).to_i
-      transit_days = rate['TransitDays'].to_i
-      service = case rate['Service']
-                when 'C'
-                when 'H'
-                end
-      :standard
+        transit_days = api_transit_days if transit_days.blank? || transit_days < api_transit_days
+
+        cents = (api_rate['ServiceCharge'].to_f * 100).to_i
+        prices << Price.new(blame: :api, cents:, description: 'Service charge')
+
+        cents = (api_rate['FuelCharge'].to_f * 100).to_i
+        prices << Price.new(blame: :api, cents:, description: 'Fuel charge')
+      end
 
       RateResponse.new(
         rates: [
           Rate.new(
-            carrier: self,
             carrier_name: self.class.name,
+            carrier: self,
             currency: 'USD',
+            prices:,
             scac: self.class.scac.upcase,
-            service_name: service,
+            service_name: :standard,
             shipment:,
-            total_price: cost,
             transit_days:,
             with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
           )
