@@ -205,6 +205,12 @@ module Interstellar
     # Rates
 
     def build_rate_request(shipment:)
+      country_codes = [shipment.destination.country.code(:alpha2), shipment.origin.country.code(:alpha2)]
+
+      if country_codes.reject { |c| c == 'US' }.any?
+        raise UnserviceableError, "No service in #{country_codes.reject { |c| c == 'US' }.join(', ')}"
+      end
+
       accessorials = []
       unless shipment.accessorials.blank?
         serviceable_accessorials?(shipment.accessorials)
