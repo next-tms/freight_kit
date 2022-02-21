@@ -205,7 +205,7 @@ module Interstellar
     # Rates
 
     def build_rate_request(shipment:)
-      country_codes = [shipment.destination.country.code(:alpha2), shipment.origin.country.code(:alpha2)]
+      country_codes = [shipment.destination.country.code(:alpha2).value, shipment.origin.country.code(:alpha2).value]
 
       if country_codes.reject { |c| c.upcase == 'US' }.any?
         raise UnserviceableError, "No service from #{shipment.origin.zip} to #{shipment.destination.zip}"
