@@ -290,7 +290,7 @@ module Interstellar
         browser.text_field(name: 'SHPAD1').set(shipment.origin.address1.upcase)
         browser.text_field(name: 'SHPCTY').set(shipment.origin.city.upcase)
         browser.text_field(name: 'SHPSTA').set(shipment.origin.state.upcase[..1])
-        browser.text_field(name: 'SHPZIP').set(shipment.origin.zip.gsub(/\s+/, ''))
+        browser.text_field(name: 'SHPZIP').set(shipment.origin.zip.gsub(/\s+/, '').upcase)
       end
 
       browser.text_field(name: 'DPADAT').set(pickup_from.to_date.strftime('%m/%d/%Y'))
