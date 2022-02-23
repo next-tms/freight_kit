@@ -417,7 +417,7 @@ module Interstellar
           parts << '0'
           parts << 'false' # Staurday delivery
           parts << declared_value
-          parts << package.pounds(:each)
+          parts << package.pounds(:each).ceil
           parts << "#{package.inches(:length).ceil}X#{package.inches(:width).ceil}X#{package.inches(:height).ceil}"
           parts << 'C'
           parts << '0' # not a letter
