@@ -161,11 +161,6 @@ module Interstellar
                    HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
-      pp 'Response'
-      pp response
-      pp 'parsed_response'
-      pp response&.parsed_response
-
       response.parsed_response if response&.parsed_response
     end
 
@@ -443,7 +438,7 @@ module Interstellar
       error = response.dig('OnTracRateResponse', 'Shipments', 'Error')
 
       if error.blank? && response.dig('OnTracRateResponse', 'Shipments', 'Shipment').is_a?(Hash)
-        error = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Error')
+        error = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Rates', 'Rate', 'Error')
       end
 
       unless error.blank?
