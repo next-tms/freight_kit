@@ -188,6 +188,12 @@ module Interstellar # :nodoc:
     end
     alias cm centimetres
 
+    def dim_weight
+      return if inches(:length).blank? || inches(:width).blank? || inches(:height).blank? || pounds(:each).blank?
+
+      @dim_weight ||= (inches(:length).ceil * inches(:width).ceil * inches(:height).ceil).to_f / 139
+    end
+
     def each_weight(options = {})
       weight(@each_weight, options)
     end
