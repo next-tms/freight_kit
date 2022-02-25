@@ -389,6 +389,13 @@ module Interstellar
       # leave the support baked-in below anyway.
       raise Interstellar::UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
 
+      dim_weights_too_heavy = shipment.packages.map(&:dim_weight).select { |w| w > maximum_weight.value }
+
+      unless dim_weights_too_heavy.empty?
+        raise Interstellar::UnserviceableError,
+              "Dimensional weight(s) of #{dim_weights_too_heavy.map(&:round).join('lbs, ')} lbs more than maximum of #{maximum_weight.value.round} lbs"
+      end
+
       params = ''.dup
       params << 'packages='
 
