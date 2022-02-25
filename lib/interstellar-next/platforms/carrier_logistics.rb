@@ -320,7 +320,7 @@ module Interstellar
         i += 1 # API starts at 1 (not 0)
 
         params << "&vclass[#{i}]=#{package.freight_class}"
-        params << "&wpallets[#{i}]=#{package.packaging.pallet? ? package.quantity : 0}"
+        params << "&wpallets[#{i}]=#{package.quantity}"
         params << "&wpieces[#{i}]=#{package.quantity}"
         params << "&wweight[#{i}]=#{package.pounds(:total).ceil}"
       end
