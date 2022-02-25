@@ -201,6 +201,8 @@ module Interstellar
       estimate_reference = result[:quote_number]
 
       rate_accessorial_items = result.dig(:rate_accessorials, :rate_accessorial_item)
+      rate_accessorial_items = [rate_accessorial_items] if rate_accessorial_items.is_a?(Hash)
+
       prices = []
 
       rate_accessorial_items.each do |rate_accessorial_item|
