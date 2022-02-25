@@ -237,36 +237,52 @@ module Interstellar
         .click
 
       browser.iframes(src: '../mainframe/MainFrame.jsp?bRedirect=true')
-      browser.iframe(name: 'AppBody').frame(id: 'Header')
-             .select(name: 'column')
-             .select('Primary Reference')
-      browser.iframe(name: 'AppBody').frame(id: 'Header')
-             .select(name: 'condition')
-             .select('=')
-      browser.iframe(name: 'AppBody').frame(id: 'Header')
-             .text_field(name: 'filter')
-             .set(tracking_number)
-      browser.iframe(name: 'AppBody').frame(id: 'Header').button(value: 'Find')
-             .click
+      browser
+        .iframe(name: 'AppBody')
+        .frame(id: 'Header')
+        .select(name: 'column')
+        .select('Primary Reference')
+      browser
+        .iframe(name: 'AppBody')
+        .frame(id: 'Header')
+        .select(name: 'condition')
+        .select('=')
+      browser
+        .iframe(name: 'AppBody')
+        .frame(id: 'Header')
+        .text_field(name: 'filter')
+        .set(tracking_number)
+      browser
+        .iframe(name: 'AppBody')
+        .frame(id: 'Header')
+        .button(value: 'Find')
+        .click
 
       begin
-        browser.iframe(name: 'AppBody').frame(id: 'Detail')
-               .iframe(id: 'transportsWin')
-               .element(xpath: '/html/body/div/table/tbody/tr[2]/td[1]/span/a[2]')
-               .click
-      rescue StandardError
+        browser
+          .iframe(name: 'AppBody')
+          .frame(id: 'Detail')
+          .iframe(id: 'transportsWin')
+          .element(xpath: '/html/body/div/table/tbody/tr[2]/td[1]/span/a[2]')
+          .wait_until(&:present?)
+          .click
+
+        browser
+          .iframe(name: 'AppBody')
+          .frame(id: 'Detail')
+          .element(xpath: '/html/body/div[1]/div/div/div[1]/div[1]/div[2]/div/a[5]')
+          .wait_until(&:present?)
+          .click
+      rescue Watir::Wait::TimeoutError
         # POD not yet available
         browser.close
         raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found"
       end
 
-      browser.iframe(name: 'AppBody').frame(id: 'Detail')
-             .element(xpath: '/html/body/div[1]/div/div/div[1]/div[1]/div[2]/div/a[5]')
-             .click
-
-      html = browser.iframe(name: 'AppBody').frame(id: 'Detail').iframes[1]
-                    .element(xpath: '/html/body/table[3]')
-                    .html
+      html = browser
+             .iframe(name: 'AppBody').frame(id: 'Detail').iframes[1]
+             .element(xpath: '/html/body/table[3]')
+             .html
       html = Nokogiri::HTML(html)
 
       browser.goto(logout_url)
