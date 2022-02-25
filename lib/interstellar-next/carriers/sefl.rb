@@ -44,6 +44,10 @@ module Interstellar
       true
     end
 
+    def find_rates_with_declared_value?
+      true
+    end
+
     # Tracking
 
     protected
@@ -149,6 +153,21 @@ module Interstellar
         Terms: 'P'
       }
 
+      declared_value = if shipment.declared_value_cents.blank?
+                         '0'
+                       else
+                         format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
+                       end
+
+      unless declared_value.blank?
+        body = body.deep_merge(
+          {
+            chkIN: 'on',
+            FVInsuranceAmount: declared_value
+          }
+        )
+      end
+
       if longest_dimension >= 96
         body = body.deep_merge(
           {
@@ -233,6 +252,7 @@ module Interstellar
           if error.downcase.include?('not yet been processed')
             sleep(5)
             tries += 1
+            next
           else
             raise Interstellar::ResponseError, "API Error: #{error}"
           end
