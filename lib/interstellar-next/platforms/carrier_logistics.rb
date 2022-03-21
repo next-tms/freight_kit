@@ -175,7 +175,7 @@ module Interstellar
     end
 
     def parse_date(date)
-      date ? DateTime.strptime(date, '%m/%d/%Y %H:%M %p').to_s(:db) : nil
+      date ? DateTime.strptime(date, '%m/%d/%Y %H:%M %p').to_fs(:db) : nil
     end
 
     def parse_tracking_response(tracking_number)

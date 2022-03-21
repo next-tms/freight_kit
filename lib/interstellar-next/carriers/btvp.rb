@@ -123,16 +123,16 @@ module Interstellar
     end
 
     def parse_date(date)
-      date ? Date.strptime(date, '%m/%d/%Y').to_s(:db) : nil
+      date ? Date.strptime(date, '%m/%d/%Y').to_fs(:db) : nil
     end
 
     def parse_datetime(datetime)
       return nil unless datetime
 
       if datetime.include?('-')
-        DateTime.strptime(datetime, '%Y-%m-%d %H:%M').to_s(:db)
+        DateTime.strptime(datetime, '%Y-%m-%d %H:%M').to_fs(:db)
       else
-        DateTime.strptime(datetime, '%m/%d/%Y %H:%M').to_s(:db)
+        DateTime.strptime(datetime, '%m/%d/%Y %H:%M').to_fs(:db)
       end
     end
 

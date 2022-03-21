@@ -132,7 +132,7 @@ module Interstellar
     end
 
     def parse_date(date)
-      date ? DateTime.strptime(date, '%Y-%m-%dT%H:%M:%S').to_s(:db) : nil
+      date ? DateTime.strptime(date, '%Y-%m-%dT%H:%M:%S').to_fs(:db) : nil
     end
 
     def request_url(action)

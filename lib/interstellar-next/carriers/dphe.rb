@@ -350,7 +350,7 @@ module Interstellar
     end
 
     def parse_date(date)
-      date ? DateTime.strptime(date, '%m/%d/%Y %l:%M:%S %p').to_s(:db) : nil
+      date ? DateTime.strptime(date, '%m/%d/%Y %l:%M:%S %p').to_fs(:db) : nil
     end
 
     def parse_location(comment, delimiters)
