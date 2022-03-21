@@ -367,6 +367,7 @@ module Interstellar
 
       last_location = nil
       shipment_events = []
+
       search_result.dig('Shipment', 'Comments').each do |api_event|
         type_code = api_event['ActivityCode']
         next if !type_code || type_code == 'ARQ'
@@ -381,6 +382,8 @@ module Interstellar
         case event
         when :arrived_at_terminal
           location = parse_location(comment, [' terminal in '])
+        when :delayed_due_to_weather
+          location = last_location
         when :delivered
           location = receiver_address
         when :delivery_appointment_scheduled
