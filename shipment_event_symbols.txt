@@ -1,4 +1,5 @@
 :arrived_at_terminal
+:delayed_due_to_weather
 :delivered
 :delivery_appointment_scheduled
 :departed
