@@ -127,6 +127,7 @@
 :events:
   :types:
     :arrived_at_terminal: ARV
+    :delayed_due_to_weather: WTR
     :delivered: DEL
     :delivery_appointment_scheduled: APT
     :departed: DSP
