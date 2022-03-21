@@ -144,7 +144,7 @@ module Interstellar
     end
 
     def parse_date(date)
-      date ? DateTime.strptime(date, '%m/%d/%Y %l:%M:%S %p').to_s(:db) : nil
+      date ? DateTime.strptime(date, '%m/%d/%Y %l:%M:%S %p').to_fs(:db) : nil
     end
 
     def parse_tracking_response(tracking_number, options = {})
@@ -175,7 +175,7 @@ module Interstellar
       ship_time = browser.element(
         xpath: '/html/body/form/div[3]/table[2]/tbody/tr[7]/td[2]/span'
       ).text
-      ship_time = ship_time ? Date.strptime(ship_time, '%m/%d/%Y').to_s(:db) : nil
+      ship_time = ship_time ? Date.strptime(ship_time, '%m/%d/%Y').to_fs(:db) : nil
 
       shipment_events = []
       html.css('tr').each do |tr|
@@ -216,7 +216,7 @@ module Interstellar
 
       actual_delivery_date = unless actual_delivery_date.blank?
                                begin
-                                 Date.strptime(actual_delivery_date, '%m/%d/%Y').to_s(:db)
+                                 Date.strptime(actual_delivery_date, '%m/%d/%Y').to_fs(:db)
                                rescue Date::Error
                                  nil
                                end
