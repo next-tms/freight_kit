@@ -1,0 +1,16 @@
+:arrived_at_terminal
+:delivered
+:delivery_appointment_scheduled
+:departed
+:found
+:located
+:lost
+:out_for_delivery
+:pending_delivery_appointment
+:picked_up
+:pickup_driver_assigned
+:pickup_information_received_by_carrier
+:pickup_information_sent_to_carrier
+:sailed
+:trailer_closed
+:trailer_unloaded
