@@ -100,6 +100,14 @@ module Interstellar
       false
     end
 
+    # Asks the carrier for a list of locations (terminals) for a given country
+    #
+    # @param [Country] country
+    # @return [Array<Location>]
+    def find_locations(_country)
+      raise NotImplementedError, "#{self.class.name}: #find_locations not supported"
+    end
+
     def find_pod(*)
       raise NotImplementedError, "#{self.class.name}: #find_pod not supported"
     end
