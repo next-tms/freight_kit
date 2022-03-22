@@ -107,10 +107,12 @@
     :production: api.forwardair.com
     :test: test-api.forwardair.com
   :endpoints:
+    :locations: /ltlservices/v2/rest/ltlinfo/liststations
     :pickup: /ltlservices/v2/rest/waybills/book/json
     :rates: /ltlservices/v2/rest/waybills/quote/json
     :track: /ltlservices/v2/rest/waybills/%TRACKING_NUMBER%/statuses
   :methods:
+    :locations: :get
     :pickup: :post
     :rates: :post
     :track: :get
