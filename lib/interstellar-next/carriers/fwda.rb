@@ -92,6 +92,15 @@ module Interstellar
       true
     end
 
+    # Locations
+
+    def find_locations(country)
+      raise ArgumentError, 'country must be a ActiveUtils::Country' unless country.is_a?(ActiveUtils::Country)
+
+      request = build_locations_request
+      locations = parse_locations_response(country:, response: commit(request))
+    end
+
     # Rates
 
     def find_rates(shipment:)
@@ -239,6 +248,42 @@ module Interstellar
     end
 
     # Documents
+
+    # Locations
+
+    def build_locations_request
+      request = {
+        url: build_url(:locations),
+        headers: build_headers(@options),
+        method: @conf.dig(:api, :methods, :locations)
+      }
+
+      save_request(request)
+      request
+    end
+
+    def parse_locations_response(country:, response:)
+      raise ResponseError, 'API Error: Unknown response' if response.blank?
+
+      raise ResponseError, 'API Error: Unknown response' unless response.is_a?(Array)
+
+      locations = response
+
+      locations = locations.map do |location|
+        Location.new(
+          address1: location['address1'],
+          city: location['city'],
+          contact: Contact.new(
+            fax: location['fax'],
+            phone: location['phone']
+          ),
+          country: ActiveUtils::Country.find(location['countrycd']),
+          state: location['state']
+        )
+      end
+
+      locations.select { |location| location.country == country }
+    end
 
     # Pickups
 
