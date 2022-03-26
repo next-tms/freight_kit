@@ -102,7 +102,7 @@ module Interstellar
 
     # Asks the carrier for a list of locations (terminals) for a given country
     #
-    # @param [Country] country
+    # @param [ActiveUtils::Country] country
     # @return [Array<Location>]
     def find_locations(_country)
       raise NotImplementedError, "#{self.class.name}: #find_locations not supported"
