@@ -208,6 +208,8 @@ module Interstellar
 
       browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[4]/div[3]/div/table/tbody/tr[2]/td[2]').double_click
 
+      sleep(5)
+
       unless browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div/div/form/div[4]/div[2]/div/div/table').exists?
         browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').wait_until(&:present?).click
         browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
