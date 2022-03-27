@@ -58,6 +58,40 @@ module Interstellar
 
     # Documents
 
+    def find_bol(tracking_number, options = {})
+      options = @options.merge(options)
+
+      # Retrieve list of available documents first
+      documents = commit(build_documents_request(tracking_number))
+      doc_id = get_doc_id(documents:, tracking_number:, type: :bol)
+
+      request = build_document_request(doc_id:, tracking_number:)
+      document = commit(request)
+
+      parse_document_response(:bol, tracking_number, document, options)
+    end
+
+    def find_bol_implemented?
+      true
+    end
+
+    def find_pod(tracking_number, options = {})
+      options = @options.merge(options)
+
+      # Retrieve list of available documents first
+      documents = commit(build_documents_request(tracking_number))
+      doc_id = get_doc_id(documents:, tracking_number:, type: :pod)
+
+      request = build_document_request(doc_id:, tracking_number:)
+      document = commit(request)
+
+      parse_document_response(:pod, tracking_number, document, options)
+    end
+
+    def find_pod_implemented?
+      true
+    end
+
     # Pickups
 
     def create_pickup(
@@ -181,6 +215,7 @@ module Interstellar
 
       url = "#{base_url}#{@conf.dig(:api, :endpoints, action)}"
       url = url.gsub('%TRACKING_NUMBER%', options[:tracking_number]) if options[:tracking_number]
+      url = url.gsub('%DOC_ID%', options[:doc_id]) if options[:doc_id]
 
       url
     end
@@ -234,6 +269,8 @@ module Interstellar
                    HTTParty.get(url, headers:)
                  end
 
+      return response.body unless response.headers.content_type == 'application/json'
+
       json = JSON.parse(response.body)
       error = json.is_a?(Array) ? nil : json['errorMessage']
 
@@ -248,6 +285,58 @@ module Interstellar
     end
 
     # Documents
+
+    def get_doc_id(documents:, tracking_number:, type:)
+      type = type.to_s.upcase
+      link = nil
+
+      documents.each do |document|
+        next unless document['documentType'] == type
+
+        link = document['link']
+      end
+
+      return Interstellar::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless link
+
+      query = URI.parse(link).query
+      CGI.parse(query)['docId'].first
+    end
+
+    def build_document_request(doc_id:, tracking_number:)
+      request = {
+        url: build_url(:document, doc_id:, tracking_number:),
+        headers: build_headers(@options),
+        method: @conf.dig(:api, :methods, :documents)
+      }
+
+      save_request(request)
+      request
+    end
+
+    def build_documents_request(tracking_number)
+      request = {
+        url: build_url(:documents, tracking_number:),
+        headers: build_headers(@options),
+        method: @conf.dig(:api, :methods, :documents)
+      }
+
+      save_request(request)
+      request
+    end
+
+    def parse_document_response(type, tracking_number, document, options = {})
+      options = @options.merge(options)
+      path = if options[:path].blank?
+               File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
+             else
+               options[:path]
+             end
+      file = File.new(path, 'w')
+
+      File.open(file.path, 'wb') { |f| f.write(document) }
+
+      File.exist?(path) ? path : false
+    end
 
     # Locations
 
