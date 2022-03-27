@@ -106,6 +106,8 @@
   :endpoints:
     :rates: /WTKServicesCLEARL/GetRating.asmx?WSDL
   :use_ssl: true
+:website:
+  :login: https://ssworldtrak.com/WebtrakWTNew/
 :attributes:
   :rates:
     :with_excessive_length_fees: true

@@ -26,6 +26,24 @@ module Interstellar
 
     # Documents
 
+    def find_bol(tracking_number, options = {})
+      options = @options.merge(options)
+      parse_document_response(:bol, tracking_number, options)
+    end
+
+    def find_bol_implemented?
+      true
+    end
+
+    def find_pod(tracking_number, options = {})
+      options = @options.merge(options)
+      parse_document_response(:pod, tracking_number, options)
+    end
+
+    def find_pod_implemented?
+      true
+    end
+
     # Rates
     def find_rates(shipment:)
       validate_packages(shipment.packages)
@@ -45,7 +63,7 @@ module Interstellar
 
     def commit_soap(action, request)
       Savon.client(
-        wsdl: request_url(action),
+        wsdl: build_url(:api, action),
         convert_request_keys_to: :none,
         env_namespace: :soap,
         element_form_default: :qualified
@@ -67,12 +85,124 @@ module Interstellar
       }
     end
 
-    def request_url(action)
-      scheme = @conf.dig(:api, :use_ssl) ? 'https://' : 'http://'
-      "#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
+    def build_url(api_or_website, action)
+      case api_or_website
+      when :api
+        scheme = @conf.dig(:api, :use_ssl) ? 'https://' : 'http://'
+        "#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
+      when :website
+        @conf.dig(:website, action)
+      end
     end
 
     # Documents
+
+    def parse_document_response(action, tracking_number, options = {})
+      browser = Watir::Browser.new(*options[:watir_args])
+      browser.goto('https://ssworldtrak.com/WebtrakWTNew/')
+
+      browser.text_field(name: 'txtUserId').set('JFJTRANS')
+      browser.text_field(name: 'txtPass').set('Clear193')
+      browser.button(name: 'btnSubmit').click
+
+      if browser.html.include?('Either UserID or Password are incorrect, please try again.')
+        browser.close
+        raise Interstellar::InvalidCredentialsError
+      end
+
+      # Bypass the hover menu
+      browser.goto('https://ssworldtrak.com/WebtrakWTNew/Main/Reports/POD.aspx')
+
+      from = 90.days.ago.strftime('%m%d%Y')
+
+      browser.text_field(name: 'txtFromDate').wait_until(&:present?).focus
+
+      # Hack to get around JavaScript messing up our input
+      sleep(1)
+
+      from.split('').each do |char|
+        browser.text_field(name: 'txtFromDate').append(char)
+      end
+
+      browser.text_field(name: 'txtToDate').click
+      browser.element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div').wait_until(&:present?).click
+
+      browser.button(name: 'btnSubmit').click
+
+      browser.text_field(id: 'yadcf-filter--grid-2').set('1054360')
+      browser.send_keys(:enter)
+
+      if browser.element(id: 'tdPODName0').wait_until(&:present?).text == 'NO POD' && action == :pod
+        browser.window.close
+        browser.original_window.use
+        browser.goto('https://ssworldtrak.com/WebtrakWTNew/logoff.aspx')
+        browser.close
+
+        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
+      end
+
+      browser.element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a').wait_until(&:present?).click
+
+      browser.switch_window
+
+      sleep(5)
+
+      html = browser.element(id: 'DataTables_Table_0').wait_until(&:present?).html
+      html = Nokogiri::HTML(html)
+      link_id = nil
+
+      html.css('tbody tr').each do |row|
+        next unless row.css('td:nth-child(3)').text == action.to_s.upcase
+
+        link_id = row.css('td:nth-child(1) a').attr('id').value
+      end
+
+      if link_id.blank?
+        browser.window.close
+        browser.original_window.use
+        browser.goto('https://ssworldtrak.com/WebtrakWTNew/logoff.aspx')
+        browser.close
+
+        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
+      end
+
+      browser.element(css: "##{link_id}").click
+
+      sleep(10) # so Chrome can finish downloading
+
+      pdf_path = nil
+
+      if !options.dig(:selenoid_options, :download_url)
+        pdf_path = Dir.glob("#{tmpdir}/*.pdf").max_by { |f| File.mtime(f) }
+      else
+        download_url = "#{options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
+        response = HTTParty.get("#{download_url}/?json")
+        pdf_url = "#{download_url}/#{JSON.parse(response.body)&.last}"
+        pdf_path = File.join(tmpdir, "#{tracking_number}_#{DateTime.current}.pdf")
+
+        File.open(pdf_path, 'wb') do |file|
+          HTTParty.get(pdf_url, stream_body: true) do |fragment|
+            file.write(fragment)
+          end
+        end
+      end
+
+      browser.window.close
+      browser.original_window.use
+      browser.goto('https://ssworldtrak.com/WebtrakWTNew/logoff.aspx')
+      browser.close
+
+      return Interstellar::ResponseError if !pdf_path || !File.exist?(pdf_path)
+
+      path = if options[:path].blank?
+               File.join(tmpdir, "#{self.class.name} #{tracking_number} #{action.to_s.upcase}.pdf")
+             else
+               options[:path]
+             end
+      file = File.new(path, 'w')
+
+      File.exist?(path) ? path : false
+    end
 
     # Rates
     def build_rate_request(shipment:)
