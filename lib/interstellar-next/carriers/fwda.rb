@@ -299,7 +299,11 @@ module Interstellar
       return Interstellar::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless link
 
       query = URI.parse(link).query
-      CGI.parse(query)['docId'].first
+      doc_id = CGI.parse(query)['docId']&.first
+
+      return Interstellar::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless doc_id
+
+      doc_id
     end
 
     def build_document_request(doc_id:, tracking_number:)
