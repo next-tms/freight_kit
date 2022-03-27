@@ -15,7 +15,7 @@ This library is an [Interstellar](https://github.com/next-tms/interstellar) plug
 |Clear Lane Freight Systems         |   |   |       |✓    |        |
 |The Custom Companies               |   |   |       |✓    |✓       |
 |Dependable Highway Express         |✓  |✓  |       |✓    |✓       |
-|Forward Air                        |   |✓  |✓      |✓    |✓       |
+|Forward Air                        |✓  |✓  |✓      |✓    |✓       |
 |Frontline Freight                  |✓  |✓  |       |✓    |✓       |
 |OnTrac                             |   |   |       |✓    |        |
 |Peninsula Truck Lines              |   |   |       |✓    |        |

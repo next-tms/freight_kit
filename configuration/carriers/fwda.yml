@@ -107,6 +107,8 @@
     :production: api.forwardair.com
     :test: test-api.forwardair.com
   :endpoints:
+    :documents: /ltlservices/v2/rest/waybills/%TRACKING_NUMBER%/documents
+    :document: /ltlservices/v2/rest/waybills/%TRACKING_NUMBER%/documents/download?docId=%DOC_ID%
     :locations: /ltlservices/v2/rest/ltlinfo/liststations
     :pickup: /ltlservices/v2/rest/waybills/book/json
     :rates: /ltlservices/v2/rest/waybills/quote/json
