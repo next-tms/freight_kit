@@ -168,7 +168,7 @@ module Interstellar
 
       browser.element(css: "##{link_id}").click
 
-      sleep(120) # slow HTTP server
+      sleep(10) # so Chrome can finish downloading
 
       pdf_path = nil
 
