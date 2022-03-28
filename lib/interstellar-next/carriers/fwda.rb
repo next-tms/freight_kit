@@ -296,12 +296,12 @@ module Interstellar
         link = document['link']
       end
 
-      return Interstellar::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless link
+      raise Interstellar::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless link
 
       query = URI.parse(link).query
       doc_id = CGI.parse(query)['docId']&.first
 
-      return Interstellar::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless doc_id
+      raise Interstellar::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless doc_id
 
       doc_id
     end
