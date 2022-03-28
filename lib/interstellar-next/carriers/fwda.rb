@@ -269,6 +269,8 @@ module Interstellar
                    HTTParty.get(url, headers:)
                  end
 
+      raise Interstellar::ResponseError, 'Internal Server Error (500)' if response.code == 500
+
       return response.body unless response.headers.content_type == 'application/json'
 
       json = JSON.parse(response.body)
