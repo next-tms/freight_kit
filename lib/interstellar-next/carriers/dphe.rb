@@ -175,7 +175,9 @@ module Interstellar
       else
         download_url = "#{options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
         response = HTTParty.get("#{download_url}/?json")
-        tif_url = "#{download_url}/#{JSON.parse(response.body)&.last}"
+
+        filename = CGI.escape(JSON.parse(response.body)&.last)
+        tif_url = "#{download_url}/#{filename}"
         tif_path = File.join(tmpdir, "#{tracking_number}_#{DateTime.current}.tif")
 
         File.open(tif_path, 'wb') do |file|

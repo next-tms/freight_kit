@@ -177,7 +177,9 @@ module Interstellar
       else
         download_url = "#{options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
         response = HTTParty.get("#{download_url}/?json")
-        pdf_url = "#{download_url}/#{JSON.parse(response.body)&.last}"
+
+        filename = CGI.escape(JSON.parse(response.body)&.last)
+        pdf_url = "#{download_url}/#{filename}"
         pdf_path = File.join(tmpdir, "#{tracking_number}_#{DateTime.current}.pdf")
 
         File.open(pdf_path, 'wb') do |file|
