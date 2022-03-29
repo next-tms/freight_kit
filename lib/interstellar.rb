@@ -4,6 +4,9 @@ require 'active_model'
 require 'active_support/all'
 require 'active_utils'
 
+require 'cgi'
+require 'yaml'
+
 require 'httparty'
 require 'measured'
 require 'mimemagic'
@@ -12,7 +15,6 @@ require 'open-uri'
 require 'rmagick'
 require 'savon'
 require 'watir'
-require 'yaml'
 
 require 'interstellar/error'
 require 'interstellar/errors'
