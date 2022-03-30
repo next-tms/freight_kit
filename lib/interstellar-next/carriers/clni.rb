@@ -168,7 +168,7 @@ module Interstellar
 
       browser.element(css: "##{link_id}").click
 
-      sleep(10) # so Chrome can finish downloading
+      sleep(50) # so Chrome can finish downloading, Selenoid default timeout is 60s
 
       pdf_path = nil
 
