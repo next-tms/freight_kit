@@ -102,7 +102,7 @@ module Interstellar
     # Tracking
 
     def valid_tracking_number?(tracking_number)
-      pro[..2] == 'UAP' && pro.length == 13
+      tracking_number[..2] == 'UAP' && tracking_number.length == 13
     end
 
     protected
