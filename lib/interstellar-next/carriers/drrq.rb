@@ -101,6 +101,10 @@ module Interstellar
 
     # Tracking
 
+    def valid_tracking_number?(tracking_number)
+      pro[..2] == 'UAP' && pro.length == 13
+    end
+
     protected
 
     def build_accessorials(shipment:)
