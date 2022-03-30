@@ -251,6 +251,14 @@ module Interstellar
       true
     end
 
+    # Validate the tracking number (may call API).
+    #
+    # @param [String] tracking_number
+    # @return [Boolean] Should return `true` if the provided pro is valid.
+    def valid_tracking_number?(_tracking_number)
+      raise NotImplementedError, "#valid_pro is not supported by #{self.class.name}."
+    end
+
     # The address field maximum length accepted by the carrier
     # @return [Integer]
     def maximum_address_field_length
