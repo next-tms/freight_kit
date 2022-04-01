@@ -192,7 +192,7 @@ module Interstellar
       response = parse_response(response)
 
       file_bytes = response['FileBytes']
-      return Interstellar::DocumentNotFoundError if file_bytes.blank?
+      raise Interstellar::DocumentNotFoundError if file_bytes.blank?
 
       data = Base64.decode64(file_bytes)
       path = if options[:path].blank?
