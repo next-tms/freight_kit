@@ -13,6 +13,7 @@
   :types:
     :arrived_at_terminal: arrived
     :delivered: delivered
+    :delivery_appointment_scheduled: delivery appt made
     :departed: departed
 :services:
   :types:

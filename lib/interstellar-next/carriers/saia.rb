@@ -282,8 +282,19 @@ module Interstellar
       request
     end
 
-    def parse_datetime(datetime)
-      datetime ? DateTime.strptime(datetime, '%Y-%m-%d %H:%M:%S')&.to_fs(:db) : nil
+    def parse_api_date_time(date_time)
+      return nil if date_time.blank?
+
+      local_date_time = ::DateTime.strptime(date_time, '%Y-%m-%d %H:%M:%S').to_fs(:db)
+      DateTime.new(local_date_time:)
+    end
+
+    def parse_api_location(api_event)
+      Location.new(
+        city: api_event[:city]&.titleize,
+        state: api_event[:state]&.upcase,
+        country: ActiveUtils::Country.find('USA')
+      )
     end
 
     def parse_tracking_response(response)
@@ -319,9 +330,9 @@ module Interstellar
         country: ActiveUtils::Country.find('USA')
       )
 
-      actual_delivery_date = parse_datetime(search_result[:delivery_date_time_arrive])&.to_date
-      pickup_date = parse_datetime(search_result[:pickup_date_time])&.to_date
-      scheduled_delivery_date = nil # TODO: Set correctly
+      actual_delivery_date = parse_api_date_time(search_result[:delivery_date_time_arrive])
+      pickup_date = parse_api_date_time(search_result[:pickup_date_time])
+      scheduled_delivery_date = parse_api_date_time(search_result[:delivery_appointment_date_time])
       tracking_number = search_result[:pro_number]
 
       shipment_events = []
@@ -330,9 +341,9 @@ module Interstellar
 
       if api_events.blank?
         shipment_events << ShipmentEvent.new(
-          :picked_up,
-          pickup_date,
-          shipper_address
+          date_time: pickup_date,
+          location: shipper_address,
+          type_code: :picked_up
         )
       else
         api_events = [api_events] if api_events.is_a?(Hash)
@@ -349,19 +360,15 @@ module Interstellar
           end
           next if event_key.blank?
 
-          location = Location.new(
-            city: api_event[:city]&.titleize,
-            state: api_event[:state]&.upcase,
-            country: ActiveUtils::Country.find('USA')
-          )
-          datetime_without_time_zone = parse_datetime(api_event[:activity_date_time])
+          location = parse_api_location(api_event)
+          date_time = parse_api_date_time(api_event[:activity_date_time])
 
-          # status and type_code set automatically by ActiveFreight based on event
-          shipment_events << ShipmentEvent.new(event_key, datetime_without_time_zone, location)
+          shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event_key)
         end
       end
 
-      shipment_events = shipment_events&.sort_by(&:time)
+      shipment_events = shipment_events.sort_by { |shipment_event| shipment_event.date_time.local_date_time }
+      status = shipment_events.last&.type_code
 
       TrackingResponse.new(
         actual_delivery_date:,
@@ -370,11 +377,10 @@ module Interstellar
         origin: shipper_address,
         request: last_request,
         response:,
-        response:,
         scheduled_delivery_date:,
         ship_time: pickup_date,
         shipment_events:,
-        status: shipment_events&.last&.status,
+        status:,
         tracking_number:
       )
     end

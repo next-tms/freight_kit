@@ -131,8 +131,11 @@ module Interstellar
       amount * -1
     end
 
-    def parse_date(date)
-      date ? DateTime.strptime(date, '%Y-%m-%dT%H:%M:%S').to_fs(:db) : nil
+    def parse_api_date_time(date_time)
+      return nil if date_time.blank?
+
+      local_date_time = ::DateTime.strptime(date_time, '%Y-%m-%dT%H:%M:%S').to_fs(:db)
+      DateTime.new(local_date_time:)
     end
 
     def request_url(action)
@@ -361,8 +364,8 @@ module Interstellar
         country: ActiveUtils::Country.find('USA')
       )
 
-      actual_delivery_date = parse_date(search_result.dig('Shipment', 'DeliveredDateTime'))
-      scheduled_delivery_date = parse_date(search_result.dig('Shipment', 'ApptDateTime'))
+      actual_delivery_date = parse_api_date_time(search_result.dig('Shipment', 'DeliveredDateTime'))
+      scheduled_delivery_date = parse_api_date_time(search_result.dig('Shipment', 'ApptDateTime'))
       tracking_number = search_result.dig('Shipment', 'SearchItem')
 
       last_location = nil
@@ -375,7 +378,7 @@ module Interstellar
         event = @conf.dig(:events, :types).key(type_code)
         next if event.blank?
 
-        datetime_without_time_zone = parse_date(api_event['StatusDateTime'])
+        date_time = parse_api_date_time(api_event['StatusDateTime'])
         comment = strip_date(api_event['StatusComment'])
         appointment_date = nil
 
@@ -387,15 +390,7 @@ module Interstellar
         when :delivered
           location = receiver_address
         when :delivery_appointment_scheduled
-          delimeter = ' on '
-          if !comment.blank? && comment.downcase.include?(delimeter)
-            location = receiver_address
-            appointment_date = Date
-                               .strptime(
-                                 comment.split(delimeter).last.strip,
-                                 '%m/%d/%y'
-                               )
-          end
+          location = last_location
         when :departed
           location = parse_location(comment, [' to ', 'from '])
         when :located
@@ -411,18 +406,18 @@ module Interstellar
         when :trailer_unloaded
           location = parse_location(comment, [' terminal in '])
         end
+
         last_location = location
 
-        # status and type_code set automatically by ActiveFreight based on event
         shipment_events << ShipmentEvent.new(
-          event,
-          datetime_without_time_zone,
-          location,
-          appointment_date
+          location:,
+          date_time:,
+          type_code: event
         )
       end
 
-      shipment_events = shipment_events.sort_by(&:time)
+      shipment_events = shipment_events.sort_by { |shipment_event| shipment_event.date_time.local_date_time }
+      status = shipment_events.last&.type_code
 
       TrackingResponse.new(
         actual_delivery_date:,
@@ -432,9 +427,9 @@ module Interstellar
         request: last_request,
         response:,
         scheduled_delivery_date:,
-        ship_time: parse_date(search_result.dig('Shipment', 'ProDateTime')),
+        ship_time: parse_api_date_time(search_result.dig('Shipment', 'ProDateTime')),
         shipment_events:,
-        status: shipment_events.last&.status,
+        status:,
         tracking_number:
       )
     end

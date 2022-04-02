@@ -121,8 +121,6 @@
 :events:
   :types:
     :arrived_at_terminal: linehaul arrived
-    :delivered: completed.  signed by # "delivery" used often to mean arrived at terminal
-    :delivered: partner delivery
     :departed: linehaul departed
     :out_for_delivery: out for delivery
     :trailer_closed: terminal load
