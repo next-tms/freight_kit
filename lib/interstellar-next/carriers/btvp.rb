@@ -122,18 +122,20 @@ module Interstellar
       ).body
     end
 
-    def parse_date(date)
-      date ? Date.strptime(date, '%m/%d/%Y').to_fs(:db) : nil
+    def parse_api_date(date)
+      return nil if date.blank?
+
+      local_date = ::Date.strptime(date, '%m/%d/%Y')
+      DateTime.new(local_date:)
     end
 
-    def parse_datetime(datetime)
-      return nil unless datetime
+    def parse_api_date_time(date_time)
+      return nil if date_time.blank?
 
-      if datetime.include?('-')
-        DateTime.strptime(datetime, '%Y-%m-%d %H:%M').to_fs(:db)
-      else
-        DateTime.strptime(datetime, '%m/%d/%Y %H:%M').to_fs(:db)
-      end
+      format = date_time.include?('-') ? '%Y-%m-%d %H:%M' : '%m/%d/%Y %H:%M'
+
+      local_date_time = ::DateTime.strptime(date_time, format).to_fs(:db)
+      DateTime.new(local_date_time:)
     end
 
     def build_url(action)
@@ -570,18 +572,18 @@ module Interstellar
       unless actual_delivery_date.blank?
         comment = response.dig(:tracktrace_response, :return, :currentstatus, :status).downcase
         if comment.starts_with?('delivered')
-          actual_delivery_date = parse_date(comment.downcase.split('signed')[0].split('on')[1].strip.sub('at ', ''))
+          actual_delivery_date = parse_api_date(comment.downcase.split('signed')[0].split('on')[1].strip.sub('at ', ''))
         end
       end
 
       shipment_events = []
       status = nil
 
-      ship_time = parse_date(response.dig(:tracktrace_response, :return, :currentstatus, :shipdate))
-      shipment_events << ShipmentEvent.new(:picked_up, "#{ship_time} 00:00:00", shipper_address)
+      ship_time = parse_api_date(response.dig(:tracktrace_response, :return, :currentstatus, :shipdate))
+      shipment_events << ShipmentEvent.new(location: shipper_address, date_time: ship_time, type_code: :picked_up)
 
-      scheduled_delivery_date = parse_date(response.dig(:tracktrace_response, :return, :currentstatus,
-                                                        :estdeliverydate))
+      scheduled_delivery_date = parse_api_date(response.dig(:tracktrace_response, :return, :currentstatus,
+                                                            :estdeliverydate))
       tracking_number = response.dig(:tracktrace_response, :return, :pronumber)
 
       api_events = response.dig(:tracktrace_response, :return, :history)
@@ -597,43 +599,42 @@ module Interstellar
         end
         next if event.blank?
 
-        datetime_without_time_zone = parse_datetime("#{api_event[:date]} #{api_event[:time]}")
+        date_time = parse_api_date_time("#{api_event[:date]} #{api_event[:time]}")
 
         location = parse_location(api_event[:location])
         location = shipper_address if location.state.blank? && %i[picked_up
                                                                   pickup_information_sent_to_carrier].include?(event)
         location = receiver_address if location.state.blank? && %i[delivered out_for_delivery].include?(event)
 
-        # Do not consider out for delivery when out for delivery and interlined dates match
-        if event == :out_for_delivery
+        case event
+        when :delivered
+          actual_delivery_date = date_time
+        when :out_for_delivery
+          # Do not consider out for delivery when out for delivery and interlined dates match
           next_api_event = api_events[index + 1]
 
           break if next_api_event.blank?
 
           if next_api_event[:description].include?('INTERLINE') && next_api_event[:date] == api_event[:date]
-            shipment_events << ShipmentEvent.new(:departed, datetime_without_time_zone, location)
+            shipment_events << ShipmentEvent.new(date_time:, location:, type_code: :departed)
             next
           end
         end
 
-        status = event
-
-        shipment_events << ShipmentEvent.new(event, datetime_without_time_zone, location)
+        shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event)
       end
 
-      shipment_events = shipment_events.sort_by(&:time)
-
-      # Workaround for false status on certain events when timestamps are in wrong order
-      if !status == :out_for_delivery
-        out_for_delivery_event = shipment_events.select { |shipment_event| shipment_event.status == :out_for_delivery }
-        status = :out_for_delivery unless out_for_delivery_event.blank?
-      end
-      if !status == :delivered
-        delivery_event = shipment_events.select { |shipment_event| shipment_event.status == :delivered }
-        status = :delivered unless delivery_event.blank?
+      shipment_events = shipment_events.sort_by do |shipment_event|
+        shipment_event.date_time.local_date_time.blank? ? '0' : shipment_event.date_time.local_date_time
       end
 
-      status = shipment_events.last&.status if status.blank?
+      status = shipment_events.last&.type_code
+
+      # Workarounds for false status on certain events when timestamps are in wrong order
+      status = :out_for_delivery if shipment_events.select do |shipment_event|
+                                      shipment_event.type_code == :out_for_delivery
+                                    end.any?
+      status = :delivered if shipment_events.select { |shipment_event| shipment_event.type_code == :delivered }.any?
 
       TrackingResponse.new(
         actual_delivery_date:,

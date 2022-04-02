@@ -143,8 +143,11 @@ module Interstellar
       )
     end
 
-    def parse_date(date)
-      date ? DateTime.strptime(date, '%m/%d/%Y %l:%M:%S %p').to_fs(:db) : nil
+    def parse_api_date_time(date_time)
+      return nil if date_time.blank?
+
+      local_date_time = ::DateTime.strptime(date_time, '%m/%d/%Y %l:%M:%S %p').to_fs(:db)
+      DateTime.new(local_date_time:)
     end
 
     def parse_tracking_response(tracking_number, options = {})
@@ -172,57 +175,70 @@ module Interstellar
         ).text
       )
 
-      ship_time = browser.element(
-        xpath: '/html/body/form/div[3]/table[2]/tbody/tr[7]/td[2]/span'
-      ).text
-      ship_time = ship_time ? Date.strptime(ship_time, '%m/%d/%Y').to_fs(:db) : nil
+      actual_delivery_date = nil
+      delivery_appointment_scheduled = false
+      scheduled_delivery_date = nil
+      ship_time = nil
 
       shipment_events = []
+
       html.css('tr').each do |tr|
         next if tr.text.include?('DateNotes')
 
-        datetime_without_time_zone = tr.css('td')[0].text
+        date_time = tr.css('td')[0].text
         event = tr.css('td')[1].text
 
         event_key = nil
+
         @conf.dig(:events, :types).each do |key, val|
           if event.downcase.include?(val) && !event.downcase.include?('estimated')
             event_key = key
             break
           end
         end
+
         next if event_key.blank?
 
-        location = event.downcase.split(@conf.dig(:events, :types, event_key)).last
-        location = location.downcase.sub(event_key.to_s, '')
-        location = location.gsub(',', '')
-        location = location.downcase.include?('carrier') ? nil : parse_city_state(location)
+        location = nil
 
-        event = event_key
-        datetime_without_time_zone = parse_date(datetime_without_time_zone)
+        unless event_key == :delivery_appointment_scheduled
+          location = event.downcase.split(@conf.dig(:events, :types, event_key)).last
+          location = location.downcase.sub(event_key.to_s, '')
+          location = location.gsub(',', '')
+          location = location.downcase.include?('carrier') ? nil : parse_city_state(location)
+        end
 
-        # status and type_code set automatically by ActiveFreight based on event
-        shipment_events << ShipmentEvent.new(event, datetime_without_time_zone, location)
+        date_time = parse_api_date_time(date_time)
+
+        actual_delivery_date = date_time if event_key == :delivered
+        delivery_appointment_scheduled = true if event_key == :delivery_appointment_scheduled
+
+        # API doesn't provide pickup information
+        if event_key == :arrived_at_terminal && (ship_time.blank? || ship_time.local_date_time > date_time.local_date_time)
+          ship_time = date_time
+        end
+
+        shipment_event = ShipmentEvent.new(date_time:, location:, type_code: event_key)
+        shipment_events << shipment_event
       end
 
-      scheduled_delivery_date = nil
-      status = shipment_events.last&.status
+      # API doesn't provide appointment information on :delivery_appointment_scheduled
+      if delivery_appointment_scheduled
+        html.css('tr').each do |tr|
+          next if tr.text.include?('DateNotes')
+          next unless tr.css('td')[1].text.include?('Estimated Delivery Date')
 
-      actual_delivery_date = browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[9]/td[2]/span').text
+          scheduled_delivery_date = parse_api_date_time(tr.css('td')[0].text)
+          break
+        end
+      end
 
       browser.close
 
-      actual_delivery_date = actual_delivery_date&.strip
+      shipment_events = shipment_events.sort_by { |shipment_event| shipment_event.date_time.local_date_time }
 
-      actual_delivery_date = unless actual_delivery_date.blank?
-                               begin
-                                 Date.strptime(actual_delivery_date, '%m/%d/%Y').to_fs(:db)
-                               rescue Date::Error
-                                 nil
-                               end
-                             end
-
-      shipment_events = shipment_events.sort_by(&:time)
+      # API events sometimes appear after delivered
+      status = actual_delivery_date.blank? ? shipment_events.last&.type_code : :delivered
 
       TrackingResponse.new(
         actual_delivery_date:,

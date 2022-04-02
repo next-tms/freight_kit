@@ -614,8 +614,11 @@ module Interstellar
       request
     end
 
-    def parse_date(date)
-      date ? DateTime.strptime(date, '%m/%d/%y %H:%M').to_fs(:db) : nil
+    def parse_api_date_time(date_time)
+      return nil if date_time.blank?
+
+      local_date_time = ::DateTime.strptime(date_time, '%m/%d/%y %H:%M').to_fs(:db)
+      DateTime.new(local_date_time:)
     end
 
     def parse_tracking_response(response)
@@ -640,7 +643,7 @@ module Interstellar
         end
         next if event.blank?
 
-        datetime_without_time_zone = parse_date(api_event['recordDate'])
+        date_time = parse_api_date_time(api_event['recordDate'])
 
         location = Location.new(
           city: api_event['city'].titleize,
@@ -649,16 +652,23 @@ module Interstellar
           country: ActiveUtils::Country.find(api_event['country'])
         )
 
-        actual_delivery_date = datetime_without_time_zone if event == :delivered
-        scheduled_delivery_date = datetime_without_time_zone if event == :delivered
+        case event
+        when :delivered
+          actual_delivery_date = date_time
+          receiver_address = location
+        when :delivery_appointment_scheduled
+          scheduled_delivery_date = date_time
+        when :picked_up
+          ship_time = date_time
+          shipper_address = location
+        end
 
-        receiver_address = location if event == :delivered
-        shipper_address = location if event == :picked_up
-
-        shipment_events << ShipmentEvent.new(event, datetime_without_time_zone, location)
+        shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event)
       end
 
-      shipment_events = shipment_events.sort_by(&:time)
+      shipment_events = shipment_events.sort_by { |shipment_event| shipment_event.date_time.local_date_time }
+      status = shipment_events.last&.type_code
+
       tracking_number = api_events.last['airbillNumber']
 
       TrackingResponse.new(

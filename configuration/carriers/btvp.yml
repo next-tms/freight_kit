@@ -137,6 +137,10 @@
       :city: Las Vegas
       :province: NV
       :state: NV
+    :'32':
+      :city: Reno
+      :province: NV
+      :state: NV
     :'50':
       :city: Phoenix
       :province: AZ

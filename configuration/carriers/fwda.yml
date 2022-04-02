@@ -126,6 +126,7 @@
   :types:
     :arrived_at_terminal: ARR
     :delivered: DLV
+    :delivery_appointment_scheduled: DPL
     :departed: DEP
     :located: ARRD
     :out_for_delivery: OUTDV
