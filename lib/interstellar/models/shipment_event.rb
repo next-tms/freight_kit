@@ -4,10 +4,13 @@ module Interstellar
   # `ShipmentEvent` is the abstract base class for all shipment events (usually
   # attached to `TrackingEresponse`).
   #
-  # @!attribute location
+  # @attribute date_time
+  #   @return [DateTime] Date and time the event occurred.
+  #
+  # @attribute location
   #   @return [Location] Location the event occurred.
   #
-  # @!attribute type_code
+  # @attribute type_code
   #   @return [Symbol] One of:
   #     ```
   #       :arrived_at_terminal
@@ -30,6 +33,6 @@ module Interstellar
   #     ```
   #
   class ShipmentEvent < Model
-    attr_reader :location, :time, :time_with_time_zone, :type_code
+    attr_accessor :date_time, :location, :type_code
   end
 end
