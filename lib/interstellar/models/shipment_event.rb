@@ -7,14 +7,6 @@ module Interstellar
   # @!attribute location
   #   @return [Location] Location the event occurred.
   #
-  # @!attribute time
-  #   @return [String] Local date and time without time zone in the format
-  #     `"YYYY-MM-DD HH:MM:SS"` (zero-padded 24 hour clock).
-  #
-  # @!attribute time_with_time_zone
-  #   @return [ActiveSupport::TimeWithZone] Date and time
-  #     with time zone (if available).
-  #
   # @!attribute type_code
   #   @return [Symbol] One of:
   #     ```
