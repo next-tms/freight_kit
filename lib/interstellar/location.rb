@@ -110,6 +110,12 @@ module Interstellar # :nodoc:
       @address_type = value.to_s
     end
 
+    def time_zone
+      return nil if country_code(:alpha2).blank? || province.blank? || city.blank?
+
+      Spacetime.lookup(country_code(:alpha2), province, city)
+    end
+
     def to_hash
       {
         country: country_code,

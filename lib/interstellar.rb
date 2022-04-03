@@ -14,6 +14,7 @@ require 'nokogiri'
 require 'open-uri'
 require 'rmagick'
 require 'savon'
+require 'spacetime'
 require 'watir'
 
 require 'interstellar/error'
