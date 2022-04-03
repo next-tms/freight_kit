@@ -17,6 +17,21 @@ module Interstellar
   #   @return [String]
   #
   class DateTime < Model
-    attr_accessor :local_date, :local_date_time, :date_time_with_zone
+    attr_accessor :local_date, :local_date_time, :location, :date_time_with_zone
+
+    def initialize(*)
+      super
+
+      attempt_upgrade_using_location(location) unless location.blank?
+    end
+
+    private
+
+    def attempt_upgrade_using_location(location)
+      return unless date_time_with_zone.blank? && !location.time_zone.blank?
+
+      @date_time_with_zone = location.time_zone.parse(@local_date_time)
+      @local_date_time = nil
+    end
   end
 end
