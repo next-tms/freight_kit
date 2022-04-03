@@ -5,8 +5,8 @@ $:.unshift(lib) unless $:.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name = 'interstellar-next'
-  spec.version = '0.1.pre16'
-  spec.date = '2022-04-02'
+  spec.version = '0.1.pre17'
+  spec.date = '2022-04-03'
 
   spec.authors = [
     'Third Party Transportation Systems LLC'
