@@ -129,13 +129,13 @@ module Interstellar
       DateTime.new(local_date:)
     end
 
-    def parse_api_date_time(date_time)
+    def parse_api_date_time(date_time, location)
       return nil if date_time.blank?
 
       format = date_time.include?('-') ? '%Y-%m-%d %H:%M' : '%m/%d/%Y %H:%M'
 
       local_date_time = ::DateTime.strptime(date_time, format).to_fs(:db)
-      DateTime.new(local_date_time:)
+      DateTime.new(local_date_time:, location:)
     end
 
     def build_url(action)
@@ -554,14 +554,14 @@ module Interstellar
       raise Interstellar::ShipmentNotFoundError unless response.dig(:tracktrace_response, :return, :currentstatus,
                                                                     :errorcode).blank?
 
-      receiver_address = Location.new(
+      receiver_location = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :city).titleize,
         province: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :state).upcase,
         state: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :state).upcase,
         country: ActiveUtils::Country.find('USA')
       )
 
-      shipper_address = Location.new(
+      shipper_location = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :shipper, :city).titleize,
         province: response.dig(:tracktrace_response, :return, :currentstatus, :shipper, :state).upcase,
         state: response.dig(:tracktrace_response, :return, :currentstatus, :shipper, :state).upcase,
@@ -572,18 +572,23 @@ module Interstellar
       unless actual_delivery_date.blank?
         comment = response.dig(:tracktrace_response, :return, :currentstatus, :status).downcase
         if comment.starts_with?('delivered')
-          actual_delivery_date = parse_api_date(comment.downcase.split('signed')[0].split('on')[1].strip.sub('at ', ''))
+          api_date = comment.downcase.split('signed')[0].split('on')[1].strip.sub('at ', '')
+          actual_delivery_date = parse_api_date(api_date)
         end
       end
 
       shipment_events = []
       status = nil
 
-      ship_time = parse_api_date(response.dig(:tracktrace_response, :return, :currentstatus, :shipdate))
-      shipment_events << ShipmentEvent.new(location: shipper_address, date_time: ship_time, type_code: :picked_up)
+      api_date = response.dig(:tracktrace_response, :return, :currentstatus, :shipdate)
+      ship_time = parse_api_date(api_date)
 
-      scheduled_delivery_date = parse_api_date(response.dig(:tracktrace_response, :return, :currentstatus,
-                                                            :estdeliverydate))
+      # Leave this open for modification later
+      picked_up_event = ShipmentEvent.new(location: shipper_location, date_time: ship_time, type_code: :picked_up)
+
+      api_date = response.dig(:tracktrace_response, :return, :currentstatus, :estdeliverydate)
+      scheduled_delivery_date = parse_api_date(api_date)
+
       tracking_number = response.dig(:tracktrace_response, :return, :pronumber)
 
       api_events = response.dig(:tracktrace_response, :return, :history)
@@ -599,14 +604,24 @@ module Interstellar
         end
         next if event.blank?
 
-        date_time = parse_api_date_time("#{api_event[:date]} #{api_event[:time]}")
+        location = if api_event[:location].blank?
+                     case event
+                     when :picked_up, :pickup_information_sent_to_carrier
+                       shipper_location
+                     when :delivered, :out_for_delivery
+                       receiver_location
+                     end
+                   else
+                     parse_location(api_event[:location])
+                   end
 
-        location = parse_location(api_event[:location])
-        location = shipper_address if location.state.blank? && %i[picked_up
-                                                                  pickup_information_sent_to_carrier].include?(event)
-        location = receiver_address if location.state.blank? && %i[delivered out_for_delivery].include?(event)
+        api_date_time = "#{api_event[:date]} #{api_event[:time]}"
+        date_time = parse_api_date_time(api_date_time, location)
 
         case event
+        when :arrived_at_terminal
+          # Duplicate event occurs without location data from API
+          break if api_event[:location].blank?
         when :delivered
           actual_delivery_date = date_time
         when :out_for_delivery
@@ -619,13 +634,19 @@ module Interstellar
             shipment_events << ShipmentEvent.new(date_time:, location:, type_code: :departed)
             next
           end
+        when :pickup_information_sent_to_carrier
+          # Pickup event appears after carrier information sent, let's fix that
+          picked_up_event.date_time = date_time.dup
         end
 
         shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event)
       end
 
+      shipment_events << picked_up_event
+
       shipment_events = shipment_events.sort_by do |shipment_event|
-        shipment_event.date_time.local_date_time.blank? ? '0' : shipment_event.date_time.local_date_time
+        d = shipment_event.date_time
+        d&.local_date_time || d.date_time_with_zone&.to_fs(:db) || d.local_date&.to_fs(:db)
       end
 
       status = shipment_events.last&.type_code
@@ -639,8 +660,8 @@ module Interstellar
       TrackingResponse.new(
         actual_delivery_date:,
         carrier: self,
-        destination: receiver_address,
-        origin: shipper_address,
+        destination: receiver_location,
+        origin: shipper_location,
         request: last_request,
         response:,
         scheduled_delivery_date:,

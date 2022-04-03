@@ -131,11 +131,11 @@ module Interstellar
       amount * -1
     end
 
-    def parse_api_date_time(date_time)
+    def parse_api_date_time(date_time, location)
       return nil if date_time.blank?
 
       local_date_time = ::DateTime.strptime(date_time, '%Y-%m-%dT%H:%M:%S').to_fs(:db)
-      DateTime.new(local_date_time:)
+      DateTime.new(local_date_time:, location:)
     end
 
     def request_url(action)
@@ -306,7 +306,7 @@ module Interstellar
       URI.parse("#{request_url(:track)}/#{tracking_number}").open
     end
 
-    def parse_location(comment, delimiters)
+    def parse_api_location(comment, delimiters)
       return nil if comment.blank? || !comment.include?(delimiters[0])
 
       parts = if delimiters.size == 2
@@ -350,23 +350,30 @@ module Interstellar
       pro = search_result.dig('Shipment', 'ProNumber')&.downcase
       raise Interstellar::ShipmentNotFoundError if pro.blank? || pro.downcase.include?('not available')
 
-      receiver_address = Location.new(
+      receiver_location = Location.new(
         city: search_result.dig('Shipment', 'Consignee', 'City').titleize,
         province: search_result.dig('Shipment', 'Consignee', 'State').upcase,
         state: search_result.dig('Shipment', 'Consignee', 'State').upcase,
         country: ActiveUtils::Country.find('USA')
       )
 
-      shipper_address = Location.new(
+      shipper_location = Location.new(
         city: search_result.dig('Shipment', 'Origin', 'City').titleize,
         province: search_result.dig('Shipment', 'Origin', 'State').upcase,
         state: search_result.dig('Shipment', 'Origin', 'State').upcase,
         country: ActiveUtils::Country.find('USA')
       )
 
-      actual_delivery_date = parse_api_date_time(search_result.dig('Shipment', 'DeliveredDateTime'))
-      scheduled_delivery_date = parse_api_date_time(search_result.dig('Shipment', 'ApptDateTime'))
+      api_date_time = search_result.dig('Shipment', 'DeliveredDateTime')
+      actual_delivery_date = parse_api_date_time(api_date_time, receiver_location)
+
+      api_date_time = search_result.dig('Shipment', 'ApptDateTime')
+      scheduled_delivery_date = parse_api_date_time(api_date_time, receiver_location)
+
       tracking_number = search_result.dig('Shipment', 'SearchItem')
+
+      api_date_time = search_result.dig('Shipment', 'ProDateTime')
+      ship_time = parse_api_date_time(api_date_time, shipper_location)
 
       last_location = nil
       shipment_events = []
@@ -378,56 +385,51 @@ module Interstellar
         event = @conf.dig(:events, :types).key(type_code)
         next if event.blank?
 
-        date_time = parse_api_date_time(api_event['StatusDateTime'])
         comment = strip_date(api_event['StatusComment'])
-        appointment_date = nil
 
-        case event
-        when :arrived_at_terminal
-          location = parse_location(comment, [' terminal in '])
-        when :delayed_due_to_weather
-          location = last_location
-        when :delivered
-          location = receiver_address
-        when :delivery_appointment_scheduled
-          location = last_location
-        when :departed
-          location = parse_location(comment, [' to ', 'from '])
-        when :located
-          location = parse_location(comment, [' currently at '])
-        when :out_for_delivery
-          location = parse_location(comment, [' to ', 'from '])
-        when :picked_up
-          location = shipper_address
-        when :pending_delivery_appointment
-          location = last_location
-        when :trailer_closed
-          location = last_location
-        when :trailer_unloaded
-          location = parse_location(comment, [' terminal in '])
-        end
+        location = case event
+                   when :arrived_at_terminal
+                     parse_api_location(comment, [' terminal in '])
+                   when :delayed_due_to_weather
+                     last_location
+                   when :delivered
+                     receiver_location
+                   when :delivery_appointment_scheduled
+                     last_location
+                   when :departed
+                     parse_api_location(comment, [' to ', 'from '])
+                   when :located
+                     parse_api_location(comment, [' currently at '])
+                   when :out_for_delivery
+                     parse_api_location(comment, [' to ', 'from '])
+                   when :picked_up
+                     shipper_location
+                   when :pending_delivery_appointment
+                     last_location
+                   when :trailer_closed
+                     last_location
+                   when :trailer_unloaded
+                     parse_api_location(comment, [' terminal in '])
+                   end
+
+        date_time = parse_api_date_time(api_event['StatusDateTime'], location)
 
         last_location = location
 
-        shipment_events << ShipmentEvent.new(
-          location:,
-          date_time:,
-          type_code: event
-        )
+        shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event)
       end
 
-      shipment_events = shipment_events.sort_by { |shipment_event| shipment_event.date_time.local_date_time }
       status = shipment_events.last&.type_code
 
       TrackingResponse.new(
         actual_delivery_date:,
         carrier: self,
-        destination: receiver_address,
-        origin: shipper_address,
+        destination: receiver_location,
+        origin: shipper_location,
         request: last_request,
         response:,
         scheduled_delivery_date:,
-        ship_time: parse_api_date_time(search_result.dig('Shipment', 'ProDateTime')),
+        ship_time:,
         shipment_events:,
         status:,
         tracking_number:

@@ -122,7 +122,7 @@ module Interstellar
     # Rates
 
     # Tracking
-    def parse_city_state_zip(str)
+    def parse_api_city_state_zip(str)
       return nil if str.blank?
 
       Location.new(
@@ -133,7 +133,7 @@ module Interstellar
       )
     end
 
-    def parse_city_state(str)
+    def parse_api_city_state(str)
       return nil if str.blank?
 
       Location.new(
@@ -143,11 +143,18 @@ module Interstellar
       )
     end
 
-    def parse_api_date_time(date_time)
+    def parse_api_date(date, location)
+      return nil if date.blank?
+
+      local_date = ::Date.strptime(date, '%m/%d/%Y')
+      DateTime.new(local_date:, location:)
+    end
+
+    def parse_api_date_time(date_time, location)
       return nil if date_time.blank?
 
       local_date_time = ::DateTime.strptime(date_time, '%m/%d/%Y %l:%M:%S %p').to_fs(:db)
-      DateTime.new(local_date_time:)
+      DateTime.new(local_date_time:, location:)
     end
 
     def parse_tracking_response(tracking_number, options = {})
@@ -163,17 +170,11 @@ module Interstellar
       html = browser.table(id: 'cphMain_grvLogNotes').inner_html
       html = Nokogiri::HTML(html)
 
-      shipper_address = parse_city_state_zip(
-        browser.element(
-          xpath: '/html/body/form/div[3]/table[2]/tbody/tr[14]/td[1]/span'
-        ).text
-      )
+      api_city_state_zip = browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[14]/td[1]/span').text
+      shipper_location = parse_api_city_state_zip(api_city_state_zip)
 
-      receiver_address = parse_city_state_zip(
-        browser.element(
-          xpath: '/html/body/form/div[3]/table[2]/tbody/tr[14]/td[2]/span'
-        ).text
-      )
+      api_city_state_zip = browser.element(xpath: '/html/body/form/div[3]/table[2]/tbody/tr[14]/td[2]/span').text
+      receiver_location = parse_api_city_state_zip(api_city_state_zip)
 
       actual_delivery_date = nil
       delivery_appointment_scheduled = false
@@ -185,9 +186,7 @@ module Interstellar
       html.css('tr').each do |tr|
         next if tr.text.include?('DateNotes')
 
-        date_time = tr.css('td')[0].text
         event = tr.css('td')[1].text
-
         event_key = nil
 
         @conf.dig(:events, :types).each do |key, val|
@@ -202,21 +201,21 @@ module Interstellar
         location = nil
 
         unless event_key == :delivery_appointment_scheduled
-          location = event.downcase.split(@conf.dig(:events, :types, event_key)).last
-          location = location.downcase.sub(event_key.to_s, '')
-          location = location.gsub(',', '')
-          location = location.downcase.include?('carrier') ? nil : parse_city_state(location)
+          api_city_state = event.downcase.split(@conf.dig(:events, :types, event_key)).last
+          api_city_state = api_city_state.downcase.sub(event_key.to_s, '')
+          api_city_state = api_city_state.gsub(',', '')
+
+          location = api_city_state.downcase.include?('carrier') ? nil : parse_api_city_state(api_city_state)
         end
 
-        date_time = parse_api_date_time(date_time)
+        api_date_time = tr.css('td')[0].text
+        date_time = parse_api_date_time(api_date_time, location)
 
         actual_delivery_date = date_time if event_key == :delivered
         delivery_appointment_scheduled = true if event_key == :delivery_appointment_scheduled
 
         # API doesn't provide pickup information
-        if event_key == :arrived_at_terminal && (ship_time.blank? || ship_time.local_date_time > date_time.local_date_time)
-          ship_time = date_time
-        end
+        ship_time = date_time if event_key == :arrived_at_terminal && ship_time.blank?
 
         shipment_event = ShipmentEvent.new(date_time:, location:, type_code: event_key)
         shipment_events << shipment_event
@@ -228,14 +227,14 @@ module Interstellar
           next if tr.text.include?('DateNotes')
           next unless tr.css('td')[1].text.include?('Estimated Delivery Date')
 
-          scheduled_delivery_date = parse_api_date_time(tr.css('td')[0].text)
+          api_date = tr.css('td')[0].text.split(' ')&.first
+          scheduled_delivery_date = parse_api_date(api_date, shipment_events.last.location)
+
           break
         end
       end
 
       browser.close
-
-      shipment_events = shipment_events.sort_by { |shipment_event| shipment_event.date_time.local_date_time }
 
       # API events sometimes appear after delivered
       status = actual_delivery_date.blank? ? shipment_events.last&.type_code : :delivered
@@ -243,14 +242,13 @@ module Interstellar
       TrackingResponse.new(
         actual_delivery_date:,
         carrier: self,
-        destination: receiver_address,
-        origin: shipper_address,
+        destination: receiver_location,
+        origin: shipper_location,
         request: last_request,
         response: html.to_s,
         scheduled_delivery_date:,
         ship_time:,
         shipment_events:,
-        shipper_address:,
         status:,
         tracking_number:
       )

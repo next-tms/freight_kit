@@ -614,19 +614,19 @@ module Interstellar
       request
     end
 
-    def parse_api_date_time(date_time)
+    def parse_api_date_time(date_time, location)
       return nil if date_time.blank?
 
       local_date_time = ::DateTime.strptime(date_time, '%m/%d/%y %H:%M').to_fs(:db)
-      DateTime.new(local_date_time:)
+      DateTime.new(local_date_time:, location:)
     end
 
     def parse_tracking_response(response)
       actual_delivery_date = nil
-      receiver_address = nil
+      receiver_location = nil
       scheduled_delivery_date = nil
       ship_time = nil
-      shipper_address = nil
+      shipper_location = nil
       status = nil
       tracking_number = nil
 
@@ -643,8 +643,6 @@ module Interstellar
         end
         next if event.blank?
 
-        date_time = parse_api_date_time(api_event['recordDate'])
-
         location = Location.new(
           city: api_event['city'].titleize,
           state: api_event['state'].upcase,
@@ -652,21 +650,22 @@ module Interstellar
           country: ActiveUtils::Country.find(api_event['country'])
         )
 
+        date_time = parse_api_date_time(api_event['recordDate'], location)
+
         case event
         when :delivered
           actual_delivery_date = date_time
-          receiver_address = location
+          receiver_location = location
         when :delivery_appointment_scheduled
           scheduled_delivery_date = date_time
         when :picked_up
           ship_time = date_time
-          shipper_address = location
+          shipper_location = location
         end
 
         shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event)
       end
 
-      shipment_events = shipment_events.sort_by { |shipment_event| shipment_event.date_time.local_date_time }
       status = shipment_events.last&.type_code
 
       tracking_number = api_events.last['airbillNumber']
@@ -674,8 +673,8 @@ module Interstellar
       TrackingResponse.new(
         actual_delivery_date:,
         carrier: self,
-        destination: receiver_address,
-        origin: shipper_address,
+        destination: receiver_location,
+        origin: shipper_location,
         request: last_request,
         response:,
         scheduled_delivery_date:,
