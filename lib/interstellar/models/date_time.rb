@@ -28,7 +28,7 @@ module Interstellar
     private
 
     def attempt_upgrade_using_location(location)
-      return if @date_time_with_zone.blank? && !location.time_zone.blank?
+      return if !@date_time_with_zone.blank? || @local_date_time.blank? || location.time_zone.blank?
 
       @date_time_with_zone = location.time_zone.parse(@local_date_time)
       @local_date_time = nil
