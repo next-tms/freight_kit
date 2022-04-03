@@ -331,7 +331,7 @@ module Interstellar
       request
     end
 
-    def parse_city_state(str)
+    def parse_api_city_state(str)
       return nil if str.blank?
 
       Location.new(
@@ -341,21 +341,29 @@ module Interstellar
       )
     end
 
-    def parse_city(str)
+    def parse_api_city(str)
       return nil if str.blank?
 
-      Location.new(
-        city: str.squish.strip.titleize,
-        state: nil,
-        country: ActiveUtils::Country.find('USA')
-      )
+      city = str.squish.strip.titleize
+      state = case city
+              when 'Los Angeles'
+                'CA'
+              when 'Sacramento'
+                'CA'
+              when 'Redding'
+                'CA'
+              when 'West Sacramento'
+                'CA'
+              end
+
+      Location.new(city:, state:, country: ActiveUtils::Country.find('USA'))
     end
 
-    def parse_api_date_time(date_time)
+    def parse_api_date_time(date_time, location)
       return nil if date_time.blank?
 
       local_date_time = ::DateTime.strptime(date_time, '%m/%d/%Y %l:%M:%S %p').to_fs(:db)
-      DateTime.new(local_date_time:)
+      DateTime.new(local_date_time:, location:)
     end
 
     def parse_location(comment, delimiters)
@@ -380,7 +388,7 @@ module Interstellar
 
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 
-      shipper_address = Location.new(
+      shipper_location = Location.new(
         street: search_result[:shipperaddress]&.squish&.strip&.titleize,
         city: search_result[:shipper_city].squish.strip.titleize,
         state: search_result[:shipper_state].strip.upcase,
@@ -388,7 +396,7 @@ module Interstellar
         country: ActiveUtils::Country.find('USA')
       )
 
-      receiver_address = Location.new(
+      receiver_location = Location.new(
         street: search_result[:consaddress]&.squish&.strip&.titleize,
         city: search_result[:cons_city].squish.strip.titleize,
         state: search_result[:cons_state].strip.upcase,
@@ -396,14 +404,20 @@ module Interstellar
         country: ActiveUtils::Country.find('USA')
       )
 
-      actual_delivery_date = parse_api_date_time(search_result.dig('Shipment', 'DeliveredDateTime'))
-      pickup_date = parse_api_date_time(search_result[:pickup_date])
-      scheduled_delivery_date = parse_api_date_time(search_result.dig('Shipment', 'ApptDateTime'))
+      api_date_time = search_result.dig('Shipment', 'DeliveredDateTime')
+      actual_delivery_date = parse_api_date_time(api_date_time, receiver_location)
+
+      api_date_time = search_result[:pickup_date]
+      pickup_date = parse_api_date_time(api_date_time, shipper_location)
+
+      api_date_time = search_result.dig('Shipment', 'ApptDateTime')
+      scheduled_delivery_date = parse_api_date_time(api_date_time, receiver_location)
+
       ship_time = pickup_date
       tracking_number = search_result.dig('Shipment', 'SearchItem')
 
       shipment_events = []
-      shipment_events << ShipmentEvent.new(location: shipper_address, date_time: pickup_date, type_code: :picked_up)
+      shipment_events << ShipmentEvent.new(location: shipper_location, date_time: pickup_date, type_code: :picked_up)
 
       api_events = search_result.dig(:tracking_status_response, :tracking_status_row).reverse
       api_events.each do |api_event|
@@ -427,35 +441,35 @@ module Interstellar
 
         next if event_key.blank?
 
-        date_time = parse_api_date_time(api_event[:tracking_date])
+        location =  case event_key
+                    when :arrived_at_terminal
+                      parse_api_city(comment.split('arrived')[1].upcase.split('SERVICE CENTER')[0])
+                    when :delivered
+                      receiver_location
+                    when :departed
+                      parse_api_city(comment.split('departed')[1].upcase.split('SERVICE CENTER')[0])
+                    when :out_for_delivery
+                      receiver_location
+                    when :trailer_closed
+                      parse_api_city(comment.split('Location:')[1])
+                    when :trailer_unloaded
+                      parse_api_city(comment.split('Location:')[1])
+                    end
 
-        case event_key
-        when :arrived_at_terminal
-          location = parse_city(comment.split('arrived')[1].upcase.split('SERVICE CENTER')[0])
-        when :delivered
-          actual_delivery_date = date_time
-          location = receiver_address
-        when :departed
-          location = parse_city(comment.split('departed')[1].upcase.split('SERVICE CENTER')[0])
-        when :out_for_delivery
-          location = receiver_address
-        when :trailer_closed
-          location = parse_city(comment.split('Location:')[1])
-        when :trailer_unloaded
-          location = parse_city(comment.split('Location:')[1])
-        end
+        date_time = parse_api_date_time(api_event[:tracking_date], location)
+
+        actual_delivery_date = date_time if event_key == :delivered
 
         shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event_key)
       end
 
-      shipment_events = shipment_events.sort_by { |shipment_event| shipment_event.date_time.local_date_time }
       status = shipment_events.last&.type_code
 
       TrackingResponse.new(
         actual_delivery_date:,
         carrier: self,
-        destination: receiver_address,
-        origin: shipper_address,
+        destination: receiver_location,
+        origin: shipper_location,
         request: last_request,
         response:,
         scheduled_delivery_date:,

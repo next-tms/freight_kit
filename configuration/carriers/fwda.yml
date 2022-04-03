@@ -131,7 +131,7 @@
     :located: ARRD
     :out_for_delivery: OUTDV
     :picked_up: PUP
-    :pickup_information_sent_to_carrier: DPUP
+    :pickup_driver_assigned: DPUP
 :services:
   :types:
     - :standard_ltl
