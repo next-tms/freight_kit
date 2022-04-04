@@ -180,7 +180,7 @@ module Interstellar
 
         filename = CGI.escape(JSON.parse(response.body)&.last)
         pdf_url = "#{download_url}/#{filename}"
-        pdf_path = File.join(tmpdir, "#{tracking_number}_#{DateTime.current}.pdf")
+        pdf_path = File.join(tmpdir, "#{tracking_number}_#{::DateTime.current}.pdf")
 
         File.open(pdf_path, 'wb') do |file|
           HTTParty.get(pdf_url, stream_body: true) do |fragment|
@@ -238,8 +238,8 @@ module Interstellar
         }
       end
 
-      pickup_from = DateTime.current.beginning_of_day + 14.hours
-      pickup_from += 1.day if DateTime.current > pickup_from
+      pickup_from = ::DateTime.current.beginning_of_day + 14.hours
+      pickup_from += 1.day if ::DateTime.current > pickup_from
       pickup_to = pickup_from + 3.hours
 
       request = {
