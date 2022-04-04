@@ -178,7 +178,7 @@ module Interstellar
 
         filename = CGI.escape(JSON.parse(response.body)&.last)
         tif_url = "#{download_url}/#{filename}"
-        tif_path = File.join(tmpdir, "#{tracking_number}_#{DateTime.current}.tif")
+        tif_path = File.join(tmpdir, "#{tracking_number}_#{::DateTime.current}.tif")
 
         File.open(tif_path, 'wb') do |file|
           HTTParty.get(tif_url, stream_body: true) do |fragment|
