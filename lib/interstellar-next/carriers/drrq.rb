@@ -495,7 +495,7 @@ module Interstellar
         }
       end
 
-      pickup_date = DateTime.now + 1.day
+      pickup_date = ::DateTime.now + 1.day
 
       body = {
         Constraints: {
@@ -513,7 +513,7 @@ module Interstellar
         DropEvent: {
           City: shipment.destination.city.upcase,
           Country: shipment.destination.country_code(:alpha3),
-          Date: (DateTime.now + 5.days).strftime('%m/%d/%Y %I:%M:00 %p'),
+          Date: (::DateTime.now + 5.days).strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'DLocationCode',
           MaxPriceSheet: 6,
           ShowInsurance: false,
