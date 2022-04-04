@@ -25,13 +25,13 @@ module Interstellar
   #   @return [Date, Time]
   #
   # @!attribute scheduled_delivery_date
-  #   @return [Date, Time]
+  #   @return [DateTime]
   #
   # @!attribute actual_delivery_date
-  #   @return [Date, Time]
+  #   @return [DateTime]
   #
   # @!attribute attempted_delivery_date
-  #   @return [Date, Time]
+  #   @return [DateTime]
   #
   # @!attribute delivery_signature
   #   @return [String]
