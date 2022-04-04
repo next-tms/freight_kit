@@ -70,8 +70,9 @@ module Interstellar
     # Tracking
 
     def find_tracking_info(tracking_number)
-      tracking_request = build_tracking_request(tracking_number)
-      parse_tracking_response(tracking_request)
+      response = commit_tracking_request(tracking_number)
+
+      parse_tracking_response(response)
     end
 
     def find_tracking_info_implemented?
@@ -132,7 +133,7 @@ module Interstellar
     end
 
     def parse_api_date_time(date_time, location)
-      return nil if date_time.blank?
+      return nil if date_time.blank? || date_time == '0001-01-01T00:00:00'
 
       local_date_time = ::DateTime.strptime(date_time, '%Y-%m-%dT%H:%M:%S').to_fs(:db)
       DateTime.new(local_date_time:, location:)
@@ -302,8 +303,11 @@ module Interstellar
 
     # Tracking
 
-    def build_tracking_request(tracking_number)
-      URI.parse("#{request_url(:track)}/#{tracking_number}").open
+    def commit_tracking_request(tracking_number)
+      uri = URI.parse("#{request_url(:track)}/#{tracking_number}")
+      save_request(uri)
+
+      uri.open
     end
 
     def parse_api_location(comment, delimiters)
@@ -427,7 +431,7 @@ module Interstellar
         destination: receiver_location,
         origin: shipper_location,
         request: last_request,
-        response:,
+        response: json,
         scheduled_delivery_date:,
         ship_time:,
         shipment_events:,
