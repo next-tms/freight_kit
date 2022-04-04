@@ -657,7 +657,8 @@ module Interstellar
           actual_delivery_date = date_time
           receiver_location = location
         when :delivery_appointment_scheduled
-          scheduled_delivery_date = date_time
+          api_date_time = api_event['scheduledDeliveryFromDate']
+          scheduled_delivery_date = parse_api_date_time(api_date_time, location)
         when :picked_up
           ship_time = date_time
           shipper_location = location
