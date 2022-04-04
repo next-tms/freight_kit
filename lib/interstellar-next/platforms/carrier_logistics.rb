@@ -153,7 +153,7 @@ module Interstellar
 
     # Tracking
 
-    def parse_city_state(str)
+    def parse_api_city_state(str)
       return nil if str.blank?
 
       Location.new(
@@ -163,7 +163,7 @@ module Interstellar
       )
     end
 
-    def parse_city_state_zip(str)
+    def parse_api_city_state_zip(str)
       return nil if str.blank?
 
       Location.new(
@@ -174,8 +174,18 @@ module Interstellar
       )
     end
 
-    def parse_date(date)
-      date ? DateTime.strptime(date, '%m/%d/%Y %H:%M %p').to_fs(:db) : nil
+    def parse_api_date(date, location)
+      return nil if date.blank?
+
+      local_date = ::Date.strptime(date, '%m/%d/%Y')
+      DateTime.new(local_date:, location:)
+    end
+
+    def parse_api_date_time(date_time, location)
+      return nil if date_time.blank?
+
+      local_date_time = ::Date.strptime(date_time, '%m/%d/%Y %H:%M %p')
+      DateTime.new(local_date_time:, location:)
     end
 
     def parse_tracking_response(tracking_number)
@@ -223,12 +233,6 @@ module Interstellar
         next if tr.text.include?('shipment status')
         next if tr.css('td').blank?
 
-        # Some carriers do not provide times 👎
-        datetime_without_time_zone = if tr.css('td')[3].blank?
-                                       "#{tr.css('td')[2].text} 12:00 AM".squish
-                                     else
-                                       "#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish
-                                     end
         event = tr.css('td')[0].text
         location = tr.css('td')[1].text
 
@@ -241,28 +245,37 @@ module Interstellar
         end
         next if event_key.blank?
 
-        location = (parse_city_state(location.squish) if !location.blank? && location.downcase.include?(','))
-
         event = event_key
-        datetime_without_time_zone = parse_date(datetime_without_time_zone)
+
+        location = (parse_api_city_state(location.squish) if !location.blank? && location.downcase.include?(','))
+
+        # Some carriers do not provide times 👎
+        date_time = if tr.css('td')[3].blank?
+                      parse_api_date(
+                        tr.css('td')[2].text.squish.strip,
+                        location
+                      )
+                    else
+                      parse_api_date_time(
+                        "#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish.strip,
+                        location:
+                      )
+                    end
 
         case event_key
         when :delivered
-          actual_delivery_date = datetime_without_time_zone
+          actual_delivery_date = date_time
           receiver_address = location
         when :picked_up
           shipper_address = location
-          ship_time = datetime_without_time_zone
+          ship_time = date_time
         end
 
-        # status and type_code set automatically by ActiveFreight based on event
-        shipment_events << ShipmentEvent.new(event, datetime_without_time_zone, location)
+        shipment_events << ShipmentEvent.new(location:, date_time:, type_code: event)
       end
 
       scheduled_delivery_date = nil
-      status = shipment_events.last&.status
-
-      shipment_events = shipment_events.sort_by(&:time)
+      status = shipment_events.last&.type_code
 
       TrackingResponse.new(
         actual_delivery_date:,
