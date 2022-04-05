@@ -137,8 +137,8 @@ module Interstellar
       return nil if str.blank?
 
       Location.new(
-        city: str.split(' ')[0].titleize,
-        state: str.split(' ')[1].upcase,
+        city: str[..-3].strip.titleize,
+        state: str[-2..].upcase,
         country: ActiveUtils::Country.find('USA')
       )
     end
