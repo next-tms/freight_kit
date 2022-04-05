@@ -30,10 +30,6 @@ module Interstellar
 
     # Documents
 
-    def bol_requires_tracking_number?
-      true
-    end
-
     # Pickups
 
     def pickup_number_is_tracking_number?
