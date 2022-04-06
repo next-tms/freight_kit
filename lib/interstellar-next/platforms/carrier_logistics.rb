@@ -184,7 +184,7 @@ module Interstellar
     def parse_api_date_time(date_time, location)
       return nil if date_time.blank?
 
-      local_date_time = ::Date.strptime(date_time, '%m/%d/%Y %H:%M %p')
+      local_date_time = ::DateTime.strptime(date_time, '%m/%d/%Y %H:%M %p').to_fs(:db)
       DateTime.new(local_date_time:, location:)
     end
 
@@ -258,7 +258,7 @@ module Interstellar
                     else
                       parse_api_date_time(
                         "#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish.strip,
-                        location:
+                        location
                       )
                     end
 
