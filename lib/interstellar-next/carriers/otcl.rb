@@ -442,7 +442,8 @@ module Interstellar
     def parse_rate_response(shipment:, response:)
       raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
 
-      error = response.dig('OnTracRateResponse', 'Shipments', 'Error')
+      error = response.dig('OnTracRateResponse', 'Error')
+      error = response.dig('OnTracRateResponse', 'Shipments', 'Error') if error.blank?
 
       if error.blank? && response.dig('OnTracRateResponse', 'Shipments', 'Shipment').is_a?(Hash)
         error = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Rates', 'Rate', 'Error')
