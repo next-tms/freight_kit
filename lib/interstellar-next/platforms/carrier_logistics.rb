@@ -224,7 +224,9 @@ module Interstellar
       end
 
       actual_delivery_date = nil
+      estimated_delivery_date = nil
       receiver_address = nil
+      scheduled_delivery_date = nil
       ship_time = nil
       shipper_address = nil
 
@@ -274,13 +276,19 @@ module Interstellar
         shipment_events << ShipmentEvent.new(location:, date_time:, type_code: event)
       end
 
-      scheduled_delivery_date = nil
+      api_estimated_delivery_date = html.css('td.estdeldate')&.text&.split(',')&.last&.strip
+
+      unless api_estimated_delivery_date.blank?
+        estimated_delivery_date = parse_api_date(api_estimated_delivery_date, shipper_address)
+      end
+
       status = shipment_events.last&.type_code
 
       TrackingResponse.new(
         actual_delivery_date:,
         carrier: self,
         destination: receiver_address,
+        estimated_delivery_date:,
         origin: shipper_address,
         request: last_request,
         response: html.to_s,
@@ -363,7 +371,7 @@ module Interstellar
     def parse_rate_response(shipment:, response:)
       raise Interstellar::ResponseError, 'API Error: Unknown response' if response.blank?
 
-      if response&.is_a?(String) && response&.include?('WebSpeed error')
+      if response.is_a?(String) && response&.include?('WebSpeed error')
         raise Interstellar::ResponseError, 'API Error: Temporary error (CarrierLogistics WebSpeed error)'
       end
 
