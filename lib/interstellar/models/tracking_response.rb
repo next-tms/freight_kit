@@ -6,11 +6,41 @@ module Interstellar
   # @note Some carriers provide more information than others, so not all attributes
   #   will be set, depending on what carrier you are using.
   #
+  # @!attribute actual_delivery_date
+  #   @return [DateTime]
+  #
+  # @!attribute attempted_delivery_date
+  #   @return [DateTime]
+  #
   # @!attribute carrier
   #   @return [Symbol]
   #
   # @!attribute carrier_name
   #   @return [String]
+  #
+  # @!attribute delivery_signature
+  #   @return [String]
+  #
+  # @!attribute destination
+  #   @return [Interstellar::Location]
+  #
+  # @!attribute estimated_delivery_date
+  #   @return [Interstellar::DateTime]
+  #
+  # @!attribute origin
+  #   @return [Interstellar::Location]
+  #
+  # @!attribute scheduled_delivery_date
+  #   @return [DateTime]
+  #
+  # @!attribute ship_time
+  #   @return [Date, Time]
+  #
+  # @!attribute shipment_events
+  #   @return [Array<Interstellar::ShipmentEvent>]
+  #
+  # @!attribute shipper_address
+  #   @return [Interstellar::Location]
   #
   # @!attribute status
   #   @return [Symbol]
@@ -21,35 +51,9 @@ module Interstellar
   # @!attribute status_description
   #   @return [String]
   #
-  # @!attribute ship_time
-  #   @return [Date, Time]
-  #
-  # @!attribute scheduled_delivery_date
-  #   @return [DateTime]
-  #
-  # @!attribute actual_delivery_date
-  #   @return [DateTime]
-  #
-  # @!attribute attempted_delivery_date
-  #   @return [DateTime]
-  #
-  # @!attribute delivery_signature
-  #   @return [String]
-  #
   # @!attribute tracking_number
   #   @return [String]
   #
-  # @!attribute shipment_events
-  #   @return [Array<Interstellar::ShipmentEvent>]
-  #
-  # @!attribute shipper_address
-  #   @return [Interstellar::Location]
-  #
-  # @!attribute origin
-  #   @return [Interstellar::Location]
-  #
-  # @!attribute destination
-  #   @return [Interstellar::Location]
   class TrackingResponse < Response
     attr_accessor :actual_delivery_date,
                   :attempted_delivery_date,
@@ -57,6 +61,7 @@ module Interstellar
                   :carrier_name,
                   :delivery_signature,
                   :destination,
+                  :estimated_delivery_date,
                   :origin,
                   :scheduled_delivery_date,
                   :ship_time,
