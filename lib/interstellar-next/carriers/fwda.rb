@@ -623,12 +623,11 @@ module Interstellar
 
     def parse_tracking_response(response)
       actual_delivery_date = nil
+      estimated_delivery_date = nil
       receiver_location = nil
       scheduled_delivery_date = nil
       ship_time = nil
       shipper_location = nil
-      status = nil
-      tracking_number = nil
 
       shipment_events = []
 
@@ -652,6 +651,9 @@ module Interstellar
 
         date_time = parse_api_date_time(api_event['recordDate'], location)
 
+        api_estimated_delivery_date = api_event['estimatedArrivalDate']
+        estimated_delivery_date = parse_api_date_time(api_estimated_delivery_date, nil)
+
         case event
         when :delivered
           actual_delivery_date = date_time
@@ -667,6 +669,8 @@ module Interstellar
         shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event)
       end
 
+      estimated_delivery_date = scheduled_delivery_date unless scheduled_delivery_date.blank?
+
       status = shipment_events.last&.type_code
 
       tracking_number = api_events.last['airbillNumber']
@@ -675,6 +679,7 @@ module Interstellar
         actual_delivery_date:,
         carrier: self,
         destination: receiver_location,
+        estimated_delivery_date:,
         origin: shipper_location,
         request: last_request,
         response:,
