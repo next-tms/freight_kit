@@ -57,6 +57,10 @@ module Interstellar
       true
     end
 
+    def find_rates_with_declared_value?
+      false # API allows it but doesn't quote correctly per support
+    end
+
     # Tracking
 
     protected
