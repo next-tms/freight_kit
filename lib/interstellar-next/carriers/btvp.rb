@@ -337,8 +337,15 @@ module Interstellar
       browser.element(xpath: '/html/body/div[10]/div[11]/div/button[1]').wait_until(&:present?).click
       browser.close
 
-      error = pickup_number.blank? ? Interstellar::ResponseError.new('API Error: Unknown response') : nil
-      Interstellar::PickupResponse.new(error:, pickup_number:)
+      pickup_response = PickupResponse.new(request: nil, response: html)
+
+      if pickup_number.blank?
+        pickup_response.error = Interstellar::ResponseError.new('Unknown response')
+        return pickup_response
+      end
+
+      pickup_response.pickup_number = pickup_number
+      pickup_response
     end
 
     # Rates
