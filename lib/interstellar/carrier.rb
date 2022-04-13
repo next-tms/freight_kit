@@ -84,11 +84,43 @@ module Interstellar
       false
     end
 
-    def find_bol(*)
-      raise NotImplementedError, "#{self.class.name}: #find_bol not supported"
+    # Asks the carrier for the scanned proof of delivery that the carrier would provide after delivery.
+    #
+    # @param [String] tracking_number Tracking number.
+    # @return [DocumentResponse]
+    def pod(tracking_number)
+      raise NotImplementedError, "#{self.class.name}: #pod not supported"
     end
 
-    def find_bol_implemented?
+    def pod_implemented?
+      false
+    end
+
+    # Asks the carrier for the bill of lading that the carrier would provide before shipping.
+    #
+    # @see #scanned_bol
+    #
+    # @param [String] tracking_number Tracking number.
+    # @return [DocumentResponse]
+    def bol(tracking_number)
+      raise NotImplementedError, "#{self.class.name}: #bol not supported"
+    end
+
+    def bol_implemented?
+      false
+    end
+
+    # Asks the carrier for the scanned bill of lading that the carrier would provide after shipping.
+    #
+    # @see #bol
+    #
+    # @param [String] tracking_number Tracking number.
+    # @return [DocumentResponse]
+    def scanned_bol(tracking_number)
+      raise NotImplementedError, "#{self.class.name}: #scanned_bol not supported"
+    end
+
+    def scanned_bol_implemented?
       false
     end
 
@@ -106,14 +138,6 @@ module Interstellar
     # @return [Array<Location>]
     def find_locations(_country)
       raise NotImplementedError, "#{self.class.name}: #find_locations not supported"
-    end
-
-    def find_pod(*)
-      raise NotImplementedError, "#{self.class.name}: #find_pod not supported"
-    end
-
-    def find_pod_implemented?
-      false
     end
 
     def find_tracking_number_from_pickup_number(*)
@@ -253,7 +277,7 @@ module Interstellar
 
     # Validate the tracking number (may call API).
     #
-    # @param [String] tracking_number
+    # @param [String] tracking_number Tracking number.
     # @return [Boolean] Should return `true` if the provided pro is valid.
     def valid_tracking_number?(_tracking_number)
       raise NotImplementedError, "#valid_pro is not supported by #{self.class.name}."
