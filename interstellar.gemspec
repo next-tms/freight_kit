@@ -50,7 +50,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'measured', '>= 2.0', '< 2.8.3'
   spec.add_dependency 'mimemagic', '~> 0.4.3'
   spec.add_dependency 'nokogiri', '>= 1.6', '< 1.13.5'
-  spec.add_dependency 'rmagick', '>= 4.1', '< 4.3'
   spec.add_dependency 'savon', '>= 2.0', '< 2.13'
   spec.add_dependency 'spacetime', '~> 0.1.pre1'
   spec.add_dependency 'watir', '>= 7.0', '< 7.2'
