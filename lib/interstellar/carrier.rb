@@ -136,7 +136,7 @@ module Interstellar
     #
     # @param [ActiveUtils::Country] country
     # @return [Array<Location>]
-    def find_locations(_country)
+    def find_locations(country)
       raise NotImplementedError, "#{self.class.name}: #find_locations not supported"
     end
 
@@ -173,7 +173,6 @@ module Interstellar
     # @note Override with whatever you need to register a shipment, and obtain
     #   shipping labels if supported by the carrier.
     #
-    # @param customer_reference [String] The customer reference (PO #).
     # @param delivery_from [ActiveSupport::TimeWithZone] Local date, time and time zone that
     #   delivery hours begin.
     # @param delivery_to [ActiveSupport::TimeWithZone] Local date, time and time zone that
@@ -210,13 +209,10 @@ module Interstellar
     #
     # @note Override with whatever you need to cancel a shipping label
     #
-    # @param shipment_id [String] The unique identifier of the shipment to cancel.
-    #  This can be shipment_id or tracking number depending on carrier. Up to you and
-    #  the carrier
-    # @param options [Hash] Carrier-specific parameters.
-    # @return [Interstellar::ShipmentResponse] The response from the carrier. This
+    # @param tracking_number [String] The tracking number of the shipment to cancel.
+    # @return [Interstellar::Response] The response from the carrier. This
     #   response in most cases has a cancellation id.
-    def cancel_shipment(_shipment_id, _options = {})
+    def cancel_shipment(tracking_number)
       raise NotImplementedError, "#cancel_shipment is not supported by #{self.class.name}."
     end
 
@@ -228,11 +224,10 @@ module Interstellar
     #
     # @note Override with whatever you need to get a shipping label
     #
-    # @param tracking_number [String] The unique identifier of the shipment to track.
-    # @param options [Hash] Carrier-specific parameters.
+    # @param tracking_number [String] The tracking number of the shipment to track.
     # @return [Interstellar::TrackingResponse] The response from the carrier. This
     #   response should a list of shipment tracking events if successful.
-    def find_tracking_info(_tracking_number, _options = {})
+    def find_tracking_info(tracking_number)
       raise NotImplementedError, "#find_tracking_info is not supported by #{self.class.name}."
     end
 
@@ -244,13 +239,13 @@ module Interstellar
       false
     end
 
-    # Get a list of services available for the a specific route
+    # Get a list of services available for the a specific route.
     #
-    # @param origin_country_code [String] The country of origin
-    # @param destination_country_code [String] The destination country
-    # @return [Array<String>] A list of names of the available services
+    # @param origin [Location] The origin location.
+    # @param destination [Location] The destination location.
+    # @return [Array<Symbol>] A list of service type symbols for the available services.
     #
-    def available_services(_origin_country_code, _destination_country_code, _options = {})
+    def available_services(origin, destination)
       raise NotImplementedError, "#available_services is not supported by #{self.class.name}."
     end
 
@@ -279,7 +274,7 @@ module Interstellar
     #
     # @param [String] tracking_number Tracking number.
     # @return [Boolean] Should return `true` if the provided pro is valid.
-    def valid_tracking_number?(_tracking_number)
+    def valid_tracking_number?(tracking_number)
       raise NotImplementedError, "#valid_pro is not supported by #{self.class.name}."
     end
 
