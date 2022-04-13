@@ -326,21 +326,29 @@ module Interstellar
     end
 
     def parse_pickup_response(response:, labels:)
-      raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
+      pickup_response = PickupResponse.new(request: last_request, response:)
+
+      if response.blank?
+        pickup_response.error = Interstellar::ResponseError.new('API Error: Blank response')
+        return pickup_response
+      end
 
       error = response.dig('OnTracPickupResponse', 'Error')
 
       unless error.blank?
-        error = error.capitalize
-        error = Interstellar::ResponseError.new("API Error: #{error}")
-
-        return Interstellar::PickupResponse.new(error:, labels:)
+        pickup_response.error = Interstellar::ResponseError.new(error.capitalize)
+        return pickup_response
       end
 
       pickup_number = response.dig('OnTracPickupResponse', 'Tracking')
 
-      error = pickup_number.blank? ? Interstellar::ResponseError.new('API Error: Unknown response') : nil
-      Interstellar::PickupResponse.new(error:, labels:, pickup_number:)
+      if pickup_number.blank?
+        pickup_response.error = Interstellar::ResponseError.new('Blank pickup number')
+        return pickup_response
+      end
+
+      pickup_response.pickup_number = pickup_number
+      pickup_response
     end
 
     def parse_shipment_response(response)
