@@ -205,6 +205,7 @@ module Interstellar
         raise Interstellar::ResponseError, "API Error: #{self.class.name}: Unknown response:\n#{response.inspect}"
       end
 
+      raise Interstellar::ShipmentNotFoundError if response.body.downcase.include?('please enter a valid bol')
       raise Interstellar::ShipmentNotFoundError if response.body.downcase.include?('please enter a valid pro')
 
       html = Nokogiri::HTML(response.body)
