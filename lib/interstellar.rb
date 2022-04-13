@@ -25,7 +25,6 @@ require 'interstellar/models'
 
 require 'interstellar/carrier'
 require 'interstellar/contact'
-require 'interstellar/location'
 require 'interstellar/package_item'
 require 'interstellar/package'
 require 'interstellar/packaging'
