@@ -195,38 +195,40 @@ module Interstellar
 
     def parse_tracking_response(tracking_number)
       url = "#{build_url(:track)}wbtn=PRO&wpro1=#{tracking_number}"
-      save_request({ url: })
+      tracking_response = TrackingResponse.new(carrier: self, request: url)
+
+      save_request(url)
 
       begin
         response = HTTParty.get(url)
-        if !response.code == 200
-          if response.code == 404
-            raise Interstellar::ShipmentNotFoundError
-          else
-            raise Interstellar::ResponseError, "API Error: #{self.class.name}: HTTP #{response.code}"
-          end
-        end
-      rescue StandardError
-        raise Interstellar::ResponseError, "API Error: #{self.class.name}: Unknown response:\n#{response.inspect}"
+      rescue StandardError => e
+        tracking_response.assign_attributes(e:)
       end
 
-      raise Interstellar::ShipmentNotFoundError if response.body.downcase.include?('please enter a valid bol')
-      raise Interstellar::ShipmentNotFoundError if response.body.downcase.include?('please enter a valid pro')
+      case response.code
+      when 400
+        tracking_response.assign_attributes(error: ShipmentNotFoundError.new)
+        return tracking_response
+      else
+        unless code == 200
+          tracking_response.assign_attributes(error: ResponseError.new("HTTP #{response.code}"))
+          return tracking_response
+        end
+      end
+
+      tracking_response.error = ShipmentNotFoundError.new if response.body.downcase.include?('please enter a valid')
+
+      return tracking_response unless tracking_response.error.blank?
 
       html = Nokogiri::HTML(response.body)
       tracking_table = html.css('.newtables2')[0]
 
-      if tracking_table.blank?
-        status = "API Error: #{self.class.name}: Unknown response (missing tracking table):\n#{response.inspect}"
-        warn status
+      tracking_response.response = html
 
-        return TrackingResponse.new(
-          carrier: self,
-          request: last_request,
-          response: html.to_s,
-          status:,
-          tracking_number:
-        )
+      if tracking_table.blank?
+        tracking_response.error = ResponseError.new('Missing tracking table')
+
+        return tracking_response
       end
 
       actual_delivery_date = nil
@@ -259,15 +261,9 @@ module Interstellar
 
         # Some carriers do not provide times 👎
         date_time = if tr.css('td')[3].blank?
-                      parse_api_date(
-                        tr.css('td')[2].text.squish.strip,
-                        location
-                      )
+                      parse_api_date(tr.css('td')[2].text.squish.strip, location)
                     else
-                      parse_api_date_time(
-                        "#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish.strip,
-                        location
-                      )
+                      parse_api_date_time("#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish.strip, location)
                     end
 
         case event_key
@@ -290,20 +286,19 @@ module Interstellar
 
       status = shipment_events.last&.type_code
 
-      TrackingResponse.new(
+      tracking_response.assign_attributes(
         actual_delivery_date:,
-        carrier: self,
         destination: receiver_address,
         estimated_delivery_date:,
         origin: shipper_address,
-        request: last_request,
-        response: html.to_s,
         scheduled_delivery_date:,
         ship_time:,
         shipment_events:,
         status:,
         tracking_number:
       )
+
+      tracking_response
     end
 
     # Rates

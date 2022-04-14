@@ -547,8 +547,12 @@ module Interstellar
     end
 
     def parse_tracking_response(response)
-      raise Interstellar::ShipmentNotFoundError unless response.dig(:tracktrace_response, :return, :currentstatus,
-                                                                    :errorcode).blank?
+      tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
+
+      unless response.dig(:tracktrace_response, :return, :currentstatus, :errorcode).blank?
+        tracking_response.error = ShipmentNotFoundError.new
+        return tracking_response
+      end
 
       receiver_location = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :city).titleize,
@@ -651,19 +655,18 @@ module Interstellar
                                     end.any?
       status = :delivered if shipment_events.select { |shipment_event| shipment_event.type_code == :delivered }.any?
 
-      TrackingResponse.new(
+      tracking_response.assign_attributes(
         actual_delivery_date:,
-        carrier: self,
         destination: receiver_location,
         origin: shipper_location,
-        request: last_request,
-        response:,
         scheduled_delivery_date:,
         ship_time:,
         shipment_events:,
         status:,
         tracking_number:
       )
+
+      tracking_response
     end
   end
 end

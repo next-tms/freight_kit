@@ -621,6 +621,8 @@ module Interstellar
     end
 
     def parse_tracking_response(response)
+      tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
+
       actual_delivery_date = nil
       estimated_delivery_date = nil
       receiver_location = nil
@@ -674,20 +676,19 @@ module Interstellar
 
       tracking_number = api_events.last['airbillNumber']
 
-      TrackingResponse.new(
+      tracking_response.assign_attributes(
         actual_delivery_date:,
-        carrier: self,
         destination: receiver_location,
         estimated_delivery_date:,
         origin: shipper_location,
-        request: last_request,
-        response:,
         scheduled_delivery_date:,
         ship_time:,
         shipment_events:,
         status:,
         tracking_number:
       )
+
+      tracking_response
     end
   end
 end

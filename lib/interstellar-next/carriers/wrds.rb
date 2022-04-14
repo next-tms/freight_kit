@@ -29,9 +29,8 @@ module Interstellar
     # Rates
 
     # Tracking
-    def find_tracking_info(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_tracking_response(tracking_number, options)
+    def find_tracking_info(tracking_number)
+      parse_tracking_response(tracking_number)
     end
 
     def find_tracking_info_implemented?
@@ -157,15 +156,17 @@ module Interstellar
       DateTime.new(local_date_time:, location:)
     end
 
-    def parse_tracking_response(tracking_number, options = {})
-      options = @options.merge(options)
+    def parse_tracking_response(tracking_number)
+      tracking_response = TrackingResponse.new(carrier: self)
 
-      browser = Watir::Browser.new(*options[:watir_args])
-      browser.goto build_url(:track)
+      browser = Watir::Browser.new(*@options[:watir_args])
+      browser.goto(build_url(:track))
 
       browser.text_field(name: 'ctl00$cphMain$txtProNumber').set(tracking_number)
       browser.button(name: 'ctl00$cphMain$btnSearchProNumber').wait_until(&:present?).click
       browser.element(xpath: '/html/body/form/div[3]/div/div/table/tbody/tr[2]/td[1]/a').wait_until(&:present?).click
+
+      tracking_response.response = browser.html
 
       html = browser.table(id: 'cphMain_grvLogNotes').inner_html
       html = Nokogiri::HTML(html)
@@ -239,19 +240,18 @@ module Interstellar
       # API events sometimes appear after delivered
       status = actual_delivery_date.blank? ? shipment_events.last&.type_code : :delivered
 
-      TrackingResponse.new(
+      tracking_response.assign_attributes(
         actual_delivery_date:,
-        carrier: self,
         destination: receiver_location,
         origin: shipper_location,
-        request: last_request,
-        response: html.to_s,
         scheduled_delivery_date:,
         ship_time:,
         shipment_events:,
         status:,
         tracking_number:
       )
+
+      tracking_response
     end
   end
 end
