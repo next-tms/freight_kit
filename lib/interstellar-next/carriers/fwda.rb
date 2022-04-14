@@ -144,7 +144,11 @@ module Interstellar
     # Rates
 
     def find_rates(shipment:)
-      validate_packages(shipment.packages)
+      begin
+        validate_packages(shipment.packages)
+      rescue UnserviceableError => e
+        return RateResponse.new(error: e)
+      end
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit(request))
@@ -544,12 +548,24 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      raise ResponseError, 'API Error: Unknown response' if response.blank?
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if response.blank?
+        rate_response.error = ResponseError.new('API Error: Unknown response')
+        return rate_response
+      end
 
       error = response.key?('errorMessage')
-      raise ResponseError, error unless error.blank?
 
-      raise ResponseError, 'API Error: Cost is blank' if response['quoteTotal'].blank?
+      unless error.blank?
+        rate_response.error = ResponseError.new(error)
+        return rate_response
+      end
+
+      if response['quoteTotal'].blank?
+        rate_response.error = ResponseError.new('Cost is blank')
+        return rate_response
+      end
 
       transit_days = response['transitDaysTotal']
 
@@ -565,23 +581,20 @@ module Interstellar
         prices << Price.new(blame: :api, cents:, description:)
       end
 
-      RateResponse.new(
-        rates: [
-          Rate.new(
-            carrier: self,
-            carrier_name: self.class.name,
-            currency: 'USD',
-            scac: self.class.scac.upcase,
-            service_name: :standard,
-            shipment:,
-            prices:,
-            transit_days:,
-            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-          )
-        ],
-        request: last_request,
-        response:
+      rate = Rate.new(
+        carrier: self,
+        carrier_name: self.class.name,
+        currency: 'USD',
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
+        prices:,
+        transit_days:,
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
+
+      rate_response.rates = [rate]
+      rate_response
     end
 
     def charge_line_item_description(charge_line_item)

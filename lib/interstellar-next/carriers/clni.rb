@@ -43,9 +43,13 @@ module Interstellar
     end
 
     # Rates
+
     def find_rates(shipment:)
-      validate_packages(shipment.packages)
-      raise UnserviceableError, 'Must be fewer than 10 items altogether' if shipment.packages.sum(&:quantity) > 10
+      begin
+        validate_packages(shipment.packages)
+      rescue UnserviceableError => e
+        return RateResponse.new(error: e)
+      end
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit_soap(:rates, request))
@@ -57,6 +61,12 @@ module Interstellar
 
     def find_rates_with_declared_value?
       false # API allows it but doesn't quote correctly per support
+    end
+
+    def validate_packages(packages)
+      raise UnserviceableError, 'Must be fewer than 10 items altogether' if shipment.packages.sum(&:quantity) > 10
+
+      super
     end
 
     # Tracking
@@ -296,25 +306,42 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if response.blank?
+        rate_response.error = ResponseError.new('Blank response')
+        return rate_response
+      end
 
       error = response.dig(:get_rating_response, :get_rating_result, :rating_output, :message)
 
       unless error.blank?
         if error.include?('do not service this lane')
-          raise Interstellar::UnserviceableError,
-                'Incorrect ZIP code or no service available at origin and/or destination'
+          rate_response.error = UnserviceableError.new(
+            'Incorrect ZIP code or no service available at origin and/or destination'
+          )
+          return rate_response
         end
 
         pretty_error = error.strip.gsub('can not', 'cannot')
-        raise Interstellar::ResponseError, pretty_error
+
+        rate_response.error = ResponseError.new(pretty_error)
+        return rate_response
       end
 
       result = response.dig(:get_rating_response, :get_rating_result, :rating_output)
-      raise Interstellar::ResponseError, 'API Error: Blank response' if result.blank?
+
+      if result.blank?
+        rate_response.error = ResponseError.new('Blank response')
+        return rate_response
+      end
 
       cents = parse_amount(result[:standard_total_rate])
-      raise Interstellar::ResponseError, 'Cost is blank' if cents.blank?
+
+      if cents.blank?
+        rate_response.error = ResponseError.new('Cost is blank')
+        return rate_response
+      end
 
       prices = []
       prices << Price.new(blame: :api, cents:, description: 'Freight')
@@ -331,24 +358,21 @@ module Interstellar
 
       transit_days = response[:transit_days].to_i
 
-      RateResponse.new(
-        rates: [
-          Rate.new(
-            carrier: self,
-            carrier_name: self.class.name,
-            currency: 'USD',
-            estimate_reference: nil,
-            scac: self.class.scac.upcase,
-            service_name: :standard,
-            shipment:,
-            prices:,
-            transit_days:,
-            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-          )
-        ],
-        response:,
-        request: last_request
+      rate = Rate.new(
+        carrier: self,
+        carrier_name: self.class.name,
+        currency: 'USD',
+        estimate_reference: nil,
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
+        prices:,
+        transit_days:,
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
+
+      rate_response.rates = [rate]
+      rate_response
     end
 
     def accessorial_output_description(accessorial_output)

@@ -45,7 +45,11 @@ module Interstellar
     # Rates
 
     def find_rates(shipment:)
-      validate_packages(shipment.packages)
+      begin
+        validate_packages(shipment.packages)
+      rescue UnserviceableError => e
+        return RateResponse.new(error: e)
+      end
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit_soap(:rates, request))
@@ -266,23 +270,31 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      raise ResponseError, 'Unknown response' if response.blank?
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if response.blank?
+        rate_response.error = ResponseError.new('Unknown response')
+        return rate_response
+      end
 
       error = response.dig(:get_rates_response, :get_rates_result, :return_line)
       error ||= response.dig(:get_rates_response, :get_rates_result, :rate_error)
 
       if error
-        raise InvalidCredentialsError, error if error.downcase.include?('not a valid customer code')
-        raise UnserviceableError, error if error.downcase.include?('not a direct service point')
+        rate_response.error = InvalidCredentialsError.new(error) if error.downcase.include?('not a valid customer code')
 
-        raise ResponseError, "API Error: #{error}" if error
+        rate_response.error = UnserviceableError.new(error) if error.downcase.include?('not a direct service point')
+
+        rate_response.error = ResponseError.new(error) if rate_response.error.blank?
+        return rate_response
       end
 
       quote_number = response.dig(:get_rates_response, :get_rates_result, :rate_quote_number)
       raise Interstellar::UnserviceableError if quote_number.blank?
 
       if response.dig(:get_rates_response, :get_rates_result, :totals).blank?
-        raise Interstellar::ResponseError, 'API Error: Cost is empty'
+        rate_response.error = ResponseError.new('Cost is empty')
+        return rate_response
       end
 
       transit_days = response.dig(:get_rates_response, :get_rates_result, :transit_days)&.to_i
@@ -307,24 +319,21 @@ module Interstellar
         prices << Price.new(blame: :api, cents:, description:)
       end
 
-      RateResponse.new(
-        rates: [
-          Rate.new(
-            carrier_name: self.class.name,
-            carrier: self,
-            currency: 'USD',
-            estimate_reference:,
-            prices:,
-            scac: self.class.scac.upcase,
-            service_name: :standard,
-            shipment:,
-            transit_days:,
-            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-          )
-        ],
-        request: last_request,
-        response:
+      rate = Rate.new(
+        carrier_name: self.class.name,
+        carrier: self,
+        currency: 'USD',
+        estimate_reference:,
+        prices:,
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
+        transit_days:,
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
+
+      rate_response.rates = [rate]
+      rate_response
     end
 
     def shipment_detail_description(shipment_detail)

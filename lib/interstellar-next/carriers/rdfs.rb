@@ -55,7 +55,11 @@ module Interstellar
     # Rates
 
     def find_rates(shipment:)
-      validate_packages(shipment.packages)
+      begin
+        validate_packages(shipment.packages)
+      rescue UnserviceableError => e
+        return RateResponse.new(error: e)
+      end
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit_soap(:rates, request))
@@ -235,19 +239,31 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      raise Interstellar::ResponseError, 'API Error: Unknown response' unless response
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if response.blank?
+        rate_response.error = ResponseError.new('Unknown response')
+        return rate_response
+      end
 
       unless response[:error].blank?
         ['no standard service', 'not in the standard pickup area'].each do |message|
-          raise Interstellar::UnserviceableError, response[:error] if response[:error].downcase.include?(message)
+          if response[:error].downcase.include?(message)
+            rate_response.error = UnserviceableError.new(response[:error])
+            return rate_response
+          end
         end
 
-        raise Interstellar::ResponseError, response[:error]
+        rate_response.error = ResponseError.new(response[:error])
+        return rate_response
       end
 
       result = response.dig(:rate_quote_by_account_response, :rate_quote_by_account_result)
 
-      raise Interstellar::ResponseError, 'API Error: Cost is empty' if result[:net_charge].blank?
+      if result[:net_charge].blank?
+        rate_response.error = ResponseError.new('Cost is empty')
+        return rate_response
+      end
 
       estimate_reference = result.dig(:quote_number)
       rate_details = result.dig(:rate_details, :quote_detail)
@@ -273,24 +289,21 @@ module Interstellar
         )
       end
 
-      RateResponse.new(
-        rates: [
-          Rate.new(
-            carrier: self,
-            carrier_name: self.class.name,
-            currency: 'USD',
-            estimate_reference:,
-            scac: self.class.scac.upcase,
-            service_name: :standard,
-            shipment:,
-            prices:,
-            transit_days:,
-            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-          )
-        ],
-        request: last_request,
-        response:
+      rate = Rate.new(
+        carrier: self,
+        carrier_name: self.class.name,
+        currency: 'USD',
+        estimate_reference:,
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
+        prices:,
+        transit_days:,
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
+
+      rate_response.rates = [rate]
+      rate_response
     end
 
     # Tracking

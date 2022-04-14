@@ -107,7 +107,11 @@ module Interstellar
     # Rates
 
     def find_rates(shipment:)
-      validate_packages(shipment.packages)
+      begin
+        validate_packages(shipment.packages)
+      rescue UnserviceableError => e
+        return RateResponse.new(error: e)
+      end
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit(request))
@@ -448,7 +452,12 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      raise Interstellar::ResponseError, 'API Error: Blank response' if response.blank?
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if response.blank?
+        rate_response.error = ResponseError.new('Blank response')
+        return rate_response
+      end
 
       error = response.dig('OnTracRateResponse', 'Error')
       error = response.dig('OnTracRateResponse', 'Shipments', 'Error') if error.blank?
@@ -460,13 +469,20 @@ module Interstellar
       unless error.blank?
         error = error.capitalize
 
-        raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('invalid username')
+        if error.downcase.include?('invalid username')
+          rate_response.error = InvalidCredentialsError.new(error)
+          return rate_response
+        end
 
-        raise Interstellar::UnserviceableError, error if error.downcase.include?('no valid service')
+        if error.downcase.include?('no valid service')
+          rate_response.error = UnserviceableError.new(error)
+          return rate_response
+        end
 
-        raise Interstellar::UnserviceableError, error if error.downcase.include?('not serviced')
+        rate_response.error = UnserviceableError.new(error) if error.downcase.include?('not serviced')
 
-        raise Interstellar::ResponseError, "API Error: #{error}"
+        rate_response.error = ResponseError.new(error)
+        return rate_response
       end
 
       prices = []
@@ -488,23 +504,20 @@ module Interstellar
         prices << Price.new(blame: :api, cents:, description: 'Fuel charge')
       end
 
-      RateResponse.new(
-        rates: [
-          Rate.new(
-            carrier_name: self.class.name,
-            carrier: self,
-            currency: 'USD',
-            prices:,
-            scac: self.class.scac.upcase,
-            service_name: :standard,
-            shipment:,
-            transit_days:,
-            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-          )
-        ],
-        request: last_request,
-        response:
+      rate = Rate.new(
+        carrier_name: self.class.name,
+        carrier: self,
+        currency: 'USD',
+        prices:,
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
+        transit_days:,
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
+
+      rate_response.rates = [rate]
+      rate_response
     end
 
     # Tracking

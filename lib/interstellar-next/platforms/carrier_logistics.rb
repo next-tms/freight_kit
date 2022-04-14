@@ -33,7 +33,11 @@ module Interstellar
     # Rates
 
     def find_rates(shipment:)
-      validate_packages(shipment.packages, @options[:tariff])
+      begin
+        validate_packages(shipment.packages, @options[:tariff])
+      rescue UnserviceableError => e
+        return RateResponse.new(error: e)
+      end
 
       params = build_rate_params(shipment:)
       parse_rate_response(shipment:, response: commit(:rates, params:))
@@ -370,23 +374,35 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      raise Interstellar::ResponseError, 'API Error: Unknown response' if response.blank?
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if response.blank?
+        rate_response.error = ResponseError.new('Unknown response')
+        return rate_response
+      end
 
       if response.is_a?(String) && response&.include?('WebSpeed error')
-        raise Interstellar::ResponseError, 'API Error: Temporary error (CarrierLogistics WebSpeed error)'
+        rate_response.error = ResponseError.new('Temporary error (WebSpeed error)')
+        return rate_response
       end
 
       error = response.dig('error', 'errormessage')
 
       unless error.blank?
-        raise Interstellar::InvalidCredentialsError if error.downcase.include?('invalid username/password')
-        raise Interstellar::UnserviceableError, error if error.downcase.include?('is not available')
-        raise Interstellar::UnserviceableError, error if error.downcase.include?('out of the serviceable area')
+        rate_response.error = InvalidCredentialsError.new if error.downcase.include?('invalid username/password')
 
-        raise ResponseError, "API Error: #{error}"
+        if error.downcase.include?('is not available') || error.downcase.include?('out of the serviceable area')
+          rate_response.error = UnserviceableError.new(error)
+        end
+
+        rate_response.error ResponseError.new(error) if rate_response.error.blank?
+        return rate_response.error
       end
 
-      raise ResponseError, 'Cost is blank' if response.dig('ratequote', 'quotetotal').blank?
+      if response.dig('ratequote', 'quotetotal').blank?
+        rate_response.error = ResponseError.new('Cost is blank')
+        return rate_response
+      end
 
       total_cents = parse_amount(response.dig('ratequote', 'quotetotal'))
 
@@ -428,24 +444,21 @@ module Interstellar
         prices << Price.new(blame: :tariff, cents:, description: 'Overlength fees') unless cents.zero?
       end
 
-      RateResponse.new(
-        rates: [
-          Rate.new(
-            carrier: self,
-            carrier_name: self.class.name,
-            currency: 'USD',
-            estimate_reference:,
-            scac: self.class.scac.upcase,
-            service_name: :standard,
-            shipment:,
-            prices:,
-            transit_days:,
-            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-          )
-        ],
-        request: last_request,
-        response:
+      rate = Rate.new(
+        carrier: self,
+        carrier_name: self.class.name,
+        currency: 'USD',
+        estimate_reference:,
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
+        prices:,
+        transit_days:,
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
+
+      rate_response.rates = [rate]
+      rate_response
     end
   end
 end
