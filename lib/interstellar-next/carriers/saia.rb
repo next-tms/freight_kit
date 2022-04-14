@@ -28,8 +28,11 @@ module Interstellar
 
     # Rates
     def find_rates(shipment:)
-      validate_packages(shipment.packages)
-      raise UnserviceableError, 'Must be fewer than 10 items altogether' if shipment.packages.sum(&:quantity) > 10
+      begin
+        validate_packages(shipment.packages)
+      rescue UnserviceableError => e
+        return RateResponse.new(error: e)
+      end
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit_soap(:rates, request))
@@ -43,7 +46,14 @@ module Interstellar
       true
     end
 
+    def validate_packages(packages)
+      raise UnserviceableError, 'Must be fewer than 10 items altogether' if shipment.packages.sum(&:quantity) > 10
+
+      super
+    end
+
     # Tracking
+
     def find_tracking_info(tracking_number)
       request = build_tracking_request(tracking_number)
       parse_tracking_response(commit_soap(:track, request))
@@ -172,7 +182,12 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
-      raise ResponseError, 'API Error: Unknown response' if response.blank?
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if response.blank?
+        rate_response.error = ResponseError.new('Unknown response')
+        return rate_response
+      end
 
       error = response.dig(:create_response, :create_result, :code)
 
@@ -181,21 +196,28 @@ module Interstellar
 
         case error
         when 'DNF'
-          raise Interstellar::UnserviceableError, "#{error}: #{message}"
+          rate_response.error = UnserviceableError.new("#{error}: #{message}")
+          return rate_response
         when 'S10'
-          raise Interstellar::UnserviceableError, "#{error}: #{message}"
+          rate_response.error = UnserviceableError.new("#{error}: #{message}")
+          return rate_response
         end
 
         if message.downcase.include?('must not exceed 10 lines')
-          raise Interstellar::UnserviceableError, "#{error}: #{message}"
+          rate_response.error = UnserviceableError.new("#{error}: #{message}")
+          return rate_response
         end
 
-        raise Interstellar::ResponseError, "#{error}: #{message}"
+        rate_response.error = ResponseError.new("#{error}: #{message}")
+        return rate_response
       end
 
       result = response.dig(:create_response, :create_result)
 
-      raise ResponseError, 'API Error: Cost is blank' if result[:total_invoice].blank?
+      if result[:total_invoice].blank?
+        rate_response.error = ResponseError.new('Cost is blank')
+        return rate_response
+      end
 
       transit_days = result[:standard_service_days].to_i
       estimate_reference = result[:quote_number]
@@ -264,14 +286,12 @@ module Interstellar
         )
       end
 
-      RateResponse.new(
-        rates:,
-        request: last_request,
-        response:
-      )
+      rate_response.rates = rates
+      rate_response
     end
 
     # Tracking
+
     def build_tracking_request(tracking_number)
       request = {
         'request': {

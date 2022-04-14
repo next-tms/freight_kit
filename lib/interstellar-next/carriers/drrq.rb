@@ -537,9 +537,13 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:)
+      rate_response = RateResponse.new(request: last_request, response:)
       response = parse_response(response)
 
-      raise UnserviceableError, 'No rates found' if response.blank?
+      if response.blank?
+        rate_response.error = UnserviceableError.new('No rates found')
+        return rate_response
+      end
 
       rates = []
 
@@ -576,7 +580,8 @@ module Interstellar
         )
       end
 
-      RateResponse.new(rates:, request: last_request, response:)
+      rate_response.rates = rates
+      rate_response
     end
 
     # Tracking

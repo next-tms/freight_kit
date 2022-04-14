@@ -34,7 +34,11 @@ module Interstellar
 
     # Rates
     def find_rates(shipment:)
-      validate_packages(shipment.packages)
+      begin
+        validate_packages(shipment.packages)
+      rescue UnserviceableError => e
+        return RateResponse.new(error: e)
+      end
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit(request))
@@ -203,12 +207,18 @@ module Interstellar
     end
 
     def parse_rate_response(shipment:, response:, tries: 0)
-      raise Interstellar::ResponseError, "API Error: Timeout after #{tries * 5} seconds" if tries > 10
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if tries > 10
+        rate_response.error = ResponseError.new("Timeout after #{tries * 5} seconds")
+        return rate_response
+      end
 
       if response.body.blank?
-        raise Interstellar::InvalidCredentialsError if response.code == 401
+        rate_response.error = InvalidCredentialsError if response.code == 401
 
-        raise Interstellar::ResponseError
+        rate_response.error = ResponseError.new('Unknown response') if rate_response.error.blank?
+        return rate_response
       end
 
       begin
@@ -222,10 +232,11 @@ module Interstellar
 
       unless error.blank?
         if error.include?('one point must be directly serviced')
-          raise Interstellar::UnserviceableError, error.sub(' by SEFL.', '')
-        else
-          raise Interstellar::ResponseError, "API Error: #{error}"
+          rate_response.error = UnserviceableError.new(error.sub(' by SEFL.', ''))
         end
+
+        rate_response.error = ResponseError.new(error) if rate_response.error.blank?
+        return rate_response
       end
 
       url = response['detailQuoteLocation'].gsub('\\', '')
@@ -238,13 +249,18 @@ module Interstellar
         response = commit(request)
 
         if response.body.blank?
-          raise Interstellar::InvalidCredentialsError if response.code == 401
+          rate_response.error = InvalidCredentialsError if response.code == 401
 
-          raise Interstellar::ResponseError
+          rate_response.error = ResponseError.new('Unknown response') if rate_response.error.blank?
+          return rate_response
         end
 
         response = JSON.parse(response.body)
-        raise Interstellar::ResponseError if response.blank?
+
+        if response.blank?
+          rate_response.error = ResponseError.new('Unknown response')
+          return rate_response
+        end
 
         error = response['errorMessage']
 
@@ -254,14 +270,18 @@ module Interstellar
             tries += 1
             next
           else
-            raise Interstellar::ResponseError, "API Error: #{error}"
+            rate_response.error = ResponseError.new(error)
+            return rate_response
           end
         end
 
         tries = 50
       end
 
-      raise Interstellar::ResponseError, 'API Error: Cost is empty' if response['rateQuote'].blank?
+      if response['rateQuote'].blank?
+        rate_response.error = ResponseError.new('Cost is empty')
+        return rate_response
+      end
 
       estimate_reference = response['quoteNumber']
       transit_days = response['transitTime'].to_i
@@ -285,24 +305,21 @@ module Interstellar
         prices << Price.new(blame: :api, cents:, description:)
       end
 
-      RateResponse.new(
-        rates: [
-          Rate.new(
-            carrier: self,
-            carrier_name: self.class.name,
-            currency: 'USD',
-            estimate_reference:,
-            scac: self.class.scac.upcase,
-            service_name: :standard,
-            shipment:,
-            prices:,
-            transit_days:,
-            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-          )
-        ],
-        request: last_request,
-        response:
+      rate = Rate.new(
+        carrier: self,
+        carrier_name: self.class.name,
+        currency: 'USD',
+        estimate_reference:,
+        scac: self.class.scac.upcase,
+        service_name: :standard,
+        shipment:,
+        prices:,
+        transit_days:,
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
+
+      rate_response.rates = [rate]
+      rate_response
     end
 
     # Tracking
