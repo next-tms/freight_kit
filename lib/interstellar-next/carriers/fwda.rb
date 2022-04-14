@@ -58,37 +58,43 @@ module Interstellar
 
     # Documents
 
-    def find_bol(tracking_number, options = {})
-      options = @options.merge(options)
-
+    def pod(tracking_number)
       # Retrieve list of available documents first
       documents = commit(build_documents_request(tracking_number))
-      doc_id = get_doc_id(documents:, tracking_number:, type: :bol)
+
+      begin
+        doc_id = get_doc_id(documents:, tracking_number:, type: :pod)
+      rescue StandardError => e
+        return DocumentResponse.new(e:)
+      end
 
       request = build_document_request(doc_id:, tracking_number:)
-      document = commit(request)
+      response = commit(request)
 
-      parse_document_response(:bol, tracking_number, document, options)
+      parse_document_response(:pod, tracking_number, response)
     end
 
-    def find_bol_implemented?
+    def pod_implemented?
       true
     end
 
-    def find_pod(tracking_number, options = {})
-      options = @options.merge(options)
-
+    def scanned_bol(tracking_number, _options = {})
       # Retrieve list of available documents first
       documents = commit(build_documents_request(tracking_number))
-      doc_id = get_doc_id(documents:, tracking_number:, type: :pod)
+
+      begin
+        doc_id = get_doc_id(documents:, tracking_number:, type: :bol)
+      rescue StandardError => e
+        return DocumentResponse.new(e:)
+      end
 
       request = build_document_request(doc_id:, tracking_number:)
-      document = commit(request)
+      response = commit(request)
 
-      parse_document_response(:pod, tracking_number, document, options)
+      parse_document_response(:bol, tracking_number, response)
     end
 
-    def find_pod_implemented?
+    def scanned_bol_implemented?
       true
     end
 
@@ -264,14 +270,14 @@ module Interstellar
 
       response = case method
                  when :post
-                   HTTParty.post(url, headers:, body:)
+                   HTTParty.post(url, headers:, body:, debug_output: $stdout)
                  else
-                   HTTParty.get(url, headers:)
+                   HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
       raise Interstellar::ResponseError, "HTTP #{response.code}" unless response.code == 200
 
-      return response.body unless response.headers.content_type == 'application/json'
+      return response unless response.headers.content_type == 'application/json'
 
       json = JSON.parse(response.body)
       error = json.is_a?(Array) ? nil : json['errorMessage']
@@ -330,18 +336,8 @@ module Interstellar
       request
     end
 
-    def parse_document_response(type, tracking_number, document, options = {})
-      options = @options.merge(options)
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
-      file = File.new(path, 'w')
-
-      File.open(file.path, 'wb') { |f| f.write(document) }
-
-      File.exist?(path) ? path : false
+    def parse_document_response(_type, _tracking_number, response)
+      DocumentResponse.new(content_type: response.headers['content-type'], data: response.body, request: last_request)
     end
 
     # Locations

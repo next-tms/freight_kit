@@ -32,22 +32,20 @@ module Interstellar
       true
     end
 
-    def find_bol(tracking_number, options = {})
-      options = @options.merge(options)
-      request = build_document_request(:bol, tracking_number, options)
-      parse_bol_response(commit(request), :bol, tracking_number, options)
+    def bol(tracking_number)
+      request = build_document_request(:bol, tracking_number)
+      parse_bol_response(commit(request), :bol, tracking_number)
     end
 
-    def find_bol_implemented?
+    def bol_implemented?
       true
     end
 
-    def find_pod(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_pod_response(tracking_number, options)
+    def pod(tracking_number)
+      parse_pod_response(tracking_number)
     end
 
-    def find_pod_implemented?
+    def pod_implemented?
       true
     end
 
@@ -187,42 +185,40 @@ module Interstellar
       request
     end
 
-    def parse_bol_response(response, type, tracking_number, options = {})
-      options = @options.merge(options)
+    def parse_bol_response(response, _type, _tracking_number)
       response = parse_response(response)
+      document_response = DocumentResponse.new(request: last_request, response:)
 
       file_bytes = response['FileBytes']
-      raise Interstellar::DocumentNotFoundError if file_bytes.blank?
 
-      data = Base64.decode64(file_bytes)
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
-
-      File.open(path, 'wb') do |f|
-        f.write(data)
+      if file_bytes.blank?
+        document_response.error = DocumentNotFoundError.new
+        return document_response
       end
 
-      path
+      data = Base64.decode64(file_bytes)
+
+      document_response.assign_attributes(content_type: 'application/pdf', data:)
+      document_response
     end
 
-    def parse_pod_response(tracking_number, options = {})
-      options = @options.merge(options)
+    def parse_pod_response(tracking_number)
+      document_response = DocumentResponse.new
 
-      request = build_document_request(:pod, tracking_number, options)
-      browser = Watir::Browser.new(*options[:watir_args])
+      request = build_document_request(:pod, tracking_number)
+      browser = Watir::Browser.new(*@options[:watir_args])
       browser.goto(request[:url])
 
       if browser.html.downcase.include?('unable to process request')
         browser.close
-        raise ResponseError
+
+        document_response.error = ResponseError.new
+        return document_response
       end
 
       credentials = {
-        username: options[:website_username] || options[:username],
-        password: options[:website_password] || options[:password]
+        username: @options[:website_username] || @options[:username],
+        password: @options[:website_password] || @options[:password]
       }
 
       begin
@@ -231,7 +227,9 @@ module Interstellar
         browser.button(name: 'submitbutton').click
       rescue Selenium::WebDriver::Error::UnexpectedAlertOpenError
         browser.close
-        raise InvalidCredentialsError
+
+        document_response.error = InvalidCredentialsError.new
+        return document_response
       end
 
       logout_url = 'https://rrd.mercurygate.net/MercuryGate/login/urlRedirect.jsp?Logout=true'
@@ -280,7 +278,9 @@ module Interstellar
       rescue Watir::Wait::TimeoutError
         # POD not yet available
         browser.close
-        raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found"
+
+        document_response.error = Interstellar::DocumentNotFoundError.new
+        return document_response
       end
 
       html = browser
@@ -303,29 +303,25 @@ module Interstellar
         url = text if url.blank? || !url.include?('hubtran') # Prefer HubTran
       end
 
-      raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found" if url.blank?
-
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} POD.pdf")
-             else
-               options[:path]
-             end
-      file = File.new(path, 'w')
-
-      File.open(file.path, 'wb') do |file|
-        URI.parse(url).open do |input|
-          file.write(input.read)
-        end
-      rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found"
+      if url.blank?
+        document_response.error = Interstellar::DocumentNotFoundError.new
+        return document_response
       end
 
-      unless MimeMagic.by_magic(File.open(path)).type == 'application/pdf'
-        file = Magick::ImageList.new(file.path)
-        file.write(path)
+      begin
+        response = HTTParty.get(url)
+      rescue StandardError => e
+        document_response.error = e
+        return document_response
       end
 
-      File.exist?(path) ? path : false
+      unless response.code == 200
+        document_response.error = DocumentNotFoundError.new
+        return document_response
+      end
+
+      document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
+      document_response
     end
 
     # Pickups

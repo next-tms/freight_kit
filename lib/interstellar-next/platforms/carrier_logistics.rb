@@ -13,25 +13,25 @@ module Interstellar
     ].freeze
 
     # Documents
-    def find_bol(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_document_response(:bol, tracking_number, options)
+
+    def pod(tracking_number)
+      parse_document_response(:pod, tracking_number)
     end
 
-    def find_bol_implemented?
+    def pod_implemented?
       true
     end
 
-    def find_pod(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_document_response(:pod, tracking_number, options)
+    def scanned_bol(tracking_number)
+      parse_document_response(:bol, tracking_number)
     end
 
-    def find_pod_implemented?
+    def scanned_bol_implemented?
       true
     end
 
     # Rates
+
     def find_rates(shipment:)
       validate_packages(shipment.packages, @options[:tariff])
 
@@ -44,6 +44,7 @@ module Interstellar
     end
 
     # Tracking
+
     def find_tracking_info(tracking_number)
       parse_tracking_response(tracking_number)
     end
@@ -79,9 +80,11 @@ module Interstellar
     end
 
     # Documents
-    def parse_document_response(action, tracking_number, options = {})
-      options = @options.merge(options)
-      browser = Watir::Browser.new(*options[:watir_args])
+
+    def parse_document_response(action, tracking_number)
+      document_response = DocumentResponse.new
+
+      browser = Watir::Browser.new(*@options[:watir_args])
       browser.goto(build_url(action))
 
       browser.text_field(name: 'wlogin').set(@options[:username])
@@ -91,17 +94,21 @@ module Interstellar
       downcase_html = browser.html.downcase
 
       EXPIRED_CREDENTIALS_MESSAGES.each do |expired_credentials_message|
-        if downcase_html.include?(expired_credentials_message.downcase)
-          browser.close
-          raise ExpiredCredentialsError
-        end
+        next unless downcase_html.include?(expired_credentials_message.downcase)
+
+        browser.close
+
+        document_response.error = ExpiredCredentialsError.new
+        return document_response
       end
 
       INVALID_CREDENTIALS_MESSAGES.each do |invalid_credentials_message|
-        if downcase_html.include?(invalid_credentials_message.downcase)
-          browser.close
-          raise InvalidCredentialsError
-        end
+        next unless downcase_html.include?(invalid_credentials_message.downcase)
+
+        browser.close
+
+        document_response.error = InvalidCredentialsError.new
+        return document_response
       end
 
       browser.frameset.frames[1].text_field(id: 'menuquicktrack').set(tracking_number)
@@ -116,7 +123,9 @@ module Interstellar
         element.click
       else
         browser.close
-        raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found"
+
+        document_response.error = DocumentNotFoundError.new
+        return document_response
       end
 
       url = nil
@@ -126,29 +135,25 @@ module Interstellar
 
       browser.close
 
-      if url.include?('viewdoc.php')
-        raise Interstellar::ResponseError, "API Error: #{self.class.name}: Documnent cannot be downloaded"
-      elsif url == 'about:blank'
-        raise Interstellar::ResponseError,
-              "API Error: #{self.class.name}: Document cannot be downloaded - link leads to about:blank"
+      if url.include?('viewdoc.php') || url == 'about:blank'
+        document_response.error = ResponseError.new('Documnent cannot be downloaded')
+        return document_response
       end
 
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{self.class.name} #{tracking_number} #{action.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
-      file = File.new(path, 'w')
-
-      File.open(file.path, 'wb') do |file|
-        URI.parse(url).open do |input|
-          file.write(input.read)
-        end
-      rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found"
+      begin
+        response = HTTParty.get(url)
+      rescue StandardError => e
+        document_response.error = e
+        return document_response
       end
 
-      File.exist?(path) ? path : false
+      unless response.code == 200
+        document_response.error = DocumentNotFoundError.new
+        return document_response
+      end
+
+      document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
+      document_response
     end
 
     # Tracking

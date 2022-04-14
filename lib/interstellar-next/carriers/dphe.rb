@@ -26,21 +26,19 @@ module Interstellar
 
     # Documents
 
-    def find_bol(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_document_response(:bol, tracking_number, options)
+    def pod(tracking_number)
+      parse_document_response(:pod, tracking_number)
     end
 
-    def find_bol_implemented?
+    def pod_implemented?
       true
     end
 
-    def find_pod(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_document_response(:pod, tracking_number, options)
+    def scanned_bol(tracking_number)
+      parse_document_response(:bol, tracking_number)
     end
 
-    def find_pod_implemented?
+    def scanned_bol_implemented?
       true
     end
 
@@ -113,20 +111,17 @@ module Interstellar
 
     # Documents
 
-    def parse_document_response(action, tracking_number, options = {})
-      options = @options.merge(options)
-
-      raise ArgumentError if !action || !tracking_number
-      raise ArgumentError if options[:url] && !options[:selenoid]
+    def parse_document_response(action, tracking_number)
+      document_response = DocumentResponse.new
 
       url = request_url(action)
-      browser = Watir::Browser.new(*options[:watir_args])
+      browser = Watir::Browser.new(*@options[:watir_args])
 
       browser.goto(url)
 
       credentials = {
-        username: options[:username],
-        password: options[:password]
+        username: @options[:username],
+        password: @options[:password]
       }
 
       browser.text_field(name: 'dnn$ctr1914$View$TextBox1').set(credentials[:username])
@@ -135,7 +130,9 @@ module Interstellar
 
       if browser.html.downcase.include?('invalid username or password')
         browser.close
-        raise InvalidCredentialsError
+
+        document_response.error = InvalidCredentialsError.new
+        return document_response
       end
 
       browser.text_field(name: 'ctl00$ContentPlaceHolder1$txtProNumber').set(tracking_number)
@@ -146,7 +143,8 @@ module Interstellar
           .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
           .click
       rescue Watir::Exception::UnknownObjectException
-        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
+        document_response.error = DocumentNotFoundError.new
+        return document_response
       end
 
       browser.switch_window
@@ -157,51 +155,63 @@ module Interstellar
 
       if !button_xpath || !browser.element(xpath: button_xpath).exists?
         browser.close
-        raise Interstellar::DocumentNotFoundError
+
+        document_response.error = DocumentNotFoundError.new
+        return document_response
       end
 
       browser.element(xpath: button_xpath).click
 
       if !button_xpath || browser.element(xpath: button_xpath).innertext.downcase.include?('unavailable')
         browser.close
-        raise Interstellar::DocumentNotFoundError
+
+        document_response.error = DocumentNotFoundError.new
+        return document_response
       end
 
       sleep(10) # so Chrome can finish downloading
 
-      tif_path = nil
-      if !options.dig(:selenoid_options, :download_url)
-        tif_path = Dir.glob("#{tmpdir}/*.tif").max_by { |f| File.mtime(f) }
-      else
-        download_url = "#{options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
+      unless @options.dig(:selenoid_options, :download_url).blank?
+        download_url = "#{@options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
         response = HTTParty.get("#{download_url}/?json")
 
         filename = CGI.escape(JSON.parse(response.body)&.last)
-        tif_url = "#{download_url}/#{filename}"
-        tif_path = File.join(tmpdir, "#{tracking_number}_#{::DateTime.current}.tif")
+        url = "#{download_url}/#{filename}"
 
-        File.open(tif_path, 'wb') do |file|
-          HTTParty.get(tif_url, stream_body: true) do |fragment|
-            file.write(fragment)
-          end
+        document_request.request = URI.parse(url)
+
+        begin
+          response = HTTParty.get(url)
+        rescue StandardError => e
+          document_response.error = e
+          return document_response
         end
+
+        browser.close
+
+        unless response.code == 200
+          document_response.error = DocumentNotFoundError.new
+          return document_response
+        end
+
+        document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
+        return document_response
       end
+
+      path = Dir.glob("#{tmpdir}/*.tif").max_by { |f| File.mtime(f) }
+
+      unless File.exist?(path)
+        document_response.error = Interstellar::ResponseError.new
+        return document_response
+      end
+
+      data = File.read(path)
+      content_type = Mimemagic.by_magic(data)
 
       browser.close
 
-      return Interstellar::ResponseError if !tif_path || !File.exist?(tif_path)
-
-      path = if options[:path].blank?
-               File.join(tmpdir, "#{self.class.name} #{tracking_number} #{action.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
-      file = File.new(path, 'w')
-
-      file = Magick::ImageList.new(tif_path)
-      file.write(path)
-
-      File.exist?(path) ? path : false
+      document_response.assign_attributes(content_type:, data:)
+      document_response
     end
 
     # Rates
