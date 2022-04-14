@@ -364,12 +364,9 @@ module Interstellar
         Location.new(
           address1: location['address1'],
           city: location['city'],
-          contact: Contact.new(
-            fax: location['fax'],
-            phone: location['phone']
-          ),
+          province: location['state'],
           country: ActiveUtils::Country.find(location['countrycd']),
-          state: location['state']
+          contact: Contact.new(fax: location['fax'], phone: location['phone'])
         )
       end
 
@@ -646,8 +643,8 @@ module Interstellar
 
         location = Location.new(
           city: api_event['city'].titleize,
-          state: api_event['state'].upcase,
-          zip_code: api_event['zip'].upcase,
+          province: api_event['state'].upcase,
+          postal_code: api_event['zip'].upcase,
           country: ActiveUtils::Country.find(api_event['country'])
         )
 
