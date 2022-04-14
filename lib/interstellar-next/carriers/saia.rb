@@ -298,13 +298,18 @@ module Interstellar
     end
 
     def parse_tracking_response(response)
+      tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
+
       error = if !response
                 'API Error: Unknown response'
               else
                 response.dig(:get_by_pro_number_response, :get_by_pro_number_result, :code)
               end
 
-      raise Interstellar::ShipmentNotFoundError if error
+      unless error.blank?
+        tracking_response.error = ResponseError.new(error)
+        return tracking_response
+      end
 
       search_result = response.dig(:get_by_pro_number_response, :get_by_pro_number_result)
 
@@ -326,7 +331,7 @@ module Interstellar
         ).squish.strip.titleize,
         city: search_result.dig(:consignee, :city)&.squish&.strip&.titleize,
         province: search_result.dig(:consignee, :state)&.strip&.upcase,
-        zip_code: search_result.dig(:consignee, :zipcode)&.strip,
+        postal_code: search_result.dig(:consignee, :zipcode)&.strip,
         country: ActiveUtils::Country.find('USA')
       )
 
@@ -377,19 +382,18 @@ module Interstellar
 
       status = shipment_events.last&.type_code
 
-      TrackingResponse.new(
+      tracking_response.assign_attributes(
         actual_delivery_date:,
-        carrier: self,
         destination: receiver_location,
         origin: shipper_location,
-        request: last_request,
-        response:,
         scheduled_delivery_date:,
         ship_time: pickup_date,
         shipment_events:,
         status:,
         tracking_number:
       )
+
+      tracking_response
     end
   end
 end

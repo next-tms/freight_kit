@@ -332,15 +332,22 @@ module Interstellar
     end
 
     def parse_tracking_response(response)
+      tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
+
       json = JSON.parse(response&.read || '{}')
 
-      raise Interstellar::ShipmentNotFoundError if json['SearchResults'].blank? || response.status[0] != '200'
+      if json['SearchResults'].blank? || response.status[0] != '200'
+        tracking_response.error = ShipmentNotFoundError.new
+        return tracking_response
+      end
 
       search_result = json['SearchResults']&.first
-      raise Interstellar::ShipmentNotFoundError if search_result.blank?
 
       pro = search_result.dig('Shipment', 'ProNumber')&.downcase
-      raise Interstellar::ShipmentNotFoundError if pro.blank? || pro.downcase.include?('not available')
+      if pro.blank? || pro.downcase.include?('not available')
+        tracking_response.error = ShipmentNotFoundError.new
+        return tracking_response
+      end
 
       receiver_location = Location.new(
         city: search_result.dig('Shipment', 'Consignee', 'City').titleize,
@@ -411,19 +418,18 @@ module Interstellar
 
       status = shipment_events.last&.type_code
 
-      TrackingResponse.new(
+      tracking_response.assign_attributes(
         actual_delivery_date:,
-        carrier: self,
         destination: receiver_location,
         origin: shipper_location,
-        request: last_request,
-        response: json,
         scheduled_delivery_date:,
         ship_time:,
         shipment_events:,
         status:,
         tracking_number:
       )
+
+      tracking_response
     end
 
     def parse_tracking_number_from_pickup_number_response(pickup_number, _date, options = {})
