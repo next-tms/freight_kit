@@ -346,7 +346,7 @@ module Interstellar
 
       Location.new(
         city: str.split(', ')[0].titleize,
-        state: str.split(', ')[1].split(' ')[0].upcase,
+        province: str.split(', ')[1].split(' ')[0].upcase,
         country: ActiveUtils::Country.find('USA')
       )
     end
@@ -355,18 +355,19 @@ module Interstellar
       return nil if str.blank?
 
       city = str.squish.strip.titleize
-      state = case city
-              when 'Los Angeles'
-                'CA'
-              when 'Sacramento'
-                'CA'
-              when 'Redding'
-                'CA'
-              when 'West Sacramento'
-                'CA'
-              end
+      province = case city
+                 when 'Los Angeles'
+                   'CA'
+                 when 'Sacramento'
+                   'CA'
+                 when 'Redding'
+                   'CA'
+                 when 'West Sacramento'
+                   'CA'
+                 end
+      country = ActiveUtils::Country.find('USA')
 
-      Location.new(city:, state:, country: ActiveUtils::Country.find('USA'))
+      Location.new(city:, province:, country:)
     end
 
     def parse_api_date_time(date_time, location)
@@ -382,14 +383,10 @@ module Interstellar
       parts = comment.split(delimiters[0])[0].split(delimiters[1])[1].split(',')
 
       city = parts[0].squish.strip.titleize
-      state = parts[1].squish.strip.upcase
+      province = parts[1].squish.strip.upcase
+      country = ActiveUtils::Country.find('USA')
 
-      Location.new(
-        city:,
-        province: state,
-        state:,
-        country: ActiveUtils::Country.find('USA')
-      )
+      Location.new(city:, province:, country:)
     end
 
     def parse_tracking_response(response)
@@ -398,20 +395,22 @@ module Interstellar
 
       search_result = response.dig(:get_tracking_response, :get_tracking_result)
 
+      country = ActiveUtils::Country.find('USA')
+
       shipper_location = Location.new(
         street: search_result[:shipperaddress]&.squish&.strip&.titleize,
         city: search_result[:shipper_city].squish.strip.titleize,
-        state: search_result[:shipper_state].strip.upcase,
+        province: search_result[:shipper_state].strip.upcase,
         postal_code: search_result[:shipper_zip].strip,
-        country: ActiveUtils::Country.find('USA')
+        country:
       )
 
       receiver_location = Location.new(
         street: search_result[:consaddress]&.squish&.strip&.titleize,
         city: search_result[:cons_city].squish.strip.titleize,
-        state: search_result[:cons_state].strip.upcase,
+        province: search_result[:cons_state].strip.upcase,
         postal_code: search_result[:cons_zip].strip,
-        country: ActiveUtils::Country.find('USA')
+        country:
       )
 
       api_date_time = search_result.dig('Shipment', 'DeliveredDateTime')

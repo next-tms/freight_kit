@@ -538,17 +538,11 @@ module Interstellar
       if location
         Location.new(
           city: location[:city],
-          state: location[:state],
-          province: location[:province],
+          province: location[:state],
           country:
         )
       else
-        Location.new(
-          city: code,
-          province: nil,
-          state: nil,
-          country:
-        )
+        Location.new(city: code, country:)
       end
     end
 
@@ -559,14 +553,12 @@ module Interstellar
       receiver_location = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :city).titleize,
         province: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :state).upcase,
-        state: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :state).upcase,
         country: ActiveUtils::Country.find('USA')
       )
 
       shipper_location = Location.new(
         city: response.dig(:tracktrace_response, :return, :currentstatus, :shipper, :city).titleize,
         province: response.dig(:tracktrace_response, :return, :currentstatus, :shipper, :state).upcase,
-        state: response.dig(:tracktrace_response, :return, :currentstatus, :shipper, :state).upcase,
         country: ActiveUtils::Country.find('USA')
       )
 

@@ -316,7 +316,7 @@ module Interstellar
         if str.include?('long beach')
           return Location.new(
             city: 'Long Beach',
-            state: 'CA',
+            province: 'CA',
             country: ActiveUtils::Country.find('USA')
           )
         end
@@ -325,14 +325,10 @@ module Interstellar
       end
 
       city = parts[0].squish.strip.titleize
-      state = parts[1].gsub('.', '').squish.strip.upcase
+      province = parts[1].gsub('.', '').squish.strip.upcase
+      country = ActiveUtils::Country.find('USA')
 
-      Location.new(
-        city:,
-        province: state,
-        state:,
-        country: ActiveUtils::Country.find('USA')
-      )
+      Location.new(city:, province:, country:)
     end
 
     def parse_tracking_response(response)
@@ -349,14 +345,12 @@ module Interstellar
       receiver_location = Location.new(
         city: search_result.dig('Shipment', 'Consignee', 'City').titleize,
         province: search_result.dig('Shipment', 'Consignee', 'State').upcase,
-        state: search_result.dig('Shipment', 'Consignee', 'State').upcase,
         country: ActiveUtils::Country.find('USA')
       )
 
       shipper_location = Location.new(
         city: search_result.dig('Shipment', 'Origin', 'City').titleize,
         province: search_result.dig('Shipment', 'Origin', 'State').upcase,
-        state: search_result.dig('Shipment', 'Origin', 'State').upcase,
         country: ActiveUtils::Country.find('USA')
       )
 

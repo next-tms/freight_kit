@@ -292,7 +292,7 @@ module Interstellar
     def parse_api_location(api_event)
       Location.new(
         city: api_event[:city]&.titleize,
-        state: api_event[:state]&.upcase,
+        province: api_event[:state]&.upcase,
         country: ActiveUtils::Country.find('USA')
       )
     end
@@ -314,7 +314,7 @@ module Interstellar
           " #{search_result.dig(:shipper, :address2) || ''}"
         ).squish.strip.titleize,
         city: search_result.dig(:shipper, :city)&.squish&.strip&.titleize,
-        state: search_result.dig(:shipper, :state)&.strip&.upcase,
+        province: search_result.dig(:shipper, :state)&.strip&.upcase,
         postal_code: search_result.dig(:shipper, :zipcode)&.strip,
         country: ActiveUtils::Country.find('USA')
       )
@@ -325,8 +325,8 @@ module Interstellar
           " #{search_result.dig(:consignee, :address2) || ''}"
         ).squish.strip.titleize,
         city: search_result.dig(:consignee, :city)&.squish&.strip&.titleize,
-        state: search_result.dig(:consignee, :state)&.strip&.upcase,
-        postal_code: search_result.dig(:consignee, :zipcode)&.strip,
+        province: search_result.dig(:consignee, :state)&.strip&.upcase,
+        zip_code: search_result.dig(:consignee, :zipcode)&.strip,
         country: ActiveUtils::Country.find('USA')
       )
 
