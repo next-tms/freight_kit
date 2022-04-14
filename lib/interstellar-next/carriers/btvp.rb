@@ -30,21 +30,19 @@ module Interstellar
 
     # Documents
 
-    def find_bol(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_document_response(:bol, tracking_number, options)
+    def pod(tracking_number)
+      parse_document_response(:pod, tracking_number)
     end
 
-    def find_bol_implemented?
+    def pod_implemented?
       true
     end
 
-    def find_pod(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_document_response(:pod, tracking_number, options)
+    def scanned_bol(tracking_number)
+      parse_document_response(:bol, tracking_number)
     end
 
-    def find_pod_implemented?
+    def scanned_bol_implemented?
       true
     end
 
@@ -149,30 +147,27 @@ module Interstellar
 
     # Documents
 
-    def download_document(type, tracking_number, url, options = {})
-      options = @options.merge(options)
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir,
-                         "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
-      file = File.new(path, 'w')
+    def download_document(_type, _tracking_number, url)
+      document_response = DocumentResponse.new(request: url)
 
-      File.open(file.path, 'wb') do |file|
-        URI.parse(url).open do |input|
-          file.write(input.read)
-        end
-      rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
+      begin
+        response = HTTParty.get(url)
+      rescue StandardError => e
+        document_response.error = e
+        return document_response
       end
 
-      File.exist?(path) ? path : false
+      unless response.code == 200
+        document_response.error = DocumentNotFoundError.new
+        return document_response
+      end
+
+      document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
+      document_response
     end
 
-    def parse_document_response(type, tracking_number, options = {})
-      options = @options.merge(options)
-      browser = Watir::Browser.new(*options[:watir_args])
+    def parse_document_response(type, tracking_number)
+      browser = Watir::Browser.new(*@options[:watir_args])
       browser.goto(build_url(:pod))
 
       browser.text_field(name: 'userid').set(@options[:username])
@@ -235,7 +230,7 @@ module Interstellar
       browser.element(css: "##{link_id}").click
       url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
 
-      ret = download_document(type, tracking_number, url, options)
+      ret = download_document(type, tracking_number, url)
 
       browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').click
       browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click

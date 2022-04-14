@@ -30,21 +30,19 @@ module Interstellar
 
     # Documents
 
-    def find_bol(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_document_response(:bol, tracking_number, options)
+    def pod(tracking_number)
+      parse_document_response(:pod, tracking_number)
     end
 
-    def find_bol_implemented?
+    def pod_implemented?
       true
     end
 
-    def find_pod(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_document_response(:pod, tracking_number, options)
+    def scanned_bol(tracking_number)
+      parse_document_response(:bol, tracking_number)
     end
 
-    def find_pod_implemented?
+    def scanned_bol_implemented?
       true
     end
 
@@ -150,27 +148,21 @@ module Interstellar
 
     # Documents
 
-    def parse_document_response(type, tracking_number, options = {})
+    def parse_document_response(type, tracking_number)
       url = request_url(type).sub('%%TRACKING_NUMBER%%', tracking_number.to_s)
+      document_response = DocumentResponse.new(request: url)
 
       begin
         doc = Nokogiri::HTML(URI.parse(url).open)
       rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
+        document_response.error = Interstellar::DocumentNotFoundError.new
+        return document_response
       end
 
       data = Base64.decode64(doc.css('img').first['src'].split('data:image/jpg;base64,').last)
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
 
-      file = Tempfile.new(binmode: true)
-      file.write(data)
-      file = Magick::ImageList.new(file.path)
-      file.write(path)
-      File.exist?(path) ? path : false
+      document_response.assign_attributes(content_type: 'image/jpeg', data:)
+      document_response
     end
 
     # Rates
