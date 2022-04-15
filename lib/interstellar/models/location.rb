@@ -94,7 +94,7 @@ module Interstellar
     def time_zone
       return nil if country&.code(:alpha2)&.blank? || province.blank? || city.blank?
 
-      Spacetime.lookup(country.code(:alpha2), province, city)
+      Spacetime.lookup(country.code(:alpha2).to_s, province, city)
     end
 
     def type=(value)
