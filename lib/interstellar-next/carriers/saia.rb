@@ -47,7 +47,7 @@ module Interstellar
     end
 
     def validate_packages(packages)
-      raise UnserviceableError, 'Must be fewer than 10 items altogether' if shipment.packages.sum(&:quantity) > 10
+      raise UnserviceableError, 'Must be fewer than 10 items altogether' if packages.sum(&:quantity) > 10
 
       super
     end
