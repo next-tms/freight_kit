@@ -292,8 +292,8 @@ module Interstellar
         browser.text_field(name: 'SHPNAM').set(shipper_name.upcase)
         browser.text_field(name: 'SHPAD1').set(shipment.origin.address1.upcase)
         browser.text_field(name: 'SHPCTY').set(shipment.origin.city.upcase)
-        browser.text_field(name: 'SHPSTA').set(shipment.origin.state.upcase[..1])
-        browser.text_field(name: 'SHPZIP').set(shipment.origin.zip.gsub(/\s+/, '').upcase)
+        browser.text_field(name: 'SHPSTA').set(shipment.origin.province.upcase[..1])
+        browser.text_field(name: 'SHPZIP').set(shipment.origin.postal_code.gsub(/\s+/, '').upcase)
       end
 
       browser.text_field(name: 'DPADAT').set(pickup_from.to_date.strftime('%m/%d/%Y'))
@@ -303,7 +303,7 @@ module Interstellar
       total_weight = shipment.packages.map { |p| p.pounds(:total) }.sum.ceil
 
       browser.text_field(name: 'DSTWT_1').set(total_weight)
-      browser.text_field(name: 'DSDZIP_1').set(shipment.destination.zip.gsub(/\s+/, '').upcase)
+      browser.text_field(name: 'DSDZIP_1').set(shipment.destination.postal_code.gsub(/\s+/, '').upcase)
       browser.text_field(name: 'DSTPC_1').set(shipment.packages.map(&:quantity).sum)
       browser.text_field(name: 'DSPLT_1').set(shipment.packages.map(&:quantity).sum)
 
@@ -382,13 +382,13 @@ module Interstellar
             iam: 'D', # S for shipper, C for consignee, D for third party
             shipper: {
               city: shipment.origin.city.upcase,
-              state: shipment.origin.state.upcase,
-              zip: shipment.origin.zip.gsub(/\s+/, '').upcase
+              state: shipment.origin.province.upcase,
+              zip: shipment.origin.postal_code.gsub(/\s+/, '').upcase
             },
             consignee: {
               city: shipment.destination.city.upcase,
-              state: shipment.destination.state.upcase,
-              zip: shipment.destination.zip.gsub(/\s+/, '').upcase
+              state: shipment.destination.province.upcase,
+              zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase
             },
             accessorialcount: shipment.accessorials.size,
             accessorial: shipment.accessorials.blank? ? [] : accessorials,

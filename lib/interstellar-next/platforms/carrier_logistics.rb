@@ -237,10 +237,10 @@ module Interstellar
 
       actual_delivery_date = nil
       estimated_delivery_date = nil
-      receiver_address = nil
+      destination = nil
       scheduled_delivery_date = nil
       ship_time = nil
-      shipper_address = nil
+      origin = nil
 
       shipment_events = []
       tracking_table.css('tr').reverse.each do |tr|
@@ -273,9 +273,9 @@ module Interstellar
         case event_key
         when :delivered
           actual_delivery_date = date_time
-          receiver_address = location
+          destination = location
         when :picked_up
-          shipper_address = location
+          origin = location
           ship_time = date_time
         end
 
@@ -285,16 +285,16 @@ module Interstellar
       api_estimated_delivery_date = html.css('td.estdeldate')&.text&.split(',')&.last&.strip
 
       unless api_estimated_delivery_date.blank?
-        estimated_delivery_date = parse_api_date(api_estimated_delivery_date, shipper_address)
+        estimated_delivery_date = parse_api_date(api_estimated_delivery_date, origin)
       end
 
       status = shipment_events.last&.type_code
 
       tracking_response.assign_attributes(
         actual_delivery_date:,
-        destination: receiver_address,
+        destination:,
         estimated_delivery_date:,
-        origin: shipper_address,
+        origin:,
         scheduled_delivery_date:,
         ship_time:,
         shipment_events:,
@@ -336,8 +336,8 @@ module Interstellar
       params = ''.dup
       params << 'xmlv=yes' # must be first
       params << '&quotenumber=YES'
-      params << "&vdzip=#{shipment.destination.zip}"
-      params << "&vozip=#{shipment.origin.zip}"
+      params << "&vdzip=#{shipment.destination.postal_code}"
+      params << "&vozip=#{shipment.origin.postal_code}"
       params << "&xmlpass=#{@options[:password]}"
       params << "&xmluser=#{@options[:username]}"
 

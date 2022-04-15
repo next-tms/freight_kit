@@ -224,10 +224,10 @@ module Interstellar
       request = {
         'request' => {
           account: @options[:account],
-          destination_zip: shipment.destination.zip.gsub(/\s+/, '').upcase,
+          destination_zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase,
           # :linear_feet => linear_ft(packages),
           origin_type: 'B', # O for shipper, I for consignee, B for third party
-          origin_zip: shipment.origin.zip.gsub(/\s+/, '').upcase,
+          origin_zip: shipment.origin.postal_code.gsub(/\s+/, '').upcase,
           pallet_count: shipment_pallet_count,
           payment_type: 'P', # prepaid
           pieces: shipment_box_count,

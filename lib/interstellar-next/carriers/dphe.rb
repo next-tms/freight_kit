@@ -224,7 +224,8 @@ module Interstellar
       country_codes = [shipment.destination.country.code(:alpha2).value, shipment.origin.country.code(:alpha2).value]
 
       if country_codes.reject { |c| c.upcase == 'US' }.any?
-        raise UnserviceableError, "No service from #{shipment.origin.zip} to #{shipment.destination.zip}"
+        raise UnserviceableError,
+              "No service from #{shipment.origin.postal_code} to #{shipment.destination.postal_code}"
       end
 
       accessorials = []
@@ -258,8 +259,8 @@ module Interstellar
 
       request = {
         customer_code: @options[:account],
-        origin_zip: shipment.origin.zip.to_s.upcase,
-        destination_zip: shipment.destination.zip.to_s.upcase,
+        origin_zip: shipment.origin.postal_code.to_s.upcase,
+        destination_zip: shipment.destination.postal_code.to_s.upcase,
         shipment_detail:,
         rating_type: '', # per API documentation
         accessorials:

@@ -140,15 +140,15 @@ module Interstellar
         Description: shipment_description,
         DestCountry: 'U',
         DestinationCity: shipment.destination.city,
-        DestinationState: shipment.destination.state,
-        DestinationZip: shipment.destination.zip,
+        DestinationState: shipment.destination.province,
+        DestinationZip: shipment.destination.postal_code,
         DimsOption: 'I',
         EmailAddress: @options[:customer_email].blank? ? 'unknown@fake.fake' : @options[:customer_email],
         Option: 'T',
         OrigCountry: 'U',
         OriginCity: shipment.origin.city,
-        OriginState: shipment.origin.state,
-        OriginZip: shipment.origin.zip,
+        OriginState: shipment.origin.province,
+        OriginZip: shipment.origin.postal_code,
         PickupDay: pickup_on.strftime('%_d'),
         PickupMonth: pickup_on.strftime('%_m'),
         PickupYear: pickup_on.strftime('%Y'),
@@ -181,7 +181,7 @@ module Interstellar
         )
       end
 
-      cubic_ft_required = shipment.destination.state.upcase == 'PR'
+      cubic_ft_required = shipment.destination.province.upcase == 'PR'
 
       i = 0
       shipment.packages.each do |package|

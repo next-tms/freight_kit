@@ -395,8 +395,8 @@ module Interstellar
           CountryCode: shipment.destination.country.code(:alpha3),
           IsResidential: shipment.accessorials.include?(:residential_pickup),
           Name: shipment.destination.contact.company_name,
-          PostalCode: shipment.destination.zip,
-          StateProvince: shipment.destination.state
+          PostalCode: shipment.destination.postal_code,
+          StateProvince: shipment.destination.province
         },
         Dates: {
           EarliestPickupDate: "#{pickup_from.iso8601[..-7]}Z",
@@ -445,8 +445,8 @@ module Interstellar
           CountryCode: shipment.origin.country.code(:alpha3),
           IsResidential: shipment.accessorials.include?(:residential_pickup),
           Name: shipment.origin.contact.company_name,
-          PostalCode: shipment.origin.zip,
-          StateProvince: shipment.origin.state
+          PostalCode: shipment.origin.postal_code,
+          StateProvince: shipment.origin.province
         },
         Status: 'pending'
       }.to_json
@@ -510,8 +510,8 @@ module Interstellar
           Country: shipment.origin.country_code(:alpha3),
           Date: pickup_date.strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'PLocationCode',
-          State: shipment.origin.state.upcase,
-          Zip: shipment.origin.zip.to_s.upcase
+          State: shipment.origin.province.upcase,
+          Zip: shipment.origin.postal_code.to_s.upcase
         },
         DropEvent: {
           City: shipment.destination.city.upcase,
@@ -520,8 +520,8 @@ module Interstellar
           LocationCode: 'DLocationCode',
           MaxPriceSheet: 6,
           ShowInsurance: false,
-          State: shipment.destination.state.upcase,
-          Zip: shipment.destination.zip.to_s.upcase
+          State: shipment.destination.province.upcase,
+          Zip: shipment.destination.postal_code.to_s.upcase
         }
       }.to_json
 
