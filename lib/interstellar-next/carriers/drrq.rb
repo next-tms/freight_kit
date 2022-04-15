@@ -507,7 +507,7 @@ module Interstellar
         Items: items,
         PickupEvent: {
           City: shipment.origin.city.upcase,
-          Country: shipment.origin.country_code(:alpha3),
+          Country: shipment.origin.country.code(:alpha3).value,
           Date: pickup_date.strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'PLocationCode',
           State: shipment.origin.province.upcase,
@@ -515,7 +515,7 @@ module Interstellar
         },
         DropEvent: {
           City: shipment.destination.city.upcase,
-          Country: shipment.destination.country_code(:alpha3),
+          Country: shipment.destination.country.code(:alpha3).value,
           Date: (::DateTime.now + 5.days).strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'DLocationCode',
           MaxPriceSheet: 6,
