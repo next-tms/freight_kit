@@ -214,7 +214,7 @@ module Interstellar
         tracking_response.assign_attributes(error: ShipmentNotFoundError.new)
         return tracking_response
       else
-        unless code == 200
+        unless response.code == 200
           tracking_response.assign_attributes(error: ResponseError.new("HTTP #{response.code}"))
           return tracking_response
         end
