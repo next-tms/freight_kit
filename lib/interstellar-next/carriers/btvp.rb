@@ -515,8 +515,8 @@ module Interstellar
         with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
-      rate_request.rates = [rate]
-      rate_request
+      rate_response.rates = [rate]
+      rate_response
     end
 
     # Tracking
