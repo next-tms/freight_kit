@@ -192,9 +192,11 @@ module Interstellar
         next unless longest_dimension > 96
 
         package.quantity.times do
-          if longest_dimension > 144
+          if longest_dimension >= 240
+            service_delivery_options << { service_options: { service_code: 'EXX' } }
+          elsif longest_dimension >= 144
             service_delivery_options << { service_options: { service_code: 'EXL' } }
-          elsif longest_dimension > 96
+          elsif longest_dimension >= 96
             service_delivery_options << { service_options: { service_code: 'EXM' } }
           end
         end
