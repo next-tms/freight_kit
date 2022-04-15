@@ -418,8 +418,8 @@ module Interstellar
             consigneeCountry: shipment.destination.country.code(:alpha2).value,
             consigneeLocationName: shipment.destination.contact.name,
             consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
-            consigneeState: shipment.destination.state,
-            consigneeZipCode: shipment.destination.zip.to_s
+            consigneeState: shipment.destination.province,
+            consigneeZipCode: shipment.destination.postal_code.to_s
           },
           shipper: {
             shipperAddress1: shipment.origin.address1,
@@ -432,8 +432,8 @@ module Interstellar
             shipperCountry: shipment.origin.country.code(:alpha2).value,
             shipperLocationName: shipment.origin.contact.name,
             shipperOpenTime: pickup_from.strftime('%H:%M:00'),
-            shipperState: shipment.origin.state,
-            shipperZipCode: shipment.origin.zip.to_s
+            shipperState: shipment.origin.province,
+            shipperZipCode: shipment.origin.postal_code.to_s
           },
           orderDetails: {
             airbillNumber: '00000000',
@@ -522,14 +522,14 @@ module Interstellar
         body: {
           billToCustomerNumber: @options[:account],
           origin: {
-            originZipCode: shipment.origin.zip.to_s.upcase,
+            originZipCode: shipment.origin.postal_code.to_s.upcase,
             pickup: {
               airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
               pickupAccessorials: { pickupAccessorial: pickup_accessorials }
             }
           },
           destination: {
-            destinationZipCode: shipment.destination.zip.to_s.upcase,
+            destinationZipCode: shipment.destination.postal_code.to_s.upcase,
             delivery: {
               airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
               deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }

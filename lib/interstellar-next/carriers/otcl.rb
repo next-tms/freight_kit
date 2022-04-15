@@ -214,13 +214,13 @@ module Interstellar
         'CloseAt': pickup_to.strftime('%H:%M:00'),
         'Contact': shipment.origin.contact.name || 'Shipping',
         'Date': pickup_from.to_date,
-        'DelZip': shipment.destination.zip,
+        'DelZip': shipment.destination.postal_code,
         'Instructions': '',
         'Name': shipment.origin.contact.company_name,
         'Phone': shipper_phone,
         'ReadyAt': pickup_from.strftime('%H:%M:00'),
-        'State': shipment.origin.state,
-        'Zip': shipment.origin.zip
+        'State': shipment.origin.province,
+        'Zip': shipment.origin.postal_code
       }.freeze
 
       request = {
@@ -266,15 +266,15 @@ module Interstellar
           'City': shipment.destination.city,
           'Contact': shipment.destination.contact.name || 'Shipping',
           'Phone': receiver_phone || '',
-          'State': shipment.destination.state,
-          'Zip': shipment.destination.zip.to_s
+          'State': shipment.destination.province,
+          'Zip': shipment.destination.postal_code.to_s
         },
         'shipper': {
           'Name': shipment.origin.contact.company_name,
           'Addr1': shipment.origin.address1,
           'City': shipment.origin.city,
-          'State': shipment.origin.state,
-          'Zip': shipment.origin.zip,
+          'State': shipment.origin.province,
+          'Zip': shipment.origin.postal_code,
           'Contact': shipment.origin.contact.name || 'Shipping',
           'Phone': shipper_phone
         },
@@ -395,7 +395,7 @@ module Interstellar
 
     def build_rate_request(shipment:)
       serviceable_accessorials?(shipment.accessorials)
-      serviceable_states?([shipment.origin.state, shipment.destination.state])
+      serviceable_states?([shipment.origin.province, shipment.destination.province])
 
       # API supports non-loose items (see below) but per OnTrac it shouldn't be quoted. We'll raise an error here but
       # leave the support baked-in below anyway.
@@ -430,8 +430,8 @@ module Interstellar
           parts = []
 
           parts << "ID#{i}"
-          parts << shipment.origin.zip
-          parts << shipment.destination.zip
+          parts << shipment.origin.postal_code
+          parts << shipment.destination.postal_code
           parts << shipment.accessorials.include?(:residential_delivery) ? 'true' : 'false'
           parts << '0'
           parts << 'false' # Staurday delivery
