@@ -395,7 +395,7 @@ module Interstellar
           rate_response.error = UnserviceableError.new(error)
         end
 
-        rate_response.error ResponseError.new(error) if rate_response.error.blank?
+        rate_response.error = ResponseError.new(error) if rate_response.error.blank?
         return rate_response.error
       end
 
