@@ -396,7 +396,8 @@ module Interstellar
         end
 
         rate_response.error = ResponseError.new(error) if rate_response.error.blank?
-        return rate_response.error
+
+        return rate_response
       end
 
       if response.dig('ratequote', 'quotetotal').blank?
