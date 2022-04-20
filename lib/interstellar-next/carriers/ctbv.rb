@@ -13,7 +13,7 @@ module Interstellar
     end
 
     def maximum_weight
-      Measured::Weight.new(10_000, :pounds)
+      Measured::Weight.new(6999, :pounds)
     end
 
     def minimum_length_for_overlength_fees
