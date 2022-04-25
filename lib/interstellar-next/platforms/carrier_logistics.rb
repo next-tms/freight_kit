@@ -206,7 +206,7 @@ module Interstellar
       begin
         response = HTTParty.get(url)
       rescue StandardError => e
-        tracking_response.assign_attributes(e:)
+        tracking_response.assign_attributes(error: e)
       end
 
       case response.code
