@@ -166,7 +166,14 @@ module Interstellar
 
     def find_tracking_info(tracking_number, *)
       request = build_tracking_request(tracking_number)
-      parse_tracking_response(commit(request))
+
+      begin
+        response = commit(request)
+      rescue StandardError => e
+        return TrackingResponse.new(error: e, request:)
+      end
+
+      parse_tracking_response(response)
     end
 
     def find_tracking_info_implemented?
