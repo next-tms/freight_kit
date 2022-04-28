@@ -234,9 +234,18 @@ module Interstellar
 
       logout_url = 'https://rrd.mercurygate.net/MercuryGate/login/urlRedirect.jsp?Logout=true'
 
-      browser
-        .element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
-        .click
+      begin
+        browser
+          .element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
+          .click
+      rescue Selenium::WebDriver::Error::UnexpectedAlertOpenError => e
+        browser.close
+
+        message = e.message[/{(.*?)}/m, 1]&.split(':')&.last&.squish
+
+        document_response.error = InvalidCredentialsError.new(message)
+        return document_response
+      end
 
       browser.iframes(src: '../mainframe/MainFrame.jsp?bRedirect=true')
       browser
