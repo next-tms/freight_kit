@@ -171,6 +171,8 @@ module Interstellar
     end
 
     def parse_document_response(type, tracking_number)
+      document_response = DocumentResponse.new
+
       browser = Watir::Browser.new(*@options[:watir_args])
       browser.goto(build_url(:pod))
 
@@ -178,15 +180,30 @@ module Interstellar
       browser.text_field(name: 'password').set(@options[:password])
       browser.button(name: 'btnLogin').click
 
+      begin
+        browser.html
+      rescue Selenium::WebDriver::Error::JavascriptError
+        document_response.error = Interstellar::ResponseError
+
+        return document_response
+      end
+
       if browser.html.include?('You are not enrolled in any application environments on this server')
         browser.close
-        raise Interstellar::InvalidCredentialsError,
-              'You are not enrolled in any application environments on this server'
+
+        document_response.error = Interstellar::InvalidCredentialsError.new(
+          'You are not enrolled in any application environments on this server'
+        )
+        return document_response
       end
 
       if browser.html.include?('You already have the maximum permitted application sessions open')
         browser.close
-        raise Interstellar::ResponseError, 'You already have the maximum permitted application sessions open'
+
+        document_response.error = Interstellar::InvalidCredentialsError.new(
+          'You already have the maximum permitted application sessions open'
+        )
+        return document_response
       end
 
       browser.element(xpath: '/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/img').wait_until(&:present?).click
@@ -204,7 +221,8 @@ module Interstellar
         browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
         browser.close
 
-        raise Interstellar::ShipmentNotFoundError
+        document_response.error = Interstellar::ShipmentNotFoundError
+        return document_response
       end
 
       browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div[1]/div[4]/div[3]/div/table/tbody/tr[2]/td[2]').double_click
@@ -216,7 +234,8 @@ module Interstellar
         browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
         browser.close
 
-        raise Interstellar::DocumentNotFoundError
+        document_response.error = Interstellar::DocumentNotFoundError
+        return document_response
       end
 
       html = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div/div/form/div[4]/div[2]/div/div/table').inner_html
@@ -229,18 +248,21 @@ module Interstellar
         link_id = tr.css('td')[1].css('a').to_html.split('id=')[1].split('onfocus')[0].gsub('"', '').strip
       end
 
-      raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found" if link_id.blank?
+      if link_id.blank?
+        document_response.error = Interstellar::DocumentNotFoundError
+        return document_response
+      end
 
       browser.element(css: "##{link_id}").click
       url = browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/embed').attribute_value('src')
 
-      ret = download_document(type, tracking_number, url)
+      doc = download_document(type, tracking_number, url)
 
       browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').click
       browser.element(xpath: '/html/body/div[12]/div[11]/div/button[1]').wait_until(&:present?).click
       browser.close
 
-      ret
+      doc
     end
 
     # Pickups
