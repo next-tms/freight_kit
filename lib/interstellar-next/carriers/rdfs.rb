@@ -455,14 +455,12 @@ module Interstellar
       begin
         doc = Nokogiri::HTML(URI.parse(url).open)
       rescue OpenURI::HTTPError
-        raise Interstellar::ShipmentNotFoundError, "API Error: #{@@name}: Shipment not found"
+        return nil
       end
 
       pro = doc.css('#lblProNumber')&.text
 
-      if pro.blank? || pro.downcase.include?('not available')
-        raise Interstellar::ShipmentNotFoundError, "API Error: #{@@name}: Shipment not found"
-      end
+      return nil if pro.blank? || pro.downcase.include?('not available')
 
       pro
     end
