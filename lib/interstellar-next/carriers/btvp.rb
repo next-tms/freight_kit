@@ -161,7 +161,7 @@ module Interstellar
         return document_response
       end
 
-      unless response.code == 200
+      if response.code != 200 || response.headers['content-type'].include?('html')
         document_response.error = DocumentNotFoundError.new
         return document_response
       end
