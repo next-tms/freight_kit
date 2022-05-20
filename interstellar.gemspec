@@ -8,7 +8,7 @@ require 'interstellar/version'
 Gem::Specification.new do |spec|
   spec.name = 'interstellar'
   spec.version = Interstellar::VERSION
-  spec.date = '2022-04-13'
+  spec.date = '2022-05-20'
 
   spec.authors = [
     'Third Party Transportation Systems LLC',
