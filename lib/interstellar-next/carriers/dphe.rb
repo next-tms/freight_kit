@@ -412,7 +412,7 @@ module Interstellar
       country = ActiveUtils::Country.find('USA')
 
       shipper_location = Location.new(
-        street: search_result[:shipperaddress]&.squish&.strip&.titleize,
+        address1: search_result[:shipperaddress]&.squish&.strip&.titleize,
         city: search_result[:shipper_city].squish.strip.titleize,
         province: search_result[:shipper_state].strip.upcase,
         postal_code: search_result[:shipper_zip].strip,
@@ -420,7 +420,7 @@ module Interstellar
       )
 
       receiver_location = Location.new(
-        street: search_result[:consaddress]&.squish&.strip&.titleize,
+        address1: search_result[:consaddress]&.squish&.strip&.titleize,
         city: search_result[:cons_city].squish.strip.titleize,
         province: search_result[:cons_state].strip.upcase,
         postal_code: search_result[:cons_zip].strip,
