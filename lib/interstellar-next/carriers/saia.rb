@@ -334,7 +334,7 @@ module Interstellar
       search_result = response.dig(:get_by_pro_number_response, :get_by_pro_number_result)
 
       shipper_location = Location.new(
-        street: (
+        address1: (
           search_result.dig(:shipper, :address1) || '' \
           " #{search_result.dig(:shipper, :address2) || ''}"
         ).squish.strip.titleize,
@@ -345,7 +345,7 @@ module Interstellar
       )
 
       receiver_location = Location.new(
-        street: (
+        address1: (
           search_result.dig(:consignee, :address1) || '' \
           " #{search_result.dig(:consignee, :address2) || ''}"
         ).squish.strip.titleize,
