@@ -165,9 +165,18 @@ module Interstellar
     def parse_api_city_state(str)
       return nil if str.blank?
 
+      city = str.split(', ')[0].titleize
+      province = str.split(', ')[1].upcase
+
+      if province == '*'
+        province = case city
+                   when 'Albuquerque' then 'NM'
+                   end
+      end
+
       Location.new(
-        city: str.split(', ')[0].titleize,
-        province: str.split(', ')[1].upcase,
+        city:,
+        province:,
         country: ActiveUtils::Country.find('USA')
       )
     end
