@@ -182,7 +182,7 @@ module Interstellar
         filename = CGI.escape(JSON.parse(response.body)&.last)
         url = "#{download_url}/#{filename}"
 
-        document_request.request = URI.parse(url)
+        document_response.request = URI.parse(url)
 
         begin
           response = HTTParty.get(url)
