@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'interstellar/models/credential'
 require 'interstellar/models/label'
 require 'interstellar/models/price'
 require 'interstellar/models/rate'
