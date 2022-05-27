@@ -23,6 +23,7 @@ require 'interstellar/model'
 require 'interstellar/models'
 
 require 'interstellar/carrier'
+require 'interstellar/carriers'
 require 'interstellar/contact'
 require 'interstellar/package_item'
 require 'interstellar/package'
