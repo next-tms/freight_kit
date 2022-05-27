@@ -50,11 +50,34 @@ Start off by initializing the `Carrier` provided by a `Carrier` plug-in:
 ```ruby
 require 'interstellar'
 
-carrier = Interstellar::BTVP.new(
-  account: 'account_number',
-  username: 'username',
-  password: 'password'
-)
+# Typically just one `Credential` is required
+credentials = [
+  Interstellar::Credential.new(
+    type: :api,
+    account: 'account_number',
+    username: 'username',
+    password: 'password',
+    tariff: Interstellar::Tariff.new # optional
+  ),
+  Interstellar::Credential.new(
+    type: :oauth2,
+    access_token: 'token',
+    expires_at: DateTime.current + 1.day, # DateTime
+    scope: 'scope'
+  ),
+  Interstellar::Credential.new(
+    type: :website,
+    username: 'username',
+    password: 'password'
+  ),
+  Interstellar::Credential.new(
+    type: :selenoid,
+    base_url: URI.parse('http://domain:4444'),
+    browser: :chrome
+  )
+]
+
+carrier = Interstellar::SCAC.new(credentials)
 ```
 
 ### Documents
