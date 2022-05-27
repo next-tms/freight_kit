@@ -28,8 +28,6 @@ module Interstellar
   #   @return [String] Username
   #
   class Credential < Model
-    VALID_TYPES = %i[api oauth2 website].freeze
-
     attr_accessor :type
 
     # Returns a new instance of Credential.
@@ -37,40 +35,65 @@ module Interstellar
     # Other than the following, instance `:attr_reader`s are generated dynamically based on keys.
     #
     # @param [Symbol] type One of `:api`, `:website`
+    # @param [String] base_url Required when type is `:selenoid`
     # @param [String] username Required when type is one of `:api`, `:website`
     # @param [String] password Required when type is one of `:api`, `:website`
     # @param [String] access_token Required when type is `:oauth2`
     # @param [DateTime] expires_at Required when type is `:oauth2`
     # @param [String] scope Required when type is `:oauth2`
     def initialize(hash)
-      unless VALID_TYPES.include?(hash[:type])
-        raise ArgumentError, "Credential#new: `type` should be one of #{VALID_TYPES.join(', ')}"
-      end
+      raise ArgumentError, 'Credential#new: `type` cannot be blank' if hash[:type].blank?
 
-      if hash[:type] == :oauth2 && !hash[:expires_at].is_a?(::DateTime)
-        raise ArgumentError, "Credential#new: `expires_at` must be a DateTime, got #{hash[:expires_at].class}"
-      end
-
-      hash.each do |k, v|
-        next if k == :type
-
-        singleton_class.class_eval { attr_accessor k.to_s }
-      end
-      
       type = hash[:type]
-      
+
       requirements = case type
                      when :api, :website
-                       %i[username password]
+                       { username: String, password: String }
                      when :oauth2
-                       %i[access_token expires_at scope]
+                       { access_token: String, expires_at: ::DateTime, scope: String }
+                     when :selenoid
+                       { base_url: URI, browser: Symbol }
+                     else
+                       {}
                      end
-      
-      requirements.each do |k|
-        raise ArgumentError, "Credential#new: `#{k.to_s}` cannot be blank" if hash[k].blank?
+
+      requirements.each_key do |k|
+        raise ArgumentError, "Credential#new: `#{k}` cannot be blank" if hash[k].blank?
+
+        unless hash[k].is_a?(requirements[k])
+          raise ArgumentError, "Credential#new: `#{k}` must be a #{requirements[k]}, got #{hash[k].class}"
+        end
       end
-      
+
+      hash.each do |k, _v|
+        next if k == :type
+
+        singleton_class.class_eval { attr_accessor k.to_s } unless singleton_class.respond_to?(k)
+      end
+
       super
+    end
+
+    def selenoid_options
+      return nil unless type == :selenoid
+      return @selenoid_options unless @selenoid_options.blank?
+
+      download_url = base_url.dup
+      download_url.path = '/download'
+      download_url = download_url.to_s
+
+      @selenoid_options = { download_url: }
+    end
+
+    def watir_args
+      return nil unless type == :selenoid
+      return @watir_args unless @watir_args.blank?
+
+      url = base_url.dup
+      url.path = '/wd/hub/'
+      url = url.to_s
+
+      @watir_args = [browser, { url: }]
     end
   end
 end
