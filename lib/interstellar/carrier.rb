@@ -11,61 +11,29 @@ module Interstellar
   # @see #cancel_shipment
   # @see #find_tracking_info
   #
-  # @!attribute test_mode
-  #   Whether to interact with the carrier's sandbox environment.
-  #   @return [Boolean]
-  #
   # @!attribute last_request
   #   The last request performed against the carrier's API.
   #   @see #save_request
   class Carrier
-    attr_accessor :conf, :rates_with_excessive_length_fees, :test_mode, :tmpdir
-    attr_reader :last_request, :tariff
+    attr_accessor :conf, :rates_with_excessive_length_fees, :tmpdir
+    attr_reader :last_request
 
-    alias test_mode? test_mode
+    # Credentials should be a `Credential` or `Array` of `Credential`
+    def initialize(credentials)
+      credentials = [credentials] if credentials.is_a?(Credential)
 
-    # Credentials should be in options hash under keys :login, :password and/or :key.
-    # @param options [Hash] The details needed to connect to the carrier's API.
-    # @option options [Boolean] :test Set this to true to connect to the carrier's
-    #   sandbox environment instead of the production environment.
-    def initialize(options = {})
-      requirements.each { |key| requires!(options, key) }
-      @conf = nil
-      @debug = options[:debug].blank? ? false : true
-      @last_request = nil
-      @tariff = options[:tariff]
-      @test_mode = options[:test]
-      @tmpdir = options[:tmpdir] || Dir.tmpdir
-
-      return unless self.class::REACTIVE_FREIGHT_CARRIER
-
-      # Sanitize options[:watir_args]
-      unless options[:watir_args].blank?
-        options[:watir_args] = [:chrome, { options: { prefs: {} } }] unless options[:watir_args]
-        options[:watir_args].each do |h|
-          if h.is_a?(Hash)
-            h.merge!(options: { prefs: {} }) unless h.dig(:options, :prefs)
-            if !options[:selenoid_options]
-              h[:options][:prefs].merge!(
-                download: {
-                  prompt_for_download: false,
-                  default_directory: @tmpdir
-                }
-              )
-            else
-              h[:options][:prefs].merge!(
-                download: {
-                  directory_upgrade: true,
-                  prompt_for_download: false
-                }
-              )
-            end
-          end
-          h
-        end
+      unless credentials.map(&:class).uniq == [Credential]
+        raise ArgumentError, "#{self.class.name}#new: `credentials` should be one of: `Credential`, `Array` of `Credential`"
       end
 
-      @options = options
+      missing_credential_types = required_credential_types.uniq - credentials.map(&:type).uniq
+
+      unless missing_credential_types.empty?
+        raise ArgumentError, "#{self.class.name}#new: `Credential` of type(s) missing: #{missing_credential_types.join(', ')}"
+      end
+
+      @conf = nil
+      @last_request = nil
 
       conf_path = File
                   .join(
@@ -256,14 +224,13 @@ module Interstellar
     # Validate credentials with a call to the API.
     #
     # By default this just does a `find_rates` call with the origin and destination both as
-    # the carrier's default_location. Override to provide alternate functionality, such as
-    # checking for `test_mode` to use test servers, etc.
+    # the carrier's default_location. Override to provide alternate functionality.
     #
     # @return [Boolean] Should return `true` if the provided credentials proved to work,
     #   `false` otherswise.
     def valid_credentials?
       location = self.class.default_location
-      find_rates(location, location, Package.new(100, [5, 15, 30]), test: test_mode)
+      find_rates(location, location, Package.new(100, [5, 15, 30]))
     rescue Interstellar::ResponseError
       false
     else
