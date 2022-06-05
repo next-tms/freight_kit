@@ -16,10 +16,10 @@ module Interstellar
   #   @see #save_request
   class Carrier
     attr_accessor :conf, :rates_with_excessive_length_fees, :tmpdir
-    attr_reader :credentials, :last_request
+    attr_reader :credentials, :last_request, :tariff
 
     # Credentials should be a `Credential` or `Array` of `Credential`
-    def initialize(credentials)
+    def initialize(credentials, tariff: nil)
       credentials = [credentials] if credentials.is_a?(Credential)
 
       unless credentials.map(&:class).uniq == [Credential]
