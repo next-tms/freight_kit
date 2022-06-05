@@ -20,6 +20,10 @@ module Interstellar
 
     # Credentials should be a `Credential` or `Array` of `Credential`
     def initialize(credentials, tariff: nil)
+      if tariff && !tariff.is_a?(Tariff)
+        raise ArgumentError, "#{self.class.name}#new: `tariff` should be a `Tariff`, got #{tariff.class.name}"
+      end
+
       credentials = [credentials] if credentials.is_a?(Credential)
 
       unless credentials.map(&:class).uniq == [Credential]
