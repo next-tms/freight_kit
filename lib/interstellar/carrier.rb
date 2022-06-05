@@ -16,21 +16,25 @@ module Interstellar
   #   @see #save_request
   class Carrier
     attr_accessor :conf, :rates_with_excessive_length_fees, :tmpdir
-    attr_reader :last_request
+    attr_reader :credentials, :last_request
 
     # Credentials should be a `Credential` or `Array` of `Credential`
     def initialize(credentials)
       credentials = [credentials] if credentials.is_a?(Credential)
 
       unless credentials.map(&:class).uniq == [Credential]
-        raise ArgumentError, "#{self.class.name}#new: `credentials` should be one of: `Credential`, `Array` of `Credential`"
+        raise ArgumentError,
+              "#{self.class.name}#new: `credentials` should be one of: `Credential`, `Array` of `Credential`"
       end
 
       missing_credential_types = required_credential_types.uniq - credentials.map(&:type).uniq
 
       unless missing_credential_types.empty?
-        raise ArgumentError, "#{self.class.name}#new: `Credential` of type(s) missing: #{missing_credential_types.join(', ')}"
+        raise ArgumentError,
+              "#{self.class.name}#new: `Credential` of type(s) missing: #{missing_credential_types.join(', ')}"
       end
+
+      @credentials = credentials
 
       @conf = nil
       @last_request = nil
