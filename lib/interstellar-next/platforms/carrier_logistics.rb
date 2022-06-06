@@ -12,6 +12,10 @@ module Interstellar
       'Your Username or Password is Incorrect'
     ].freeze
 
+    def required_credential_types
+      %i[api selenoid website]
+    end
+
     # Documents
 
     def pod(tracking_number)
@@ -34,7 +38,7 @@ module Interstellar
 
     def find_rates(shipment:)
       begin
-        validate_packages(shipment.packages, @options[:tariff])
+        validate_packages(shipment.packages, tariff)
       rescue UnserviceableError => e
         return RateResponse.new(error: e)
       end
@@ -59,14 +63,7 @@ module Interstellar
 
     # protected
 
-    def debug?
-      return false if @options[:debug].blank?
-
-      @options[:debug]
-    end
-
     def build_url(action, options = {})
-      options = @options.merge(options)
       scheme = @conf.dig(:api, :use_ssl, action) ? 'https://' : 'http://'
       url = ''.dup
       url << "#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
@@ -76,7 +73,6 @@ module Interstellar
     end
 
     def commit(action, options = {})
-      options = @options.merge(options)
       url = build_url(action, params: options[:params])
 
       response = HTTParty.get(url, logger: Logger.new($stdout))
@@ -88,11 +84,14 @@ module Interstellar
     def parse_document_response(action, tracking_number)
       document_response = DocumentResponse.new
 
-      browser = Watir::Browser.new(*@options[:watir_args])
+      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
+      website_credentials = credentials.find { |c| c.type == :website }
+
+      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(action))
 
-      browser.text_field(name: 'wlogin').set(@options[:username])
-      browser.text_field(name: 'wpword').set(@options[:password])
+      browser.text_field(name: 'wlogin').set(website_credentials.username)
+      browser.text_field(name: 'wpword').set(website_credentials.password)
       browser.button(name: 'BtnAction1').click
 
       downcase_html = browser.html.downcase
@@ -342,13 +341,15 @@ module Interstellar
     end
 
     def build_rate_params(shipment:)
+      api_credentials = credentials.find { |c| c.type == :api }
+
       params = ''.dup
       params << 'xmlv=yes' # must be first
       params << '&quotenumber=YES'
       params << "&vdzip=#{shipment.destination.postal_code}"
       params << "&vozip=#{shipment.origin.postal_code}"
-      params << "&xmlpass=#{@options[:password]}"
-      params << "&xmluser=#{@options[:username]}"
+      params << "&xmlpass=#{api_credentials.username}"
+      params << "&xmluser=#{api_credentials.password}"
 
       i = 0
       shipment.packages.each do |package|
@@ -448,7 +449,7 @@ module Interstellar
         cents = 0
 
         shipment.packages.each do |package|
-          cents += overlength_fee(@options[:tariff], package)
+          cents += overlength_fee(tariff, package)
         end
 
         prices << Price.new(blame: :tariff, cents:, description: 'Overlength fees') unless cents.zero?

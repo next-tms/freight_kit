@@ -24,8 +24,8 @@ module Interstellar
       false
     end
 
-    def requirements
-      %i[username password account]
+    def required_credential_types
+      %i[api website]
     end
 
     # Documents
@@ -81,9 +81,8 @@ module Interstellar
       true
     end
 
-    def find_tracking_number_from_pickup_number(pickup_number, _date, options = {})
-      options = @options.merge(options)
-      parse_tracking_number_from_pickup_number_response(pickup_number, options)
+    def find_tracking_number_from_pickup_number(pickup_number, _date)
+      parse_tracking_number_from_pickup_number_response(pickup_number)
     end
 
     def find_tracking_number_from_pickup_number_implemented?
@@ -93,11 +92,13 @@ module Interstellar
     protected
 
     def build_soap_header(action)
+      api_credentials = credentials.find { |c| c.type == :api }
+
       {
         authentication_header: {
           :@xmlns => @conf.dig(:api, :soap, :namespaces, action),
-          :user_name => @options[:username],
-          :password => @options[:password]
+          password: api_credentials.password,
+          user_name: api_credentials.username
         }
       }
     end
@@ -221,9 +222,11 @@ module Interstellar
         end
       end
 
+      api_credentials = credentials.find { |c| c.type == :api }
+
       request = {
         'request' => {
-          account: @options[:account],
+          account: api_credentials.account,
           destination_zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase,
           # :linear_feet => linear_ft(packages),
           origin_type: 'B', # O for shipper, I for consignee, B for third party
@@ -267,7 +270,7 @@ module Interstellar
         return rate_response
       end
 
-      estimate_reference = result.dig(:quote_number)
+      estimate_reference = result[:quote_number]
       rate_details = result.dig(:rate_details, :quote_detail)
       transit_days = result.dig(:routing_info, :estimated_transit_days).to_i
 
@@ -447,9 +450,7 @@ module Interstellar
       tracking_response
     end
 
-    def parse_tracking_number_from_pickup_number_response(pickup_number, _date, options = {})
-      options = @options.merge(options)
-
+    def parse_tracking_number_from_pickup_number_response(pickup_number, _date)
       url = request_url(:tracking_number_from_pickup_number).sub('%%PICKUP_NUMBER%%', pickup_number.to_s)
 
       begin

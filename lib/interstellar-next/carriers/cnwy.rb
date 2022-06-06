@@ -24,8 +24,8 @@ module Interstellar
       false
     end
 
-    def requirements
-      %i[username password account]
+    def required_credential_types
+      %i[api website]
     end
 
     # Documents
@@ -54,7 +54,9 @@ module Interstellar
     protected
 
     def build_headers
-      { 'x-api-key': @options[:password] }
+      api_credentials = credentials.find { |c| c.type == :api }
+
+      { 'x-api-key': api_credentials.password }
     end
 
     def build_xpoauthorization_request
@@ -161,9 +163,11 @@ module Interstellar
         end
       end
 
+      api_credentials = credentials.find { |c| c.type == :api }
+
       request = {
         'request' => {
-          account: @options[:account],
+          account: api_credentials.account,
           destination_zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase,
           # :linear_feet => linear_ft(packages),
           origin_type: 'B', # O for shipper, I for consignee, B for third party

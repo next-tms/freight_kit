@@ -24,6 +24,10 @@ module Interstellar
       false
     end
 
+    def required_credential_types
+      %i[api]
+    end
+
     # Documents
 
     # Rates
@@ -78,13 +82,15 @@ module Interstellar
     end
 
     def request_blueprint
+      api_credentials = credentials.find { |c| c.type == :api }
+
       {
         'request': {
+          'AccountNumber': api_credentials.account,
           'Application': 'ThirdParty',
-          'AccountNumber': @options[:account],
-          'UserID': @options[:username],
-          'Password': @options[:password],
-          'TestMode': @options[:debug].blank? ? 'N' : 'Y'
+          'Password': api_credentials.password,
+          'TestMode': 'N',
+          'UserID': api_credentials.username
         }
       }
     end

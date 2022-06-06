@@ -10,8 +10,8 @@ module Interstellar
       'charset': 'utf-8'
     }.freeze
 
-    def requirements
-      %i[email password scope]
+    def required_credential_types
+      %i[api]
     end
 
     # Documents
@@ -28,7 +28,6 @@ module Interstellar
     # protected
 
     def build_url(action, options = {})
-      options = @options.merge(options)
       url = ''.dup
       url += "#{base_url}#{@conf.dig(:api, :scopes, options[:scope])}#{@conf.dig(:api, :endpoints, action)}"
       url = url.sub(@conf.dig(:api, :scopes, options[:scope]), '') if action == :authenticate
@@ -37,7 +36,6 @@ module Interstellar
     end
 
     def build_request(action, options = {})
-      options = @options.merge(options)
       headers = JSON_HEADERS
       headers = headers.merge(options[:headers]) unless options[:headers].blank?
       body = options[:body].to_json unless options[:body].blank?
@@ -49,9 +47,9 @@ module Interstellar
 
       request = {
         url: build_url(action, options),
-        headers: headers,
+        headers:,
         method: @conf.dig(:api, :methods, action),
-        body: body
+        body:
       }
 
       save_request(request)
@@ -66,9 +64,9 @@ module Interstellar
 
       response = case method
                  when :post
-                   HTTParty.post(url, headers: headers, body: body)
+                   HTTParty.post(url, headers:, body:)
                  else
-                   HTTParty.get(url, headers: headers)
+                   HTTParty.get(url, headers:)
                  end
 
       JSON.parse(response.body) if response&.body
@@ -81,16 +79,15 @@ module Interstellar
     def set_auth_token
       return @auth_token unless @auth_token.blank?
 
+      api_credentials = credentials.find { |c| c.type == :api }
+
       request = build_request(
         :authenticate,
-        body: {
-          email: @options[:email],
-          password: @options[:password]
-        }
+        body: { email: api_credentials.username, password: api_credentials.password }
       )
 
       response = commit(request)
-      @auth_token = response.dig('auth_token')
+      @auth_token = response['auth_token']
     end
 
     def token

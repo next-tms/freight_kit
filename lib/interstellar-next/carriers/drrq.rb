@@ -22,8 +22,8 @@ module Interstellar
       false
     end
 
-    def requirements
-      %i[username password]
+    def required_credential_types
+      %i[api selenoid website]
     end
 
     # Documents
@@ -124,15 +124,10 @@ module Interstellar
       parsed_accessorials.uniq.to_a
     end
 
-    def build_headers(options = {})
-      options = @options.merge(options)
+    def build_headers
+      api_credentials = credentials.find { |c| c.type == :api }
 
-      JSON_HEADERS.merge(
-        {
-          ApiKey: options[:password],
-          UserName: options[:username]
-        }
-      )
+      JSON_HEADERS.merge({ ApiKey: api_credentials.password, UserName: api_credentials.username })
     end
 
     def commit(request)
@@ -179,7 +174,7 @@ module Interstellar
         method: @conf.dig(:api, :methods, type)
       }
 
-      request[:headers] = build_headers(options) if type == :bol
+      request[:headers] = build_headers if type == :bol
 
       save_request(request)
       request
@@ -206,7 +201,11 @@ module Interstellar
       document_response = DocumentResponse.new
 
       request = build_document_request(:pod, tracking_number)
-      browser = Watir::Browser.new(*@options[:watir_args])
+
+      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
+      website_credentials = credentials.find { |c| c.type == :website }
+
+      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(request[:url])
 
       if browser.html.downcase.include?('unable to process request')
@@ -216,14 +215,9 @@ module Interstellar
         return document_response
       end
 
-      credentials = {
-        username: @options[:website_username] || @options[:username],
-        password: @options[:website_password] || @options[:password]
-      }
-
       begin
-        browser.text_field(name: 'UserId').set(credentials[:username])
-        browser.text_field(name: 'Password').set(credentials[:password])
+        browser.text_field(name: 'UserId').set(website_credentials.username)
+        browser.text_field(name: 'Password').set(website_credentials.password)
         browser.button(name: 'submitbutton').click
       rescue Selenium::WebDriver::Error::UnexpectedAlertOpenError
         browser.close
@@ -536,7 +530,7 @@ module Interstellar
 
       request = {
         url: request_url(:quote),
-        headers: build_headers(@options),
+        headers: build_headers,
         method: @conf.dig(:api, :methods, :quote),
         body:
       }

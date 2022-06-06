@@ -30,6 +30,10 @@ module Interstellar
       false
     end
 
+    def required_credential_types
+      %i[api]
+    end
+
     # Override Carrier#serviceable_accessorials? since we have separate delivery/pickup accessorials
     def serviceable_accessorials?(accessorials)
       return true if accessorials.blank?
@@ -130,12 +134,14 @@ module Interstellar
     protected
 
     def build_url(action, options = {})
+      api_credentials = credentials.find { |c| c.type == :api }
+
       env = @test_mode ? :test : :production
 
       url = "https://#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, env, action)}"
-      url = url.gsub('%ACCOUNT_NUMBER%', @options[:account])
+      url = url.gsub('%ACCOUNT_NUMBER%', api_credentials.account)
 
-      url += "?pw=#{@options[:password]}"
+      url += "?pw=#{api_credentials.password}"
       url << "&#{options[:params]}" unless options[:params].blank?
 
       url
