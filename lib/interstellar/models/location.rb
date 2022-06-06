@@ -59,9 +59,9 @@ module Interstellar
     def contact=(contact)
       return @contact = nil if contact.blank?
 
-      @contact = contact if contact.is_a?(Contact)
+      raise ArgumentError, 'contact must be a Contact' unless contact.is_a?(Interstellar::Contact)
 
-      raise ArgumentError, 'contact must be a Contact'
+      @contact = contact
     end
 
     def country=(country)
@@ -79,7 +79,7 @@ module Interstellar
       return @lat = nil if num.blank?
 
       return @lat = num if num.is_a?(BigNum)
-        
+
       raise ArgumentError, 'lat must be a BigNum'
     end
 
@@ -87,7 +87,7 @@ module Interstellar
       return @lng = nil if num.blank?
 
       return @lng = num if num.is_a?(BigNum)
-        
+
       raise ArgumentError, 'lng must be a BigNum'
     end
 
@@ -100,9 +100,7 @@ module Interstellar
     def type=(value)
       return @type = nil if value.blank?
 
-      unless TYPES.include?(value)
-        raise ArgumentError, "type must be one of :#{TYPES.join(', :')}"
-      end
+      raise ArgumentError, "type must be one of :#{TYPES.join(', :')}" unless TYPES.include?(value)
 
       @type = value
     end
