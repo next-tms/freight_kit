@@ -24,8 +24,8 @@ module Interstellar
       true
     end
 
-    def requirements
-      %i[username password]
+    def required_credential_types
+      %i[api selenoid website]
     end
 
     # Documents
@@ -105,10 +105,9 @@ module Interstellar
     protected
 
     def build_soap_header
-      {
-        username: @options[:username],
-        password: @options[:password]
-      }
+      api_credentials = credentials.find { |c| c.type == :api }
+
+      { username: api_credentials.username, password: api_credentials.password }
     end
 
     def commit(action, request)
@@ -173,11 +172,14 @@ module Interstellar
     def parse_document_response(type, tracking_number)
       document_response = DocumentResponse.new
 
-      browser = Watir::Browser.new(*@options[:watir_args])
+      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
+      website_credentials = credentials.find { |c| c.type == :website }
+
+      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(:pod))
 
-      browser.text_field(name: 'userid').set(@options[:username])
-      browser.text_field(name: 'password').set(@options[:password])
+      browser.text_field(name: 'userid').set(website_credentials.username)
+      browser.text_field(name: 'password').set(website_credentials.password)
       browser.button(name: 'btnLogin').click
 
       begin
@@ -277,11 +279,14 @@ module Interstellar
       service:,
       shipment:
     )
-      browser = Watir::Browser.new(*@options[:watir_args])
+      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
+      website_credentials = credentials.find { |c| c.type == :website }
+
+      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(:pickup))
 
-      browser.text_field(name: 'userid').set(@options[:username])
-      browser.text_field(name: 'password').set(@options[:password])
+      browser.text_field(name: 'userid').set(website_credentials.username)
+      browser.text_field(name: 'password').set(website_credentials.password)
       browser.button(name: 'btnLogin').click
 
       if browser.html.include?('You are not enrolled in any application environments on this server')
@@ -495,7 +500,7 @@ module Interstellar
       end
 
       shipment.packages.each do |package|
-        cents = overlength_fee(@options[:tariff], package)
+        cents = overlength_fee(tariff, package)
         next unless cents.positive?
 
         prices << Price.new(

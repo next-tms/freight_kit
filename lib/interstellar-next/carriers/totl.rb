@@ -24,8 +24,8 @@ module Interstellar
       false
     end
 
-    def requirements
-      %i[username password account]
+    def required_credential_types
+      %i[api]
     end
 
     # Documents

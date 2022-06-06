@@ -24,8 +24,8 @@ module Interstellar
       false
     end
 
-    def requirements
-      %i[username password account]
+    def required_credential_types
+      %i[api]
     end
 
     # Documents
@@ -88,20 +88,22 @@ module Interstellar
     def build_rate_request(shipment:)
       raise UnserviceableError, 'Unable to quote accessorials over API' unless shipment.accessorials.blank?
 
+      api_credentials = credentials.find { |c| c.type == :api }
+
       request = {
         accessorial_list: '', # TODO: Fix this!
-        account: @options[:account],
+        account: api_credentials.account,
         class_list: shipment.packages.map(&:freight_class).join(','),
-        customer_type: @options[:customer_type].blank? ? 'B' : @options[:customer_type],
+        customer_type: 'B',
         destination_zip: shipment.destination.postal_code.to_s,
         none_palletized_mode: shipment.packages.map(&:packaging).map(&:pallet?).any?(false) ? 'Y' : 'N',
         origin_zip: shipment.origin.postal_code.to_s,
-        password: @options[:password],
+        password: api_credentials.password,
         plt_count_list: shipment.packages.map(&:quantity).join(','),
         plt_length_list: shipment.packages.map { |p| p.inches(:length).ceil }.join(','),
         plt_total_weight: shipment.packages.map { |p| p.pounds(:total).ceil }.join(','),
         plt_width_list: shipment.packages.map { |p| p.inches(:width).ceil }.join(','),
-        user_id: @options[:username],
+        user_id: api_credentials.username,
         weight_list: shipment.packages.map { |p| p.pounds(:total) }.join(',')
       }
 

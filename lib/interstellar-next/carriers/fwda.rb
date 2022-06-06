@@ -30,6 +30,10 @@ module Interstellar
       false
     end
 
+    def required_credential_types
+      %i[api]
+    end
+
     # Override Carrier#serviceable_accessorials? since we have separate delivery/pickup accessorials
     def serviceable_accessorials?(accessorials)
       return true if accessorials.blank?
@@ -228,8 +232,6 @@ module Interstellar
     end
 
     def build_url(action, options = {})
-      options = @options.merge(options)
-
       url = "#{base_url}#{@conf.dig(:api, :endpoints, action)}"
       url = url.gsub('%TRACKING_NUMBER%', options[:tracking_number]) if options[:tracking_number]
       url = url.gsub('%DOC_ID%', options[:doc_id]) if options[:doc_id]
@@ -242,22 +244,20 @@ module Interstellar
       "https://#{@conf.dig(:api, :domains, env)}"
     end
 
-    def build_headers(options = {})
-      options = @options.merge(options)
-      if !options[:username].blank? && !options[:password].blank? && !options[:account].blank?
-        return JSON_HEADERS.merge(
-          'user': options[:username],
-          'password': options[:password],
-          'customerId': options[:username]&.upcase,
-          'billToAccountNumber': options[:account]
-        )
-      end
+    def build_headers
+      api_credentials = credentials.find { |c| c.type == :api }
 
-      JSON_HEADERS
+      JSON_HEADERS.merge(
+        {
+          'billToAccountNumber': api_credentials.account,
+          'customerId': api_credentials.username.upcase,
+          'password': api_credentials.password,
+          'user': api_credentials.username
+        }
+      )
     end
 
     def build_request(action, options = {})
-      options = @options.merge(options)
       headers = JSON_HEADERS
       headers = headers.merge(options[:headers]) unless options[:headers].blank?
       body = options[:body].to_json unless options[:body].blank?
@@ -328,7 +328,7 @@ module Interstellar
     def build_document_request(doc_id:, tracking_number:)
       request = {
         url: build_url(:document, doc_id:, tracking_number:),
-        headers: build_headers(@options),
+        headers: build_headers,
         method: @conf.dig(:api, :methods, :documents)
       }
 
@@ -339,7 +339,7 @@ module Interstellar
     def build_documents_request(tracking_number)
       request = {
         url: build_url(:documents, tracking_number:),
-        headers: build_headers(@options),
+        headers: build_headers,
         method: @conf.dig(:api, :methods, :documents)
       }
 
@@ -356,7 +356,7 @@ module Interstellar
     def build_locations_request
       request = {
         url: build_url(:locations),
-        headers: build_headers(@options),
+        headers: build_headers,
         method: @conf.dig(:api, :methods, :locations)
       }
 
@@ -402,6 +402,8 @@ module Interstellar
       shipper_phone = shipment.origin.contact.phone.delete('^0-9')
       receiver_phone = shipment.destination.contact.phone.delete('^0-9')
 
+      api_credentials = credentials.find { |c| c.type == :api }
+
       declared_value = if shipment.declared_value_cents.blank?
                          '0'
                        else
@@ -409,9 +411,9 @@ module Interstellar
                        end
 
       request = {
-        headers: build_headers(@options),
+        headers: build_headers,
         method: @conf.dig(:api, :methods, :pickup),
-        url: build_url(:pickup, @options),
+        url: build_url(:pickup),
         body: {
           testmode: test_mode? ? 'Y' : 'N',
           consignee: {
@@ -444,7 +446,7 @@ module Interstellar
           },
           orderDetails: {
             airbillNumber: '00000000',
-            billToCustomerNumber: @options[:account]&.to_s || '',
+            billToCustomerNumber: api_credentials.account&.to_s || '',
             customerReferenceNumber: shipment.po_number,
             declaredValue: declared_value,
             description: shipment.packages.map(&:description).reject(&:blank?).uniq.join(', '),
@@ -455,7 +457,7 @@ module Interstellar
             orderAction: 'CREATE',
             originAirportCode: '',
             shippingDate: pickup_from.strftime('%Y-%m-%d'),
-            shipperCustomerNumber: @options[:account]&.to_s || '',
+            shipperCustomerNumber: api_credentials.account&.to_s || '',
             specialInstructions: '',
             dimensions: {
               dimension: shipment.packages.map do |package|
@@ -522,12 +524,14 @@ module Interstellar
                          format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
                        end
 
+      api_credentials = credentials.find { |c| c.type == :api }
+
       request = {
-        url: build_url(:rates, @options),
-        headers: build_headers(@options),
+        url: build_url(:rates),
+        headers: build_headers,
         method: @conf.dig(:api, :methods, :rates),
         body: {
-          billToCustomerNumber: @options[:account],
+          billToCustomerNumber: api_credentials.account,
           origin: {
             originZipCode: shipment.origin.postal_code.to_s.upcase,
             pickup: {
@@ -620,11 +624,11 @@ module Interstellar
 
     def build_tracking_request(tracking_number)
       request = {
-        url: build_url(:track, @options.deep_merge({ tracking_number: })),
-        headers: build_headers(@options),
+        url: build_url(:track, tracking_number:),
+        headers: build_headers,
         method: @conf.dig(:api, :methods, :track),
         body: {
-          billToCustomerNumber: @options[:account],
+          billToCustomerNumber: api_credentials.account,
           referenceNumber: tracking_number.to_s
         }.to_json
       }

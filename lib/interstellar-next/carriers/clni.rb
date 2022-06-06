@@ -24,6 +24,10 @@ module Interstellar
       false
     end
 
+    def required_credential_types
+      %i[api website]
+    end
+
     # Documents
 
     def pod(tracking_number)
@@ -86,13 +90,15 @@ module Interstellar
     end
 
     def request_blueprint
+      credentials = credentials.find { |c| c.type == :api }
+
       {
         'request': {
           'Application': 'ThirdParty',
-          'AccountNumber': @options[:account],
-          'UserID': @options[:username],
-          'Password': @options[:password],
-          'TestMode': @options[:debug].blank? ? 'N' : 'Y'
+          'AccountNumber': credentials.account,
+          'UserID': credentials.username,
+          'Password': credentials.password,
+          'TestMode': 'N'
         }
       }
     end
@@ -112,7 +118,10 @@ module Interstellar
     def parse_document_response(action, _tracking_number)
       document_response = DocumentResponse.new
 
-      browser = Watir::Browser.new(*@options[:watir_args])
+      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
+      website_credentials = credentials.find { |c| c.type == :website }
+
+      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto('https://ssworldtrak.com/WebtrakWTNew/')
 
       browser.text_field(name: 'txtUserId').set('JFJTRANS')
@@ -188,52 +197,33 @@ module Interstellar
 
       sleep(50) # so Chrome can finish downloading, Selenoid default timeout is 60s
 
-      unless @options.dig(:selenoid_options, :download_url).blank?
-        download_url = "#{@options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
-        response = HTTParty.get("#{download_url}/?json")
+      download_url = "#{selenoid_credentials.download_url}/#{browser.driver.session_id}"
+      response = HTTParty.get("#{download_url}/?json")
 
-        filename = CGI.escape(JSON.parse(response.body)&.last)
-        url = "#{download_url}/#{filename}"
+      filename = CGI.escape(JSON.parse(response.body)&.last)
+      url = "#{download_url}/#{filename}"
 
-        document_response.request = URI.parse(url)
+      document_response.request = URI.parse(url)
 
-        begin
-          response = HTTParty.get(url)
-        rescue StandardError => e
-          document_response.error = e
-          return document_response
-        end
-
-        browser.window.close
-        browser.original_window.use
-        browser.goto('https://ssworldtrak.com/WebtrakWTNew/logoff.aspx')
-        browser.close
-
-        unless response.code == 200
-          document_response.error = DocumentNotFoundError.new
-          return document_response
-        end
-
-        document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
+      begin
+        response = HTTParty.get(url)
+      rescue StandardError => e
+        document_response.error = e
         return document_response
       end
-
-      path = Dir.glob("#{tmpdir}/*.tif").max_by { |f| File.mtime(f) }
-
-      unless File.exist?(path)
-        document_response.error = Interstellar::ResponseError.new
-        return document_response
-      end
-
-      data = File.read(path)
-      content_type = Mimemagic.by_magic(data)
 
       browser.window.close
       browser.original_window.use
       browser.goto('https://ssworldtrak.com/WebtrakWTNew/logoff.aspx')
       browser.close
 
-      document_response.assign_attributes(content_type:, data:)
+      unless response.code == 200
+        document_response.error = DocumentNotFoundError.new
+
+        return document_response
+      end
+
+      document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
       document_response
     end
 
@@ -273,6 +263,8 @@ module Interstellar
       pickup_from += 1.day if ::DateTime.current > pickup_from
       pickup_to = pickup_from + 3.hours
 
+      credentials = credentials.find { |c| c.type == :api }
+
       request = {
         'RatingParam': {
           'AccessorialInput': accessorial_input,
@@ -296,7 +288,7 @@ module Interstellar
             'ServiceLevelID': '',
             'ShipmentTerms': '',
             'Stackable': false,
-            'WebTrakUserID': @options[:username]
+            'WebTrakUserID': credentials.username
           }
         }
       }

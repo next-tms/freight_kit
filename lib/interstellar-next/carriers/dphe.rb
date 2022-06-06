@@ -24,6 +24,10 @@ module Interstellar
       false
     end
 
+    def required_credential_types
+      %i[api selenoid website]
+    end
+
     # Documents
 
     def pod(tracking_number)
@@ -73,12 +77,9 @@ module Interstellar
     protected
 
     def build_soap_header(_action)
-      {
-        authentication_header: {
-          user_name: @options[:username],
-          password: @options[:password]
-        }
-      }
+      api_credentials = credentials.find { |c| c.type == :api }
+
+      { authentication_header: { user_name: api_credentials.username, password: api_credentials.password } }
     end
 
     def commit_soap(action, request)
@@ -118,18 +119,15 @@ module Interstellar
     def parse_document_response(action, tracking_number)
       document_response = DocumentResponse.new
 
-      url = request_url(action)
-      browser = Watir::Browser.new(*@options[:watir_args])
+      watir_credentials = credentials.find { |c| c.type == :selenoid }
+      website_credentials = credentials.find { |c| c.type == :website }
 
-      browser.goto(url)
+      browser = Watir::Browser.new(*watir_credentials.watir_args)
 
-      credentials = {
-        username: @options[:username],
-        password: @options[:password]
-      }
+      browser.goto(request_url(action))
 
-      browser.text_field(name: 'dnn$ctr1914$View$TextBox1').set(credentials[:username])
-      browser.text_field(name: 'dnn$ctr1914$View$TextBox2').set(credentials[:password])
+      browser.text_field(name: 'dnn$ctr1914$View$TextBox1').set(website_credentials.username)
+      browser.text_field(name: 'dnn$ctr1914$View$TextBox2').set(website_credentials.password)
       browser.button(name: 'dnn$ctr1914$View$Button1').click
 
       if browser.html.downcase.include?('invalid username or password')
@@ -175,46 +173,29 @@ module Interstellar
 
       sleep(10) # so Chrome can finish downloading
 
-      unless @options.dig(:selenoid_options, :download_url).blank?
-        download_url = "#{@options.dig(:selenoid_options, :download_url)}/#{browser.driver.session_id}"
-        response = HTTParty.get("#{download_url}/?json")
+      download_url = "#{selenoid_credentials.download_url}/#{browser.driver.session_id}"
+      response = HTTParty.get("#{download_url}/?json")
 
-        filename = CGI.escape(JSON.parse(response.body)&.last)
-        url = "#{download_url}/#{filename}"
+      filename = CGI.escape(JSON.parse(response.body)&.last)
+      url = "#{download_url}/#{filename}"
 
-        document_response.request = URI.parse(url)
+      document_response.request = URI.parse(url)
 
-        begin
-          response = HTTParty.get(url)
-        rescue StandardError => e
-          document_response.error = e
-          return document_response
-        end
-
-        browser.close
-
-        unless response.code == 200
-          document_response.error = DocumentNotFoundError.new
-          return document_response
-        end
-
-        document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
+      begin
+        response = HTTParty.get(url)
+      rescue StandardError => e
+        document_response.error = e
         return document_response
       end
-
-      path = Dir.glob("#{tmpdir}/*.tif").max_by { |f| File.mtime(f) }
-
-      unless File.exist?(path)
-        document_response.error = Interstellar::ResponseError.new
-        return document_response
-      end
-
-      data = File.read(path)
-      content_type = Mimemagic.by_magic(data)
 
       browser.close
 
-      document_response.assign_attributes(content_type:, data:)
+      unless response.code == 200
+        document_response.error = DocumentNotFoundError.new
+        return document_response
+      end
+
+      document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
       document_response
     end
 
@@ -257,8 +238,10 @@ module Interstellar
       end
       shipment_detail = shipment_detail.join('|')
 
+      api_credentials = credentials.find { |c| c.type == :api }
+
       request = {
-        customer_code: @options[:account],
+        customer_code: api_credentials.account,
         origin_zip: shipment.origin.postal_code.to_s.upcase,
         destination_zip: shipment.destination.postal_code.to_s.upcase,
         shipment_detail:,

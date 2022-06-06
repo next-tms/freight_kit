@@ -12,17 +12,16 @@ module Interstellar
       nil
     end
 
-    def requirements
-      %i[username password]
+    def required_credential_types
+      %i[selenoid website]
     end
 
     # Documents
-    def find_pod(tracking_number, options = {})
-      options = @options.merge(options)
-      parse_pod_response(tracking_number, options)
+    def pod(tracking_number)
+      parse_pod_response(tracking_number)
     end
 
-    def find_pod_implemented?
+    def pod_implemented?
       true
     end
 
@@ -40,11 +39,10 @@ module Interstellar
     protected
 
     def build_url(action, *)
-      url = "#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
+      "#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
     end
 
     def commit(action, options = {})
-      options = @options.merge(options)
       url = request_url(action)
 
       response = if @conf.dig(:api, :methods, action) == :post
@@ -62,19 +60,13 @@ module Interstellar
     end
 
     # Documents
-    def parse_document_response(type, tracking_number, url, options = {})
-      options = @options.merge(options)
-
-      path = if options[:path].blank?
-               File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
-             else
-               options[:path]
-             end
+    def parse_document_response(type, tracking_number, url)
+      path = File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
       file = Tempfile.new(binmode: true)
 
-      File.open(file.path, 'wb') do |file|
+      File.open(file.path, 'wb') do |f|
         URI.parse(url).open do |input|
-          file.write(input.read)
+          f.write(input.read)
         end
       rescue OpenURI::HTTPError
         raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
@@ -85,14 +77,15 @@ module Interstellar
       File.exist?(path) ? path : false
     end
 
-    def parse_pod_response(tracking_number, options = {})
-      options = @options.merge(options)
+    def parse_pod_response(tracking_number)
+      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
+      website_credentials = credentials.find { |c| c.type == :website }
 
-      browser = Watir::Browser.new(*options[:watir_args])
+      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(:pod))
 
-      browser.text_field(name: 'ctl00$cphMain$txtUserName').set(@options[:username])
-      browser.text_field(name: 'ctl00$cphMain$txtPassword').set(@options[:password])
+      browser.text_field(name: 'ctl00$cphMain$txtUserName').set(website_credentials.username)
+      browser.text_field(name: 'ctl00$cphMain$txtPassword').set(website_credentials.password)
       browser.button(name: 'ctl00$cphMain$btnLogIn').click
 
       if browser.html.include?('Username or password is invalid.')
@@ -115,12 +108,13 @@ module Interstellar
       end
       browser.close
 
-      parse_document_response(:pod, tracking_number, image_url, options)
+      parse_document_response(:pod, tracking_number, image_url)
     end
 
     # Rates
 
     # Tracking
+
     def parse_api_city_state_zip(str)
       return nil if str.blank?
 
@@ -159,7 +153,9 @@ module Interstellar
     def parse_tracking_response(tracking_number)
       tracking_response = TrackingResponse.new(carrier: self)
 
-      browser = Watir::Browser.new(*@options[:watir_args])
+      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
+
+      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(:track))
 
       browser.text_field(name: 'ctl00$cphMain$txtProNumber').set(tracking_number)

@@ -30,6 +30,10 @@ module Interstellar
       false
     end
 
+    def required_credential_types
+      %i[api]
+    end
+
     # Documents
 
     # Rates
@@ -56,8 +60,7 @@ module Interstellar
 
     protected
 
-    def build_url(action, options = {})
-      options = @options.merge(options)
+    def build_url(action)
       "#{base_url}#{@conf.dig(:api, :endpoints, action)}"
     end
 
@@ -65,25 +68,21 @@ module Interstellar
       "https://#{@conf.dig(:api, :domain)}"
     end
 
-    def auth_header(options = {})
-      options = @options.merge(options)
-      if !options[:username].blank? && !options[:password].blank?
-        auth = Base64.strict_encode64("#{options[:username]}:#{options[:password]}")
-        return { 'Authorization': "Basic #{auth}" }
-      end
+    def auth_header
+      api_credentials = credentials.find { |c| c.type == :api }
+      auth = Base64.strict_encode64("#{api_credentials.username}:#{api_credentials.password}")
 
-      {}
+      { 'Authorization': "Basic #{auth}" }
     end
 
     def build_request(action, options = {})
-      options = @options.merge(options)
       headers = JSON_HEADERS
       headers = headers.merge(auth_header)
       headers = headers.merge(options[:headers]) unless options[:headers].blank?
       body = URI.encode_www_form(options[:body]) unless options[:body].blank?
 
       request = {
-        url: options[:url].blank? ? build_url(action, options) : options[:url],
+        url: options[:url].blank? ? build_url(action) : options[:url],
         headers:,
         method: @conf.dig(:api, :methods, action),
         body:
@@ -129,21 +128,23 @@ module Interstellar
       shipment_description = shipment.packages.map(&:description).reject(&:blank?).uniq.join(', ')
       shipment_description = 'Freight All Kinds' if shipment_description.blank?
 
+      api_credentials = credentials.find { |c| c.type == :api }
+
       body = {
         allowSpot: longest_dimension >= 120 ? 'Y' : 'N',
-        CustomerAccount: @options[:account].to_i.to_s.rjust(9, '0'),
-        CustomerCity: @options.dig(:customer_address, :city),
-        CustomerName: @options[:customer_name],
-        CustomerState: @options.dig(:customer_address, :state),
-        CustomerStreet: @options.dig(:customer_address, :street),
-        CustomerZip: @options.dig(:customer_address, :zip_code),
+        CustomerAccount: api_credentials.account.to_i.to_s.rjust(9, '0'),
+        CustomerCity: customer_location.city,
+        CustomerName: customer_location.contact.customer_name,
+        CustomerState: customer_location.province,
+        CustomerStreet: customer_location.address1,
+        CustomerZip: customer_location.postal_code,
         Description: shipment_description,
         DestCountry: 'U',
         DestinationCity: shipment.destination.city,
         DestinationState: shipment.destination.province,
         DestinationZip: shipment.destination.postal_code,
         DimsOption: 'I',
-        EmailAddress: @options[:customer_email].blank? ? 'unknown@fake.fake' : @options[:customer_email],
+        EmailAddress: customer_location.contact.email,
         Option: 'T',
         OrigCountry: 'U',
         OriginCity: shipment.origin.city,
