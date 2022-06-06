@@ -5,19 +5,14 @@ module Interstellar
     attr_accessor :conf
     attr_reader :rates_with_excessive_length_fees
 
-    def initialize(options = {})
-      requirements.each { |key| requires!(options, key) }
-      @conf = nil
-      @debug = options[:debug].blank? ? false : true
-      @options = options
-      @last_request = nil
-      @test_mode = @options[:test]
+    def initialize(*)
+      super
 
       conf_path = File
                   .join(
                     File.expand_path(
                       '../../../../configuration/platforms',
-                      self.class.const_source_location(:REACTIVE_FREIGHT_PLATFORM).first,
+                      self.class.const_source_location(:REACTIVE_FREIGHT_PLATFORM).first
                     ),
                     "#{self.class.ancestors[1].name.split('::')[1].underscore}.yml"
                   )
@@ -27,7 +22,7 @@ module Interstellar
                   .join(
                     File.expand_path(
                       '../../../../configuration/carriers',
-                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first,
+                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first
                     ),
                     "#{self.class.to_s.split('::')[1].underscore}.yml"
                   )
