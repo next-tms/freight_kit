@@ -16,19 +16,21 @@ module Interstellar
   #   @see #save_request
   class Carrier
     attr_accessor :conf, :rates_with_excessive_length_fees, :tmpdir
-    attr_reader :credentials, :last_request, :tariff
+    attr_reader :credentials, :customer_location, :last_request, :tariff
 
     # Credentials should be a `Credential` or `Array` of `Credential`
-    def initialize(credentials, tariff: nil)
-      if tariff && !tariff.is_a?(Tariff)
-        raise ArgumentError, "#{self.class.name}#new: `tariff` should be a `Tariff`, got #{tariff.class.name}"
+    def initialize(credentials, customer_location: nil, tariff: nil)
+      if customer_location && !customer_location.is_a?(Location)
+        raise ArgumentError, "#{self.class.name}#new: `customer_location` must be a Location"
       end
+
+      raise ArgumentError, "#{self.class.name}#new: `tariff` must be a Tariff" if tariff && !tariff.is_a?(Tariff)
 
       credentials = [credentials] if credentials.is_a?(Credential)
 
       unless credentials.map(&:class).uniq == [Credential]
         raise ArgumentError,
-              "#{self.class.name}#new: `credentials` should be one of: `Credential`, `Array` of `Credential`"
+              "#{self.class.name}#new: `credentials` must be a Credential or Array of Credential"
       end
 
       missing_credential_types = required_credential_types.uniq - credentials.map(&:type).uniq
