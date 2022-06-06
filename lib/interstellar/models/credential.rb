@@ -48,7 +48,7 @@ module Interstellar
 
       requirements = case type
                      when :api, :website
-                       { username: String, password: String }
+                       { password: String }
                      when :oauth2
                        { access_token: String, expires_at: ::DateTime, scope: String }
                      when :selenoid
