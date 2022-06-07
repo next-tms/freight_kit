@@ -219,6 +219,17 @@ module Interstellar
       [pickup_accessorials&.uniq, delivery_accessorials&.uniq]
     end
 
+    def build_dimensions(packages)
+      packages.map do |package|
+        {
+          height: package.height(:in).ceil,
+          length: package.length(:in).ceil,
+          pieces: package.quantity,
+          width: package.width(:in).ceil
+        }
+      end
+    end
+
     def build_freight_details(packages)
       packages.map do |package|
         {
@@ -515,16 +526,16 @@ module Interstellar
     # Rates
 
     def build_rate_request(shipment:)
-      pickup_accessorials, delivery_accessorials = build_accessorials(shipment.accessorials)
-      freight_details = build_freight_details(shipment.packages)
+      api_credentials = credentials.find { |c| c.type == :api }
 
+      freight_details = build_freight_details(shipment.packages)
+      dimensions = build_dimensions(shipment.packages)
       declared_value = if shipment.declared_value_cents.blank?
                          '0'
                        else
                          format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
                        end
-
-      api_credentials = credentials.find { |c| c.type == :api }
+      pickup_accessorials, delivery_accessorials = build_accessorials(shipment.accessorials)
 
       request = {
         url: build_url(:rates),
@@ -546,6 +557,7 @@ module Interstellar
               deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
             }
           },
+          dimensions: { dimension: dimensions },
           freightDetails: { freightDetail: freight_details },
           hazmat: shipment.packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
           inBondShipment: 'N',
