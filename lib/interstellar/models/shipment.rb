@@ -20,6 +20,10 @@ module Interstellar
       packages.map(&:packaging).map(&:pallet?).none?(true)
     end
 
+    def hazmat?
+      packages.map(&:hazmat?).any?(true)
+    end
+
     def loose_and_palletized?
       !loose? && !palletized?
     end
