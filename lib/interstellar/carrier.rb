@@ -231,6 +231,17 @@ module Interstellar
       false
     end
 
+    # Fetch credential of given type.
+    #
+    # @param [Symbol] Type of credential to find. One of: `:api`, `:selenoid`, `:website`
+    # @return [Interstellar::Credential|NilClass]
+    def fetch_credential(type)
+      @fetch_credentials ||= {}
+      return @fetch_credentials[type] unless @fetch_credentials[type].blank?
+
+      @fetch_credentials[type] ||= credentials.find { |credential| credential.type == type }
+    end
+
     # Validate credentials with a call to the API.
     #
     # By default this just does a `find_rates` call with the origin and destination both as
