@@ -233,6 +233,7 @@ module Interstellar
 
     # Fetch credential of given type.
     #
+    # @param [Symbol] Type of credential to find. One of: `:api`, `:selenoid`, `:website`
     # @return [Interstellar::Credential|NilClass]
     def fetch_credential(type)
       @fetch_credentials ||= {}
