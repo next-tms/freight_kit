@@ -1,5 +1,20 @@
+AllCops:
+  NewCops: enable
+
 Layout/LineLength:
   Max: 120
 
 Lint/UnusedMethodArgument:
   Enabled: false
+
+Metrics/AbcSize:
+  Max: 35
+
+Metrics/MethodLength:
+  Max: 30
+
+Metrics/ModuleLength:
+  Max: 150
+
+Style/ModuleFunction:
+  EnforcedStyle: extend_self
