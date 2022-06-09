@@ -9,8 +9,8 @@ module Interstellar
     @@scac = 'SEFL'
 
     JSON_HEADERS = {
-      'Accept': 'application/json',
-      'charset': 'utf-8',
+      Accept: 'application/json',
+      charset: 'utf-8',
       'Content-Type' => 'application/x-www-form-urlencoded'
     }.freeze
 
@@ -72,7 +72,7 @@ module Interstellar
       api_credentials = credentials.find { |c| c.type == :api }
       auth = Base64.strict_encode64("#{api_credentials.username}:#{api_credentials.password}")
 
-      { 'Authorization': "Basic #{auth}" }
+      { Authorization: "Basic #{auth}" }
     end
 
     def build_request(action, options = {})
@@ -134,7 +134,7 @@ module Interstellar
         allowSpot: longest_dimension >= 120 ? 'Y' : 'N',
         CustomerAccount: api_credentials.account.to_i.to_s.rjust(9, '0'),
         CustomerCity: customer_location.city,
-        CustomerName: customer_location.contact.customer_name,
+        CustomerName: customer_location.contact.company_name,
         CustomerState: customer_location.province,
         CustomerStreet: customer_location.address1,
         CustomerZip: customer_location.postal_code,
