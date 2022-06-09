@@ -5,9 +5,9 @@ module Interstellar
     REACTIVE_FREIGHT_CARRIER = true
 
     JSON_HEADERS = {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
-      'charset': 'utf-8'
+      charset: 'utf-8'
     }.freeze
 
     cattr_reader :name, :scac
@@ -162,8 +162,7 @@ module Interstellar
     end
 
     def request_url(action)
-      env = test_mode? ? :staging : :production
-      "https://#{@conf.dig(:api, :domains, env, action)}#{@conf.dig(:api, :endpoints, action)}"
+      "https://#{@conf.dig(:api, :domains, :production, action)}#{@conf.dig(:api, :endpoints, action)}"
     end
 
     # Documents
