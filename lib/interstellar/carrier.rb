@@ -20,12 +20,6 @@ module Interstellar
 
     # Credentials should be a `Credential` or `Array` of `Credential`
     def initialize(credentials, customer_location: nil, tariff: nil)
-      if customer_location && !customer_location.is_a?(Location)
-        raise ArgumentError, "#{self.class.name}#new: `customer_location` must be a Location"
-      end
-
-      raise ArgumentError, "#{self.class.name}#new: `tariff` must be a Tariff" if tariff && !tariff.is_a?(Tariff)
-
       credentials = [credentials] if credentials.is_a?(Credential)
 
       unless credentials.map(&:class).uniq == [Credential]
@@ -42,8 +36,20 @@ module Interstellar
 
       @credentials = credentials
 
-      @conf = nil
-      @last_request = nil
+      if customer_location
+        unless customer_location.is_a?(Location)
+          raise ArgumentError,
+                "#{self.class.name}#new: `customer_location` must be a Location"
+        end
+
+        @customer_location = customer_location
+      end
+
+      if tariff
+        raise ArgumentError, "#{self.class.name}#new: `tariff` must be a Tariff" unless tariff.is_a?(Tariff)
+
+        @tariff = tariff
+      end
 
       conf_path = File
                   .join(
