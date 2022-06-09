@@ -9,8 +9,8 @@ module Interstellar
     @@scac = 'FWDA'
 
     JSON_HEADERS = {
-      'Accept': 'application/json',
-      'charset': 'utf-8',
+      Accept: 'application/json',
+      charset: 'utf-8',
       'Content-Type' => 'application/json'
     }.freeze
 
@@ -251,8 +251,7 @@ module Interstellar
     end
 
     def base_url
-      env = @test_mode ? :test : :production
-      "https://#{@conf.dig(:api, :domains, env)}"
+      "https://#{@conf.dig(:api, :domains, :production)}"
     end
 
     def build_headers
@@ -260,10 +259,10 @@ module Interstellar
 
       JSON_HEADERS.merge(
         {
-          'billToAccountNumber': api_credentials.account,
-          'customerId': api_credentials.username.upcase,
-          'password': api_credentials.password,
-          'user': api_credentials.username
+          billToAccountNumber: api_credentials.account,
+          customerId: api_credentials.username.upcase,
+          password: api_credentials.password,
+          user: api_credentials.username
         }
       )
     end
@@ -426,7 +425,7 @@ module Interstellar
         method: @conf.dig(:api, :methods, :pickup),
         url: build_url(:pickup),
         body: {
-          testmode: test_mode? ? 'Y' : 'N',
+          testmode: 'N',
           consignee: {
             consigneeAddress1: shipment.destination.address1,
             consigneeAddress2: '',
