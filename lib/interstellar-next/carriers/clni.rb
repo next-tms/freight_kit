@@ -90,15 +90,15 @@ module Interstellar
     end
 
     def request_blueprint
-      credentials = credentials.find { |c| c.type == :api }
+      api_credentials = credentials.find { |c| c.type == :api }
 
       {
-        'request': {
-          'Application': 'ThirdParty',
-          'AccountNumber': credentials.account,
-          'UserID': credentials.username,
-          'Password': credentials.password,
-          'TestMode': 'N'
+        request: {
+          Application: 'ThirdParty',
+          AccountNumber: api_credentials.account,
+          UserID: api_credentials.username,
+          Password: api_credentials.password,
+          TestMode: 'N'
         }
       }
     end
@@ -124,8 +124,8 @@ module Interstellar
       browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto('https://ssworldtrak.com/WebtrakWTNew/')
 
-      browser.text_field(name: 'txtUserId').set('JFJTRANS')
-      browser.text_field(name: 'txtPass').set('Clear193')
+      browser.text_field(name: 'txtUserId').set(website_credentials.username)
+      browser.text_field(name: 'txtPass').set(website_credentials.password)
       browser.button(name: 'btnSubmit').click
 
       if browser.html.include?('Either UserID or Password are incorrect, please try again.')
@@ -144,13 +144,15 @@ module Interstellar
 
       # Hack to get around JavaScript messing up our input
       sleep(1)
-
-      from.split('').each do |char|
+      from.chars.each do |char|
         browser.text_field(name: 'txtFromDate').append(char)
       end
 
       browser.text_field(name: 'txtToDate').click
-      browser.element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div').wait_until(&:present?).click
+      browser
+        .element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div')
+        .wait_until(&:present?)
+        .click
 
       browser.button(name: 'btnSubmit').click
 
@@ -167,7 +169,10 @@ module Interstellar
         return document_response
       end
 
-      browser.element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a').wait_until(&:present?).click
+      browser
+        .element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a')
+        .wait_until(&:present?)
+        .click
 
       browser.switch_window
 
@@ -228,67 +233,70 @@ module Interstellar
     end
 
     # Rates
+
+    def build_commodity_input(packages)
+      packages.map do |package|
+        {
+          CommodityInput: {
+            CommodityClass: package.freight_class,
+            CommodityHazmat: package.hazmat? ? 'Y' : 'N',
+            CommodityHeight: package.height(:in).ceil,
+            CommodityLength: package.length(:in).ceil,
+            CommodityPieces: package.quantity,
+            CommodityPieceType: package.packaging.pallet? ? 'pallet' : 'box',
+            CommodityWeight: package.pounds(:total).ceil,
+            CommodityWeightPerPiece: package.pounds(:each).ceil,
+            CommodityWidth: package.width(:in).ceil
+          }
+        }
+      end
+    end
+
     def build_rate_request(shipment:)
       accessorial_input = []
       unless shipment.accessorials.blank?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            accessorial_input << { 'AccessorialInput': { 'AccessorialCode': @conf.dig(:accessorials, :mappable)[a] } }
+            accessorial_input << { AccessorialInput: { AccessorialCode: @conf.dig(:accessorials, :mappable)[a] } }
           end
         end
       end
 
       accessorial_input.uniq!
 
-      commodity_input = []
-      dimensions = []
-      shipment.packages.each do |package|
-        commodity_input << {
-          'CommodityInput': {
-            'CommodityClass': package.freight_class,
-            'CommodityHazmat': package.hazmat? ? 'Y' : 'N',
-            'CommodityHeight': package.height(:in).ceil,
-            'CommodityLength': package.length(:in).ceil,
-            'CommodityPieces': package.quantity,
-            'CommodityPieceType': package.packaging.pallet? ? 'pallet' : 'box',
-            'CommodityWeight': package.pounds(:total).ceil,
-            'CommodityWeightPerPiece': package.pounds(:each).ceil,
-            'CommodityWidth': package.width(:in).ceil
-          }
-        }
-      end
+      commodity_input = build_commodity_input(shipment.packages)
 
       pickup_from = ::DateTime.current.beginning_of_day + 14.hours
       pickup_from += 1.day if ::DateTime.current > pickup_from
       pickup_to = pickup_from + 3.hours
 
-      credentials = credentials.find { |c| c.type == :api }
+      api_credentials = credentials.find { |c| c.type == :api }
 
       request = {
-        'RatingParam': {
-          'AccessorialInput': accessorial_input,
-          'CommodityInput': commodity_input,
-          'RatingInput': {
-            'DeclaredValue': 0,
-            'DestinationCity': shipment.destination.city,
-            'DestinationCountry': shipment.destination.country.code(:alpha2).value,
-            'DestinationState': shipment.destination.province,
-            'DestinationZip': shipment.destination.postal_code,
-            'LiabilityType': '',
-            'OriginCity': shipment.origin.city,
-            'OriginCountry': shipment.origin.country.code(:alpha2).value,
-            'OriginState': shipment.origin.province,
-            'OriginZip': shipment.origin.postal_code,
-            'Palletized': shipment.packages.map(&:packaging).map(&:pallet?).any?(false) ? 'N' : 'Y',
-            'PickupDate': pickup_from.to_date.strftime('%Y-%m-%d'),
-            'PickupLocationCloseTime': pickup_to.strftime('%H:%M:00'),
-            'PickupTime': pickup_from.strftime('%H:%M:00'),
-            'RequestID': rand(0..999_999).to_s,
-            'ServiceLevelID': '',
-            'ShipmentTerms': '',
-            'Stackable': false,
-            'WebTrakUserID': credentials.username
+        RatingParam: {
+          AccessorialInput: accessorial_input,
+          CommodityInput: commodity_input,
+          RatingInput: {
+            DeclaredValue: 0,
+            DestinationCity: shipment.destination.city,
+            DestinationCountry: shipment.destination.country.code(:alpha2).value,
+            DestinationState: shipment.destination.province,
+            DestinationZip: shipment.destination.postal_code,
+            LiabilityType: '',
+            OriginCity: shipment.origin.city,
+            OriginCountry: shipment.origin.country.code(:alpha2).value,
+            OriginState: shipment.origin.province,
+            OriginZip: shipment.origin.postal_code,
+            Palletized: shipment.packages.map(&:packaging).map(&:pallet?).any?(false) ? 'N' : 'Y',
+            PickupDate: pickup_from.to_date.strftime('%Y-%m-%d'),
+            PickupLocationCloseTime: pickup_to.strftime('%H:%M:00'),
+            PickupTime: pickup_from.strftime('%H:%M:00'),
+            RequestID: rand(0..999_999).to_s,
+            ServiceLevelID: '',
+            ShipmentTerms: '',
+            Stackable: false,
+            WebTrakUserID: api_credentials.username
           }
         }
       }
