@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
 module Interstellar
-  class Platform < Interstellar::Carrier
-    attr_accessor :conf
-    attr_reader :rates_with_excessive_length_fees
-
-    def initialize(*)
+  class Platform < Carrier
+    # Credentials should be a `Credential` or `Array` of `Credential`
+    def initialize(credentials, customer_location: nil, tariff: nil)
       super
 
       conf_path = File
@@ -29,18 +27,6 @@ module Interstellar
       @conf = @conf.deep_merge(YAML.safe_load(File.read(conf_path), permitted_classes: [Symbol]))
 
       @rates_with_excessive_length_fees = @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-    end
-
-    def find_bol(*)
-      raise NotImplementedError, "#{self.class.name}: #find_bol not supported"
-    end
-
-    def find_estimate(*)
-      raise NotImplementedError, "#{self.class.name}: #find_estimate not supported"
-    end
-
-    def find_pod(*)
-      raise NotImplementedError, "#{self.class.name}: #find_pod not supported"
     end
   end
 end
