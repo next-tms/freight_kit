@@ -5,9 +5,9 @@ module Interstellar
     REACTIVE_FREIGHT_PLATFORM = true
 
     JSON_HEADERS = {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
-      'charset': 'utf-8'
+      charset: 'utf-8'
     }.freeze
 
     def required_credential_types
@@ -79,7 +79,7 @@ module Interstellar
     def set_auth_token
       return @auth_token unless @auth_token.blank?
 
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       request = build_request(
         :authenticate,
@@ -91,7 +91,7 @@ module Interstellar
     end
 
     def token
-      { 'Authorization': "Bearer #{@auth_token}" }
+      { Authorization: "Bearer #{@auth_token}" }
     end
 
     # Show

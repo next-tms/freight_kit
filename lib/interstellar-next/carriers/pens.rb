@@ -88,7 +88,7 @@ module Interstellar
     def build_rate_request(shipment:)
       raise UnserviceableError, 'Unable to quote accessorials over API' unless shipment.accessorials.blank?
 
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       request = {
         accessorial_list: '', # TODO: Fix this!

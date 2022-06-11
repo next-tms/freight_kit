@@ -125,7 +125,7 @@ module Interstellar
     end
 
     def build_headers
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       JSON_HEADERS.merge({ ApiKey: api_credentials.password, UserName: api_credentials.username })
     end
@@ -201,8 +201,8 @@ module Interstellar
 
       request = build_document_request(:pod, tracking_number)
 
-      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
-      website_credentials = credentials.find { |c| c.type == :website }
+      selenoid_credentials = fetch_credential(:selenoid)
+      website_credentials = fetch_credential(:website)
 
       browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(request[:url])

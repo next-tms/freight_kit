@@ -105,7 +105,7 @@ module Interstellar
     protected
 
     def build_soap_header
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       { username: api_credentials.username, password: api_credentials.password }
     end
@@ -172,8 +172,8 @@ module Interstellar
     def parse_document_response(type, tracking_number)
       document_response = DocumentResponse.new
 
-      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
-      website_credentials = credentials.find { |c| c.type == :website }
+      selenoid_credentials = fetch_credential(:selenoid)
+      website_credentials = fetch_credential(:website)
 
       browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(:pod))
@@ -279,8 +279,8 @@ module Interstellar
       service:,
       shipment:
     )
-      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
-      website_credentials = credentials.find { |c| c.type == :website }
+      selenoid_credentials = fetch_credential(:selenoid)
+      website_credentials = fetch_credential(:website)
 
       browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(:pickup))

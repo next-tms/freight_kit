@@ -82,15 +82,15 @@ module Interstellar
     end
 
     def request_blueprint
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       {
-        'request': {
-          'AccountNumber': api_credentials.account,
-          'Application': 'ThirdParty',
-          'Password': api_credentials.password,
-          'TestMode': 'N',
-          'UserID': api_credentials.username
+        request: {
+          AccountNumber: api_credentials.account,
+          Application: 'ThirdParty',
+          Password: api_credentials.password,
+          TestMode: 'N',
+          UserID: api_credentials.username
         }
       }
     end
@@ -104,18 +104,18 @@ module Interstellar
 
     # Rates
     def build_rate_request(shipment:)
-      accessorials = [{ 'AccessorialItem': { 'Code': 'SingleShipment' } }]
+      accessorials = [{ AccessorialItem: { Code: 'SingleShipment' } }]
       unless shipment.accessorials.blank?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            accessorials << { 'AccessorialItem': { 'Code': @conf.dig(:accessorials, :mappable)[a] } }
+            accessorials << { AccessorialItem: { Code: @conf.dig(:accessorials, :mappable)[a] } }
           end
         end
       end
 
       longest_dimension = shipment.packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
-      accessorials << { 'AccessorialItem': { 'Code': 'ExcessiveLength' } } if longest_dimension >= 96
+      accessorials << { AccessorialItem: { Code: 'ExcessiveLength' } } if longest_dimension >= 96
 
       accessorials = accessorials.uniq
 
@@ -124,45 +124,45 @@ module Interstellar
       shipment.packages.each do |package|
         package.quantity.times do
           details << {
-            'DetailItem': {
-              'Weight': package.pounds(:each).ceil,
-              'Class': package.freight_class.to_s,
-              'Length': package.length(:in).ceil,
-              'Width': package.width(:in).ceil,
-              'Height': package.height(:in).ceil
+            DetailItem: {
+              Weight: package.pounds(:each).ceil,
+              Class: package.freight_class.to_s,
+              Length: package.length(:in).ceil,
+              Width: package.width(:in).ceil,
+              Height: package.height(:in).ceil
             }
           }
 
           # Keeping this one at a time to match with "details"
           dimensions << {
-            'DimensionItem': {
-              'Units': 1,
-              'Length': package.length(:in).round(2),
-              'Width': package.width(:in).round(2),
-              'Height': package.height(:in).round(2),
-              'Type': 'IN' # inches
+            DimensionItem: {
+              Units: 1,
+              Length: package.length(:in).round(2),
+              Width: package.width(:in).round(2),
+              Height: package.height(:in).round(2),
+              Type: 'IN' # inches
             }
           }
         end
       end
 
       request = {
-        'request': {
-          'Application': 'ThirdParty',
-          'BillingTerms': 'Prepaid',
-          'OriginCity': shipment.origin.city,
-          'OriginState': shipment.origin.province,
-          'OriginZipcode': shipment.origin.postal_code.to_s.upcase,
-          'DestinationCity': shipment.destination.city,
-          'DestinationState': shipment.destination.province,
-          'DestinationZipcode': shipment.destination.postal_code.to_s.upcase,
-          'WeightUnits': 'LBS',
-          'TotalCube': shipment.packages.sum { |p| p.cubic_ft(:each) }.round(2),
-          'TotalCubeUnits': 'CUFT', # cubic ft
-          'ExcessiveLengthTotalInches': longest_dimension.to_s,
-          'Details': details,
-          'Dimensions': dimensions,
-          'Accessorials': accessorials
+        request: {
+          Application: 'ThirdParty',
+          BillingTerms: 'Prepaid',
+          OriginCity: shipment.origin.city,
+          OriginState: shipment.origin.province,
+          OriginZipcode: shipment.origin.postal_code.to_s.upcase,
+          DestinationCity: shipment.destination.city,
+          DestinationState: shipment.destination.province,
+          DestinationZipcode: shipment.destination.postal_code.to_s.upcase,
+          WeightUnits: 'LBS',
+          TotalCube: shipment.packages.sum { |p| p.cubic_ft(:each) }.round(2),
+          TotalCubeUnits: 'CUFT', # cubic ft
+          ExcessiveLengthTotalInches: longest_dimension.to_s,
+          Details: details,
+          Dimensions: dimensions,
+          Accessorials: accessorials
         }
       }
 
@@ -175,9 +175,9 @@ module Interstellar
       unless declared_value.blank?
         request = request.deep_merge(
           {
-            'request': {
-              'DeclaredValue': declared_value,
-              'FullValueCoverage': declared_value
+            request: {
+              DeclaredValue: declared_value,
+              FullValueCoverage: declared_value
             }
           }
         )
@@ -300,8 +300,8 @@ module Interstellar
 
     def build_tracking_request(tracking_number)
       request = {
-        'request': {
-          'ProNumber': tracking_number
+        request: {
+          ProNumber: tracking_number
         }
       }
       save_request(request)
@@ -326,10 +326,10 @@ module Interstellar
     def parse_tracking_response(response)
       tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
 
-      error = if !response
-                'API Error: Unknown response'
-              else
+      error = if response
                 response.dig(:get_by_pro_number_response, :get_by_pro_number_result, :code)
+              else
+                'API Error: Unknown response'
               end
 
       unless error.blank?
@@ -342,7 +342,7 @@ module Interstellar
       shipper_location = Location.new(
         address1: (
           search_result.dig(:shipper, :address1) || '' \
-          " #{search_result.dig(:shipper, :address2) || ''}"
+                                                    " #{search_result.dig(:shipper, :address2) || ''}"
         ).squish.strip.titleize,
         city: search_result.dig(:shipper, :city)&.squish&.strip&.titleize,
         province: search_result.dig(:shipper, :state)&.strip&.upcase,
@@ -353,7 +353,7 @@ module Interstellar
       receiver_location = Location.new(
         address1: (
           search_result.dig(:consignee, :address1) || '' \
-          " #{search_result.dig(:consignee, :address2) || ''}"
+                                                      " #{search_result.dig(:consignee, :address2) || ''}"
         ).squish.strip.titleize,
         city: search_result.dig(:consignee, :city)&.squish&.strip&.titleize,
         province: search_result.dig(:consignee, :state)&.strip&.upcase,

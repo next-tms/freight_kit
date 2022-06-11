@@ -54,7 +54,7 @@ module Interstellar
     protected
 
     def build_headers
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       { 'x-api-key': api_credentials.password }
     end
@@ -163,7 +163,7 @@ module Interstellar
         end
       end
 
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       request = {
         'request' => {

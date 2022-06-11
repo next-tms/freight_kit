@@ -69,7 +69,7 @@ module Interstellar
     end
 
     def auth_header
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
       auth = Base64.strict_encode64("#{api_credentials.username}:#{api_credentials.password}")
 
       { Authorization: "Basic #{auth}" }
@@ -128,7 +128,7 @@ module Interstellar
       shipment_description = shipment.packages.map(&:description).reject(&:blank?).uniq.join(', ')
       shipment_description = 'Freight All Kinds' if shipment_description.blank?
 
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       body = {
         allowSpot: longest_dimension >= 120 ? 'Y' : 'N',
