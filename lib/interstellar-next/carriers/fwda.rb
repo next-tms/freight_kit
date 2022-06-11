@@ -142,7 +142,7 @@ module Interstellar
       raise ArgumentError, 'country must be a ActiveUtils::Country' unless country.is_a?(ActiveUtils::Country)
 
       request = build_locations_request
-      locations = parse_locations_response(country:, response: commit(request))
+      parse_locations_response(country:, response: commit(request))
     end
 
     # Rates
@@ -462,7 +462,7 @@ module Interstellar
             description: shipment.packages.map(&:description).reject(&:blank?).uniq.join(', '),
             destinationAirportCode: '',
             guaranteedService: 'N',
-            hazmat: shipment.packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
+            hazmat: shipment.hazmat? ? 'Y' : 'N',
             inBondShipment: declared_value.to_f.positive? ? 'Y' : 'N',
             orderAction: 'CREATE',
             originAirportCode: '',
@@ -487,7 +487,7 @@ module Interstellar
             emergencyContact: {
               email: dispatcher.email,
               name: dispatcher.name,
-              phone: dispatcher.phone
+              phone: dispatcher_phone
             },
             pickup: {
               airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
@@ -558,7 +558,7 @@ module Interstellar
           },
           dimensions: { dimension: dimensions },
           freightDetails: { freightDetail: freight_details },
-          hazmat: shipment.packages.map(&:hazmat).include?(true) ? 'Y' : 'N',
+          hazmat: shipment.hazmat? ? 'Y' : 'N',
           inBondShipment: 'N',
           declaredValue: declared_value,
           shippingDate: Date.current.strftime('%Y-%m-%d')

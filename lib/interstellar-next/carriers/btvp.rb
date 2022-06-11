@@ -334,7 +334,7 @@ module Interstellar
       browser.text_field(name: 'DSTPC_1').set(shipment.packages.map(&:quantity).sum)
       browser.text_field(name: 'DSPLT_1').set(shipment.packages.map(&:quantity).sum)
 
-      browser.checkbox(name: 'DSHAZ_1').check if shipment.packages.map(&:hazmat?).include?(true)
+      browser.checkbox(name: 'DSHAZ_1').check if shipment.hazmat?
 
       browser.checkbox(name: 'DSLIFT_1').check if shipment.accessorials.include?(:liftgate_pickup)
 
@@ -437,7 +437,7 @@ module Interstellar
       description = description.sub('disc.on', 'discount on')
       description = description.capitalize
       description = description.sub('zip code', 'ZIP code')
-      description = description.sub('Zip code', 'ZIP code')
+      description.sub('Zip code', 'ZIP code')
     end
 
     def parse_rate_response(shipment:, response:)
@@ -466,12 +466,10 @@ module Interstellar
 
       raise Interstellar::ResponseError, 'API Error: Cost is empty' if total_cents.blank?
 
+      rate_items = response.dig(:getquote_response, :return, :rateitem)
       total_cents = (total_cents.to_f * 100).to_i
 
-      freight_price = nil
       prices = []
-
-      rate_items = response.dig(:getquote_response, :return, :rateitem)
 
       # Confusing API sometimes returns lines of freight with high costs and then later includes includes lines that
       # override the high cost without adding a discount, etc
@@ -607,7 +605,6 @@ module Interstellar
       end
 
       shipment_events = []
-      status = nil
 
       api_date = response.dig(:tracktrace_response, :return, :currentstatus, :shipdate)
       ship_time = parse_api_date(api_date)
