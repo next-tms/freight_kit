@@ -78,8 +78,8 @@ module Interstellar
     end
 
     def parse_pod_response(tracking_number)
-      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
-      website_credentials = credentials.find { |c| c.type == :website }
+      selenoid_credentials = fetch_credential(:selenoid)
+      website_credentials = fetch_credential(:website)
 
       browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(:pod))
@@ -153,7 +153,7 @@ module Interstellar
     def parse_tracking_response(tracking_number)
       tracking_response = TrackingResponse.new(carrier: self)
 
-      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
+      selenoid_credentials = fetch_credential(:selenoid)
 
       browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(:track))

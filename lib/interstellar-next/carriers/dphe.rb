@@ -77,7 +77,7 @@ module Interstellar
     protected
 
     def build_soap_header(_action)
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       { authentication_header: { user_name: api_credentials.username, password: api_credentials.password } }
     end
@@ -120,7 +120,7 @@ module Interstellar
       document_response = DocumentResponse.new
 
       watir_credentials = credentials.find { |c| c.type == :selenoid }
-      website_credentials = credentials.find { |c| c.type == :website }
+      website_credentials = fetch_credential(:website)
 
       browser = Watir::Browser.new(*watir_credentials.watir_args)
 
@@ -238,7 +238,7 @@ module Interstellar
       end
       shipment_detail = shipment_detail.join('|')
 
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       request = {
         customer_code: api_credentials.account,

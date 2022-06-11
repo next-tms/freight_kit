@@ -84,8 +84,8 @@ module Interstellar
     def parse_document_response(action, tracking_number)
       document_response = DocumentResponse.new
 
-      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
-      website_credentials = credentials.find { |c| c.type == :website }
+      selenoid_credentials = fetch_credential(:selenoid)
+      website_credentials = fetch_credential(:website)
 
       browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto(build_url(action))
@@ -341,7 +341,7 @@ module Interstellar
     end
 
     def build_rate_params(shipment:)
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       params = ''.dup
       params << 'xmlv=yes' # must be first

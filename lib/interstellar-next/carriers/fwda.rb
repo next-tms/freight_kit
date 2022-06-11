@@ -255,7 +255,7 @@ module Interstellar
     end
 
     def build_headers
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       JSON_HEADERS.merge(
         {
@@ -412,7 +412,7 @@ module Interstellar
       shipper_phone = shipment.origin.contact.phone.delete('^0-9')
       receiver_phone = shipment.destination.contact.phone.delete('^0-9')
 
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       declared_value = if shipment.declared_value_cents.blank?
                          '0'
@@ -525,7 +525,7 @@ module Interstellar
     # Rates
 
     def build_rate_request(shipment:)
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       freight_details = build_freight_details(shipment.packages)
       dimensions = build_dimensions(shipment.packages)

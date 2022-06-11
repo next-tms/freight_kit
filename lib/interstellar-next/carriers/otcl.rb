@@ -9,8 +9,8 @@ module Interstellar
     @@scac = 'OTCL'
 
     XML_HEADERS = {
-      'Accept': 'application/xml',
-      'charset': 'utf-8',
+      Accept: 'application/xml',
+      charset: 'utf-8',
       'Content-Type': 'application/xml'
     }.freeze
 
@@ -134,7 +134,7 @@ module Interstellar
     protected
 
     def build_url(action, options = {})
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       env = @test_mode ? :test : :production
 
@@ -215,18 +215,18 @@ module Interstellar
       raise UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
 
       request_body = {
-        'Address': shipment.origin.address1,
-        'City': shipment.origin.city,
-        'CloseAt': pickup_to.strftime('%H:%M:00'),
-        'Contact': shipment.origin.contact.name || 'Shipping',
-        'Date': pickup_from.to_date,
-        'DelZip': shipment.destination.postal_code,
-        'Instructions': '',
-        'Name': shipment.origin.contact.company_name,
-        'Phone': shipper_phone,
-        'ReadyAt': pickup_from.strftime('%H:%M:00'),
-        'State': shipment.origin.province,
-        'Zip': shipment.origin.postal_code
+        Address: shipment.origin.address1,
+        City: shipment.origin.city,
+        CloseAt: pickup_to.strftime('%H:%M:00'),
+        Contact: shipment.origin.contact.name || 'Shipping',
+        Date: pickup_from.to_date,
+        DelZip: shipment.destination.postal_code,
+        Instructions: '',
+        Name: shipment.origin.contact.company_name,
+        Phone: shipper_phone,
+        ReadyAt: pickup_from.strftime('%H:%M:00'),
+        State: shipment.origin.province,
+        Zip: shipment.origin.postal_code
       }.freeze
 
       request = {
@@ -264,44 +264,44 @@ module Interstellar
       raise UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
 
       base_api_shipment = {
-        'consignee': {
-          'Name': shipment.destination.contact.company_name,
-          'Addr1': shipment.destination.address1,
-          'Addr2': '',
-          'Addr3': '',
-          'City': shipment.destination.city,
-          'Contact': shipment.destination.contact.name || 'Shipping',
-          'Phone': receiver_phone || '',
-          'State': shipment.destination.province,
-          'Zip': shipment.destination.postal_code.to_s
+        consignee: {
+          Name: shipment.destination.contact.company_name,
+          Addr1: shipment.destination.address1,
+          Addr2: '',
+          Addr3: '',
+          City: shipment.destination.city,
+          Contact: shipment.destination.contact.name || 'Shipping',
+          Phone: receiver_phone || '',
+          State: shipment.destination.province,
+          Zip: shipment.destination.postal_code.to_s
         },
-        'shipper': {
-          'Name': shipment.origin.contact.company_name,
-          'Addr1': shipment.origin.address1,
-          'City': shipment.origin.city,
-          'State': shipment.origin.province,
-          'Zip': shipment.origin.postal_code,
-          'Contact': shipment.origin.contact.name || 'Shipping',
-          'Phone': shipper_phone
+        shipper: {
+          Name: shipment.origin.contact.company_name,
+          Addr1: shipment.origin.address1,
+          City: shipment.origin.city,
+          State: shipment.origin.province,
+          Zip: shipment.origin.postal_code,
+          Contact: shipment.origin.contact.name || 'Shipping',
+          Phone: shipper_phone
         },
-        'BillTo': '0',
-        'CargoType': '0',
-        'COD': '0',
-        'CODType': 'NONE',
-        'Declared': declared_value,
-        'DelEmail': dispatcher.email,
-        'Instructions': '',
-        'LabelType': '1', # PDF label
-        'Reference': shipment.order_number,
-        'Reference2': shipment.po_number,
-        'Reference3': '',
-        'Residential': shipment.accessorials.include?(:residential_delivery) ? 'true' : 'false',
-        'SaturdayDel': 'false',
-        'Service': 'C',
-        'ShipDate': pickup_from.to_date.to_s,
-        'ShipEmail': dispatcher.email,
-        'SignatureRequired': 'true',
-        'Tracking': ''
+        BillTo: '0',
+        CargoType: '0',
+        COD: '0',
+        CODType: 'NONE',
+        Declared: declared_value,
+        DelEmail: dispatcher.email,
+        Instructions: '',
+        LabelType: '1', # PDF label
+        Reference: shipment.order_number,
+        Reference2: shipment.po_number,
+        Reference3: '',
+        Residential: shipment.accessorials.include?(:residential_delivery) ? 'true' : 'false',
+        SaturdayDel: 'false',
+        Service: 'C',
+        ShipDate: pickup_from.to_date.to_s,
+        ShipEmail: dispatcher.email,
+        SignatureRequired: 'true',
+        Tracking: ''
       }.freeze
 
       api_shipments = []
@@ -310,13 +310,13 @@ module Interstellar
         package.quantity.times do
           api_shipments << base_api_shipment.merge(
             {
-              'DIM': {
-                'Length': package.length(:inches).ceil,
-                'Width': package.width(:inches).ceil,
-                'Height': package.height(:inches).ceil
+              DIM: {
+                Length: package.length(:inches).ceil,
+                Width: package.width(:inches).ceil,
+                Height: package.height(:inches).ceil
               },
-              'UID': SecureRandom.uuid,
-              'Weight': package.pounds(:each).ceil
+              UID: SecureRandom.uuid,
+              Weight: package.pounds(:each).ceil
             }
           )
         end
@@ -327,7 +327,7 @@ module Interstellar
         method: @conf.dig(:api, :methods, :shipments),
         url: build_url(:shipments),
         body: {
-          'Shipments': api_shipments
+          Shipments: api_shipments
         }.to_xml(root: 'OnTracShipmentRequest', skip_types: true)
       }
 

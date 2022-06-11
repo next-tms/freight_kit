@@ -92,7 +92,7 @@ module Interstellar
     protected
 
     def build_soap_header(action)
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       {
         authentication_header: {
@@ -222,7 +222,7 @@ module Interstellar
         end
       end
 
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       request = {
         'request' => {

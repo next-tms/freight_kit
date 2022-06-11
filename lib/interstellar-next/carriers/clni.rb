@@ -90,7 +90,7 @@ module Interstellar
     end
 
     def request_blueprint
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       {
         request: {
@@ -118,8 +118,8 @@ module Interstellar
     def parse_document_response(action, _tracking_number)
       document_response = DocumentResponse.new
 
-      selenoid_credentials = credentials.find { |c| c.type == :selenoid }
-      website_credentials = credentials.find { |c| c.type == :website }
+      selenoid_credentials = fetch_credential(:selenoid)
+      website_credentials = fetch_credential(:website)
 
       browser = Watir::Browser.new(*selenoid_credentials.watir_args)
       browser.goto('https://ssworldtrak.com/WebtrakWTNew/')
@@ -271,7 +271,7 @@ module Interstellar
       pickup_from += 1.day if ::DateTime.current > pickup_from
       pickup_to = pickup_from + 3.hours
 
-      api_credentials = credentials.find { |c| c.type == :api }
+      api_credentials = fetch_credential(:api)
 
       request = {
         RatingParam: {
