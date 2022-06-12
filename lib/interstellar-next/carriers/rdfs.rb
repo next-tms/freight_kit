@@ -450,7 +450,7 @@ module Interstellar
       tracking_response
     end
 
-    def parse_tracking_number_from_pickup_number_response(pickup_number, _date)
+    def parse_tracking_number_from_pickup_number_response(pickup_number)
       url = request_url(:tracking_number_from_pickup_number).sub('%%PICKUP_NUMBER%%', pickup_number.to_s)
 
       begin
