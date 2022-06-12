@@ -639,7 +639,7 @@ module Interstellar
         headers: build_headers,
         method: @conf.dig(:api, :methods, :track),
         body: {
-          billToCustomerNumber: api_credentials.account,
+          billToCustomerNumber: fetch_credential(:api).account,
           referenceNumber: tracking_number.to_s
         }.to_json
       }
