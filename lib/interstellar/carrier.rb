@@ -124,7 +124,7 @@ module Interstellar
       raise NotImplementedError, "#{self.class.name}: #find_locations not supported"
     end
 
-    def find_tracking_number_from_pickup_number(*)
+    def find_tracking_number_from_pickup_number(pickup_number, date)
       raise NotImplementedError, "#{self.class.name}: #find_tracking_number_from_pickup_number not supported"
     end
 
