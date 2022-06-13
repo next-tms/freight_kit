@@ -115,7 +115,7 @@ module Interstellar
 
     # Documents
 
-    def parse_document_response(action, _tracking_number)
+    def parse_document_response(action, tracking_number)
       document_response = DocumentResponse.new
 
       selenoid_credentials = fetch_credential(:selenoid)
@@ -156,7 +156,7 @@ module Interstellar
 
       browser.button(name: 'btnSubmit').click
 
-      browser.text_field(id: 'yadcf-filter--grid-2').set('1054360')
+      browser.text_field(id: 'yadcf-filter--grid-2').set(tracking_number)
       browser.send_keys(:enter)
 
       if browser.element(id: 'tdPODName0').wait_until(&:present?).text == 'NO POD' && action == :pod
