@@ -185,8 +185,8 @@ module Interstellar
 
       Location.new(
         city: str.split(', ')[0].titleize,
-        province: str.split(', ')[1].split(' ')[0].upcase,
-        postal_code: str.split(', ')[1].split(' ')[1],
+        province: str.split(', ')[1].split[0].upcase,
+        postal_code: str.split(', ')[1].split[1],
         country: ActiveUtils::Country.find('USA')
       )
     end
@@ -215,6 +215,7 @@ module Interstellar
         response = HTTParty.get(url)
       rescue StandardError => e
         tracking_response.assign_attributes(error: e)
+        return tracking_response
       end
 
       case response.code
