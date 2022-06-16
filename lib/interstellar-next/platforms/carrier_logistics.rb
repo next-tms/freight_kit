@@ -349,8 +349,8 @@ module Interstellar
       params << '&quotenumber=YES'
       params << "&vdzip=#{shipment.destination.postal_code}"
       params << "&vozip=#{shipment.origin.postal_code}"
-      params << "&xmlpass=#{api_credentials.username}"
-      params << "&xmluser=#{api_credentials.password}"
+      params << "&xmlpass=#{api_credentials.password}"
+      params << "&xmluser=#{api_credentials.username}"
 
       i = 0
       shipment.packages.each do |package|
