@@ -64,7 +64,15 @@ module Interstellar
 
     def pod(tracking_number)
       # Retrieve list of available documents first
-      documents = commit(build_documents_request(tracking_number))
+      begin
+        documents = commit(build_documents_request(tracking_number))
+      rescue Interstellar::ResponseError => e
+        if e.message.downcase.include?('no airbills found')
+          return DocumentResponse.new(error: Interstellar::DocumentNotFoundError)
+        else
+          return DocumentResponse.new(error: e)
+        end
+      end
 
       begin
         doc_id = get_doc_id(documents:, tracking_number:, type: :pod)
@@ -84,7 +92,15 @@ module Interstellar
 
     def scanned_bol(tracking_number, _options = {})
       # Retrieve list of available documents first
-      documents = commit(build_documents_request(tracking_number))
+      begin
+        documents = commit(build_documents_request(tracking_number))
+      rescue Interstellar::ResponseError => e
+        if e.message.downcase.include?('no airbills found')
+          return DocumentResponse.new(error: Interstellar::DocumentNotFoundError)
+        else
+          return DocumentResponse.new(error: e)
+        end
+      end
 
       begin
         doc_id = get_doc_id(documents:, tracking_number:, type: :bol)
@@ -296,7 +312,15 @@ module Interstellar
                    HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
-      raise Interstellar::ResponseError, "HTTP #{response.code}" unless response.code == 200
+      unless response.code == 200
+        message = begin
+          JSON.parse(response.body)['errorMessage'] || "HTTP #{response.code}"
+        rescue JSON::ParserError
+          "HTTP #{response.code}"
+        end
+
+        raise Interstellar::ResponseError, message
+      end
 
       return response unless response.headers.content_type == 'application/json'
 
