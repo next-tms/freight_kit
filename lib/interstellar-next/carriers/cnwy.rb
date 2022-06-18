@@ -110,7 +110,7 @@ module Interstellar
               end
 
       if error.blank?
-        return json if response.code == 200
+        return json if (200..299).include?(response.code)
       else
         case response.code
         when 401
