@@ -25,7 +25,7 @@ module Interstellar
     end
 
     def required_credential_types
-      %i[api website]
+      %i[api]
     end
 
     # Documents
@@ -42,7 +42,7 @@ module Interstellar
       end
 
       request = build_rate_request(shipment:)
-      parse_rate_response(shipment:, response: commit_soap(:rates, request))
+      parse_rate_response(shipment:, response: commit(request))
     end
 
     def find_rates_implemented?
@@ -54,23 +54,45 @@ module Interstellar
     protected
 
     def build_headers
-      api_credentials = fetch_credential(:api)
-
-      { 'x-api-key': api_credentials.password }
+      {
+        accept: 'application/json',
+        authorization: "Bearer #{bearer_token}",
+        'Content-Type': 'application/json'
+      }
     end
 
-    def build_xpoauthorization_request
+    def bearer_token
+      @bearer_token ||= commit(build_bearer_token_request)[:access_token]
+    end
+
+    def build_bearer_token_request
+      api_credentials = fetch_credential(:api)
+
+      body = URI.encode_www_form(
+        grant_type: 'password',
+        password: api_credentials.password,
+        username: api_credentials.username
+      )
+
       {
-        client_id
-        client_secret
-        grant_type: 'client_credentials',
-        scope
+        body:,
+        headers: {
+          authorization: "Basic #{api_credentials.api_key}",
+          content_type: 'application/x-www-form-urlencoded'
+        },
+        method: :post,
+        url: build_url(:token)
       }
+    end
+
+    def build_url(action)
+      scheme = @conf.dig(:api, :use_ssl) ? 'https://' : 'http://'
+      "#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
     end
 
     def commit(request)
       url = request[:url]
-      headers = build_headers
+      headers = request[:headers] || build_headers
       method = request[:method]
       body = request[:body]
 
@@ -81,19 +103,20 @@ module Interstellar
                    HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
-      raise Interstellar::ResponseError, "HTTP #{response.code}" unless response.code == 200
+      json = JSON.parse(response.body).deep_symbolize_keys
 
-      return response unless response.headers.content_type == 'application/json'
+      error = if json.is_a?(Hash)
+                json[:error_description] || json.dig(:fault, :description) || json.dig(:error, :message)
+              end
 
-      json = JSON.parse(response.body)
-      error = json.is_a?(Array) ? nil : json['errorMessage']
-
-      return json if error.blank?
-
-      raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('not authorized')
-      raise Interstellar::InvalidCredentialsError, error if error.downcase.include?('shipper client does not exist')
-      raise Interstellar::ShipmentNotFoundError, error if error.downcase.include?('no history found')
-      raise Interstellar::UnserviceableError, error if error.downcase.include?('not serviced')
+      if error.blank?
+        return json if (200..299).include?(response.code)
+      else
+        case response.code
+        when 401
+          raise Interstellar::InvalidCredentialsError
+        end
+      end
 
       raise Interstellar::ResponseError, error
     end
@@ -103,81 +126,98 @@ module Interstellar
       "#{scheme}#{@conf.dig(:api, :domains, action)}#{@conf.dig(:api, :endpoints, action)}"
     end
 
-    def xpoauthorization
-      return @xpoauthorization if @xpoauthorization
-
-      request = build_xpoauthorization_request
-    end
-
     # Documents
 
     # Rates
 
+    def build_accessorials(shipment:)
+      serviceable_accessorials?(shipment.accessorials)
+
+      accessorial_codes = []
+      accessorial_codes << 'SSC'
+      accessorial_codes << 'ZHM' if shipment.hazmat?
+
+      if shipment.destination.province.upcase == 'HI'
+        accessorial_codes = accessorial_codes.map { |code| %w[DID OIP].include?(code) ? 'WHN' : code }.uniq
+      end
+
+      longest_dimension_in = shipment.packages.map { |p| [p.width(:inch), p.length(:inch)].max }.max.ceil
+
+      # Switch to accessorials rather than accessorial_codes since now we need more complex structures
+
+      accessorials = accessorial_codes.map { |accessorial_code| { accessorial_cd: accessorial_code, quantity: 0 } }
+
+      return accessorials if longest_dimension_in < 96 && shipment.accessorials.blank?
+
+      if longest_dimension_in >= 96
+        accessorials << {
+          accessorial_cd: 'ELS',
+          quantity_uom: 'INCH',
+          quantity: longest_dimension_in
+        }
+      end
+
+      return accessorials if shipment.accessorials.blank?
+
+      shipment.accessorials.map do |accessorial|
+        next if @conf.dig(:accessorials, :unquotable).include?(accessorial)
+
+        accessorials << { accessorial_cd: @conf.dig(:accessorials, :mappable, accessorial), quantity: 0 }
+      end
+
+      accessorials
+    end
+
+    def parse_amount(amount)
+      (amount.to_f * 100).to_i
+    end
+
+    def build_commodity(shipment:)
+      shipment.packages.map do |package|
+        {
+          dimensions: {
+            dimensions_uom: 'INCH',
+            height: package.inches(:height).ceil,
+            length: package.inches(:length).ceil,
+            width: package.inches(:width).ceil
+          },
+          gross_weight: {
+            weight: package.pounds(:total).ceil,
+            weight_uom: 'LBS'
+          },
+          hazmat_ind: package.hazmat?,
+          nmfc_class: package.freight_class.to_s,
+          nmfc_item_cd: package.nmfc,
+          piece_cnt: package.quantity
+        }
+      end
+    end
+
     def build_rate_request(shipment:)
-      service_delivery_options = [
-        # API calls this invalid now
-        # service_options: { service_code: 'SS' }
-      ]
-
-      unless shipment.accessorials.blank?
-        serviceable_accessorials?(shipment.accessorials)
-        shipment.accessorials.each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            service_delivery_options << { service_options: { service_code: @conf.dig(:accessorials, :mappable)[a] } }
-          end
-        end
-      end
-
-      shipment.packages.each do |package|
-        longest_dimension = [package.width(:inches), package.length(:inches)].max.ceil
-
-        next unless longest_dimension > 96
-
-        package.quantity.times do
-          if longest_dimension >= 240
-            service_delivery_options << { service_options: { service_code: 'EXX' } }
-          elsif longest_dimension >= 144
-            service_delivery_options << { service_options: { service_code: 'EXL' } }
-          elsif longest_dimension >= 96
-            service_delivery_options << { service_options: { service_code: 'EXM' } }
-          end
-        end
-      end
-
-      shipment_detail = []
-      shipment_box_count = 0
-      shipment_pallet_count = 0
-
-      shipment.packages.each do |package|
-        if package.packaging.type == 'pallet'
-          shipment_pallet_count += package.quantity
-        else
-          shipment_box_count += package.quantity
-        end
-
-        package.quantity.times do
-          shipment_detail << {
-            'ActualClass' => package.freight_class,
-            'Weight' => package.pounds(:each).ceil
-          }
-        end
-      end
-
       api_credentials = fetch_credential(:api)
+      shipment_date = (::DateTime.now + 3.days).iso8601 # TODO: Fix
+
+      accessorials = build_accessorials(shipment:)
+      commodity = build_commodity(shipment:)
+
+      body = {
+        shipmentInfo: {
+          accessorials:,
+          bill_2_party: { acct_inst_id: api_credentials.account },
+          commodity:,
+          consignee: { address: { postal_cd: shipment.destination.postal_code.to_s } },
+          pallet_cnt: shipment.packages.map(&:packaging).map(&:pallet?).count(true),
+          payment_term_cd: 'P', # prepaid,
+          shipment_date:,
+          shipper: { address: { postal_cd: shipment.origin.postal_code.to_s } }
+        }
+      }.deep_transform_keys! { |key| key.to_s.camelize(:lower) }.to_json
 
       request = {
-        'request' => {
-          account: api_credentials.account,
-          destination_zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase,
-          # :linear_feet => linear_ft(packages),
-          origin_type: 'B', # O for shipper, I for consignee, B for third party
-          origin_zip: shipment.origin.postal_code.gsub(/\s+/, '').upcase,
-          pallet_count: shipment_pallet_count,
-          payment_type: 'P', # prepaid
-          pieces: shipment_box_count,
-          service_delivery_options:,
-          shipment_details: { shipment_detail: }
-        }
+        body:,
+        headers: build_headers,
+        method: :post,
+        url: build_url(:rates)
       }
 
       save_request(request)
@@ -192,54 +232,71 @@ module Interstellar
         return rate_response
       end
 
-      unless response[:error].blank?
-        ['no standard service', 'not in the standard pickup area'].each do |message|
-          if response[:error].downcase.include?(message)
-            rate_response.error = UnserviceableError.new(response[:error])
-            return rate_response
-          end
-        end
-
-        rate_response.error = ResponseError.new(response[:error])
-        return rate_response
-      end
-
-      result = response.dig(:rate_quote_by_account_response, :rate_quote_by_account_result)
-
-      if result[:net_charge].blank?
+      if response.dig(:data, :rateQuote, :totCharge, 0, :amt).blank?
         rate_response.error = ResponseError.new('Cost is empty')
         return rate_response
       end
 
-      estimate_reference = result.dig(:quote_number)
-      rate_details = result.dig(:rate_details, :quote_detail)
-      transit_days = result.dig(:routing_info, :estimated_transit_days).to_i
+      accessorials = response.dig(:data, :rateQuote, :shipmentInfo, :accessorials)
+      commodities = response.dig(:data, :rateQuote, :shipmentInfo, :commodity)
+      deficit_weight = response.dig(:data, :rateQuote, :deficitRatingInfo)
 
       prices = []
 
-      rate_details.each do |rate_detail|
-        if rate_detail[:description].blank?
-          prices << Price.new(
-            blame: :api,
-            cents: parse_amount(rate_detail[:charge]),
-            description: 'Freight'
-          )
+      prices << Interstellar::Price.new(
+        blame: :api,
+        cents: parse_amount(
+          commodities.sum { |c| c.dig(:charge, :chargeAmt, :amt) }
+        ),
+        description: 'Freight'
+      )
 
-          next
-        end
+      prices << Interstellar::Price.new(
+        blame: :api,
+        cents: parse_amount(deficit_weight.dig(:deficitAmt, :amt)),
+        description: <<~DESC.squish
+          Deficit weight
+          #{deficit_weight.dig(:deficitWght, :weight).ceil}
+          #{deficit_weight.dig(:deficitWght, :weightUom).downcase}
+        DESC
+      )
 
-        prices << Interstellar::Price.new(
+      prices << Interstellar::Price.new(
+        blame: :api,
+        cents: parse_amount(response.dig(:data, :rateQuote, :totDiscountAmt, :amt)) * -1,
+        description: "Discount #{response.dig(:data, :rateQuote, :actlDiscountPct)}%"
+      )
+
+      prices += accessorials.map do |accessorial|
+        Interstellar::Price.new(
           blame: :api,
-          cents: parse_amount(rate_detail[:charge]),
-          description: rate_detail[:description]&.capitalize
+          cents: parse_amount(accessorial.dig(:chargeAmt, :amt)),
+          description: accessorial[:accessorialDesc].squish.capitalize.gsub('Xpo', 'XPO')
         )
       end
+
+      comment = response.dig(:data, :rateQuote, :shipmentInfo, :comment)
+      days = if comment.blank?
+               nil
+             else
+               comment.match(/\d+ days/)&.to_s&.split(' days')&.first&.to_i
+             end
+
+      expires_at = if days.is_a?(Integer) && days.positive?
+                     days.days.from_now
+                   else
+                     2.days.from_now
+                   end
+
+      estimate_reference = response.dig(:data, :rateQuote, :confirmationNbr)
+      transit_days = response.dig(:data, :transitTime, :transitDays)
 
       rate = Rate.new(
         carrier: self,
         carrier_name: self.class.name,
         currency: 'USD',
         estimate_reference:,
+        expires_at:,
         scac: self.class.scac.upcase,
         service_name: :standard,
         shipment:,
