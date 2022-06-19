@@ -500,7 +500,8 @@ module Interstellar
         }
       end
 
-      pickup_date = ::DateTime.now + 1.day
+      pickup_event_date = shipment.pickup_at.date_time_with_zone
+      drop_event_date = (pickup_event_date + 7.days).beginning_of_day + 12.hours
 
       body = {
         Constraints: {
@@ -510,7 +511,7 @@ module Interstellar
         PickupEvent: {
           City: shipment.origin.city.upcase,
           Country: shipment.origin.country.code(:alpha3).value,
-          Date: pickup_date.strftime('%m/%d/%Y %I:%M:00 %p'),
+          Date: pickup_event_date.strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'PLocationCode',
           State: shipment.origin.province.upcase,
           Zip: shipment.origin.postal_code.to_s.upcase
@@ -518,7 +519,7 @@ module Interstellar
         DropEvent: {
           City: shipment.destination.city.upcase,
           Country: shipment.destination.country.code(:alpha3).value,
-          Date: (::DateTime.now + 5.days).strftime('%m/%d/%Y %I:%M:00 %p'),
+          Date: drop_event_date.strftime('%m/%d/%Y %I:%M:00 %p'),
           LocationCode: 'DLocationCode',
           MaxPriceSheet: 6,
           ShowInsurance: false,
