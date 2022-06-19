@@ -251,15 +251,17 @@ module Interstellar
         description: 'Freight'
       )
 
-      prices << Interstellar::Price.new(
-        blame: :api,
-        cents: parse_amount(deficit_weight.dig(:deficitAmt, :amt)),
-        description: <<~DESC.squish
-          Deficit weight
-          #{deficit_weight.dig(:deficitWght, :weight).ceil}
-          #{deficit_weight.dig(:deficitWght, :weightUom).downcase}
-        DESC
-      )
+      unless deficit_weight.blank?
+        prices << Interstellar::Price.new(
+          blame: :api,
+          cents: parse_amount(deficit_weight.dig(:deficitAmt, :amt)),
+          description: <<~DESC.squish
+            Deficit weight
+            #{deficit_weight.dig(:deficitWght, :weight).ceil}
+            #{deficit_weight.dig(:deficitWght, :weightUom).downcase}
+          DESC
+        )
+      end
 
       prices << Interstellar::Price.new(
         blame: :api,
