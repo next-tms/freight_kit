@@ -195,7 +195,7 @@ module Interstellar
 
     def build_rate_request(shipment:)
       api_credentials = fetch_credential(:api)
-      shipment_date = (::DateTime.now + 3.days).iso8601 # TODO: Fix
+      shipment_date = shipment.pickup_at.date_time_with_zone.iso8601
 
       accessorials = build_accessorials(shipment:)
       commodity = build_commodity(shipment:)
