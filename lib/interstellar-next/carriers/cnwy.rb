@@ -160,7 +160,7 @@ module Interstellar
       return accessorials if shipment.accessorials.blank?
 
       shipment.accessorials.map do |accessorial|
-        next if @conf.dig(:accessorials, :unquotable).include?(accessorial)
+        next if @conf.dig(:accessorials, :unquotable)&.include?(accessorial)
 
         accessorials << { accessorial_cd: @conf.dig(:accessorials, :mappable, accessorial), quantity: 0 }
       end
