@@ -8,7 +8,7 @@ require 'interstellar/version'
 Gem::Specification.new do |spec|
   spec.name = 'interstellar'
   spec.version = Interstellar::VERSION
-  spec.date = '2022-06-18'
+  spec.date = '2022-07-16'
 
   spec.authors = [
     'Third Party Transportation Systems LLC',
@@ -44,8 +44,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'webmock', '~> 3.14.0'
 
   spec.add_dependency 'active_utils', '~> 3.3.1'
-  spec.add_dependency 'activesupport', '>= 4.2', '< 7.0.3'
-  spec.add_dependency 'activemodel', '>= 4.2', '< 7.0.3'
+  spec.add_dependency 'activesupport', '>= 4.2', '< 7.0.4'
+  spec.add_dependency 'activemodel', '>= 4.2', '< 7.0.4'
   spec.add_dependency 'httparty', '~> 0.10'
   spec.add_dependency 'measured', '>= 2.0', '< 2.8.3'
   spec.add_dependency 'mimemagic', '~> 0.4.3'
