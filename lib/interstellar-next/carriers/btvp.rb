@@ -190,6 +190,13 @@ module Interstellar
         return document_response
       end
 
+      if browser.html.include?('Password not correct')
+        browser.close
+
+        document_response.error = Interstellar::InvalidCredentialsError.new
+        return document_response
+      end
+
       if browser.html.include?('You are not enrolled in any application environments on this server')
         browser.close
 
@@ -288,6 +295,13 @@ module Interstellar
       browser.text_field(name: 'userid').set(website_credentials.username)
       browser.text_field(name: 'password').set(website_credentials.password)
       browser.button(name: 'btnLogin').click
+
+      if browser.html.include?('Password not correct')
+        browser.close
+
+        document_response.error = Interstellar::InvalidCredentialsError.new
+        return document_response
+      end
 
       if browser.html.include?('You are not enrolled in any application environments on this server')
         browser.close
