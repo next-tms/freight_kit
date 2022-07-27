@@ -278,7 +278,7 @@ module Interstellar
 
 
         # Some carriers do not provide times 👎
-        date_time = if tr.css('td')[3].text.blank?
+        date_time = if tr.css('td')[3].blank?
                       parse_api_date(tr.css('td')[2].text.squish.strip, location)
                     else
                       parse_api_date_time("#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish.strip, location)
