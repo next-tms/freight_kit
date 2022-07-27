@@ -203,6 +203,10 @@ module Interstellar
 
       local_date_time = ::DateTime.strptime(date_time, '%m/%d/%Y %H:%M %p').to_fs(:db)
       DateTime.new(local_date_time:, location:)
+    rescue Date::Error
+      raise unless local_date_time.blank?
+
+      parse_api_date(local_date_time, location)
     end
 
     def parse_tracking_response(tracking_number)
@@ -272,8 +276,9 @@ module Interstellar
 
         location = (parse_api_city_state(location.squish) if !location.blank? && location.downcase.include?(','))
 
+
         # Some carriers do not provide times 👎
-        date_time = if tr.css('td')[3].blank?
+        date_time = if tr.css('td')[3].text.blank?
                       parse_api_date(tr.css('td')[2].text.squish.strip, location)
                     else
                       parse_api_date_time("#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish.strip, location)
