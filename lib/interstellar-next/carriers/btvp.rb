@@ -368,7 +368,9 @@ module Interstellar
       pickup_number = nil
 
       html.css('tr').each do |tr|
-        next unless tr.text.include?(shipper_name) && tr.text.include?(total_weight)
+        next unless tr.text.include?(shipper_name) && tr.text.include?(total_weight.try(:to_s))
+        # Convert total_weight to string. .include?(Integer) will raise no implicit conversion of Integer into String (TypeError)
+        # Used 'try(:to_s)' so that it would still return nil if nil, and not return '' blank string
 
         pickup_number = tr.css('td')[1].text
       end
