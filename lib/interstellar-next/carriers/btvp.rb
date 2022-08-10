@@ -353,6 +353,18 @@ module Interstellar
       browser.checkbox(name: 'DSLIFT_1').check if shipment.accessorials.include?(:liftgate_pickup)
 
       browser.element(xpath: '/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div/div[1]/div/button[2]/span').click
+      # Click Button Create
+
+      has_form_error = browser.text_field(class: /rns-ui-error/).locate.located?
+
+      if has_form_error
+        # Logout
+        browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').wait_until(&:present?).click
+        browser.element(xpath: '/html/body/div[10]/div[11]/div/button[1]').wait_until(&:present?).click
+
+        browser.close
+        raise Interstellar::ResponseError, 'Invalid Pickup Form Data'
+      end
 
       if new_customer
         browser.radio(id: 'CCS', value: 'NEW').wait_until(&:present?).select
@@ -375,8 +387,10 @@ module Interstellar
         pickup_number = tr.css('td')[1].text
       end
 
+      # Logout
       browser.element(xpath: '/html/body/div[1]/div[1]/div[2]/div[4]').wait_until(&:present?).click
       browser.element(xpath: '/html/body/div[10]/div[11]/div/button[1]').wait_until(&:present?).click
+
       browser.close
 
       pickup_response = PickupResponse.new(request: nil, response: html)
