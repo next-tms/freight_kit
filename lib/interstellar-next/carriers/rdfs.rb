@@ -61,8 +61,14 @@ module Interstellar
         return RateResponse.new(error: e)
       end
 
-      request = build_rate_request(shipment:)
-      parse_rate_response(shipment:, response: commit_soap(:rates, request))
+      begin
+        request = build_rate_request(shipment:)
+        response = commit_soap(:rates, request)
+      rescue InvalidCredentialsError => e
+        return RateResponse.new(error: e)
+      end
+
+      parse_rate_response(shipment:, response:)
     end
 
     def find_rates_implemented?
@@ -92,13 +98,14 @@ module Interstellar
     protected
 
     def build_soap_header(action)
-      api_credentials = fetch_credential(:api)
+      api_credential = fetch_credential(:api)
+      validate_api_credential!(api_credential)
 
       {
         authentication_header: {
           :@xmlns => @conf.dig(:api, :soap, :namespaces, action),
-          password: api_credentials.password,
-          user_name: api_credentials.username
+          password: api_credential.password,
+          user_name: api_credential.username
         }
       }
     end
@@ -115,7 +122,10 @@ module Interstellar
         message: request
       ).body
     rescue Savon::SOAPFault => e
-      error = e.to_hash.dig(:fault, :detail, :error, :error_message)
+      raise InvalidCredentialsError, 'Invalid credentials' if e.message.include?('RRTS.Common.BLL.InvalidUserException')
+
+      error = e.respond_to?(:to_hash) ? e.to_hash.dig(:fault, :detail, :error, :error_message) : e
+      error = 'Unknown error' if error.blank?
 
       { error: }
     end
@@ -151,6 +161,22 @@ module Interstellar
       str ? str.split(/[A|P]M /)[1] : nil
     end
 
+    def validate_api_credential!(api_credential)
+      %i[account password username].each do |attribute|
+        if !api_credential.respond_to?(attribute) || api_credential.send(attribute).blank?
+          raise InvalidCredentialsError, "Invalid #{attr}"
+        end
+
+        next unless attribute == :account
+
+        # Raises vague input exception from API if we don't handle ourselves
+        next unless api_credential.account.gsub(/\D/, '') != api_credential.account ||
+                    api_credential.account.length != 7
+
+        raise InvalidCredentialsError, 'Invalid account'
+      end
+    end
+
     # Documents
 
     def parse_document_response(type, tracking_number)
@@ -173,6 +199,9 @@ module Interstellar
     # Rates
 
     def build_rate_request(shipment:)
+      api_credential = fetch_credential(:api)
+      validate_api_credential!(api_credential)
+
       service_delivery_options = [
         # API calls this invalid now
         # service_options: { service_code: 'SS' }
@@ -222,11 +251,9 @@ module Interstellar
         end
       end
 
-      api_credentials = fetch_credential(:api)
-
       request = {
         'request' => {
-          account: api_credentials.account,
+          account: api_credential.account,
           destination_zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase,
           # :linear_feet => linear_ft(packages),
           origin_type: 'B', # O for shipper, I for consignee, B for third party
@@ -405,26 +432,20 @@ module Interstellar
         location = case event
                    when :arrived_at_terminal
                      parse_api_location(comment, [' terminal in '])
-                   when :delayed_due_to_weather
+                   when :delayed_due_to_weather,
+                        :delivery_appointment_scheduled,
+                        :pending_delivery_appointment,
+                        :trailer_closed,
+                        :trailer_unloaded
                      last_location
                    when :delivered
                      receiver_location
-                   when :delivery_appointment_scheduled
-                     last_location
-                   when :departed
+                   when :departed, :out_for_delivery
                      parse_api_location(comment, [' to ', 'from '])
                    when :located
                      parse_api_location(comment, [' currently at '])
-                   when :out_for_delivery
-                     parse_api_location(comment, [' to ', 'from '])
                    when :picked_up
                      shipper_location
-                   when :pending_delivery_appointment
-                     last_location
-                   when :trailer_closed
-                     last_location
-                   when :trailer_unloaded
-                     parse_api_location(comment, [' terminal in '])
                    end
 
         date_time = parse_api_date_time(api_event['StatusDateTime'], location)
