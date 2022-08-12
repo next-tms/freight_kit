@@ -276,9 +276,23 @@ module Interstellar
 
         location = (parse_api_city_state(location.squish) if !location.blank? && location.downcase.include?(','))
 
-
+        # Sample TR Element
+        # #(Element:0x20c38 {
+        # name = "tr",
+        # attributes = [ #(Attr:0x20b70 { name = "class", value = "oddrow" })],
+        # children = [
+        #   #(Element:0x20bac {
+        #     name = "td",
+        #     attributes = [ #(Attr:0x20b84 { name = "bgcolor", value = "yellow" })],
+        #     children = [ #(Text "DELIVERED; THANK YOU FOR USING THE CUSTOM COMPANIES")]
+        #     }),
+        #   #(Element:0x20bd4 { name = "td", children = [ #(Text "BOISE, ID")] }),
+        #   #(Element:0x20bfc { name = "td", children = [ #(Text "08/10/2022")] }),
+        #   #(Element:0x20c24 { name = "td", children = [ #(Text " ")] })]
+        # })
         # Some carriers do not provide times 👎
-        date_time = if tr.css('td')[3].blank?
+        # Some table row has no 4th TD entirely, Or has 4th TD but has blank text
+        date_time = if tr.css('td')[3].blank? || (tr.css('td')[3].present? && tr.css('td')[3].text.blank?)
                       parse_api_date(tr.css('td')[2].text.squish.strip, location)
                     else
                       parse_api_date_time("#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish.strip, location)
