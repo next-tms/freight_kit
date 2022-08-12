@@ -103,7 +103,14 @@ module Interstellar
                    HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
-      json = JSON.parse(response.body).deep_symbolize_keys
+      begin
+        json = JSON.parse(response.body).deep_symbolize_keys
+      rescue JSON::ParserError => e
+        # CNWY returns a string during runtime/server error
+        raise Interstellar::ResponseError, 'Runtime Error' if response.body.include?('Runtime Error')
+
+        raise
+      end
 
       error = if json.is_a?(Hash)
                 json[:error_description] || json.dig(:fault, :description) || json.dig(:error, :message)
