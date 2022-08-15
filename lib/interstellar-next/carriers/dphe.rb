@@ -119,10 +119,10 @@ module Interstellar
     def parse_document_response(action, tracking_number)
       document_response = DocumentResponse.new
 
-      watir_credentials = credentials.find { |c| c.type == :selenoid }
+      selenoid_credential = fetch_credential(:selenoid)
       website_credentials = fetch_credential(:website)
 
-      browser = Watir::Browser.new(*watir_credentials.watir_args)
+      browser = Watir::Browser.new(*selenoid_credential.watir_args)
 
       browser.goto(request_url(action))
 
@@ -173,7 +173,7 @@ module Interstellar
 
       sleep(10) # so Chrome can finish downloading
 
-      download_url = "#{selenoid_credentials.download_url}/#{browser.driver.session_id}"
+      download_url = "#{selenoid_credential.selenoid_options[:download_url]}/#{browser.driver.session_id}"
       response = HTTParty.get("#{download_url}/?json")
 
       filename = CGI.escape(JSON.parse(response.body)&.last)
@@ -339,7 +339,7 @@ module Interstellar
 
       Location.new(
         city: str.split(', ')[0].titleize,
-        province: str.split(', ')[1].split(' ')[0].upcase,
+        province: str.split(', ')[1].split[0].upcase,
         country: ActiveUtils::Country.find('USA')
       )
     end

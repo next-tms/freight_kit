@@ -118,10 +118,10 @@ module Interstellar
     def parse_document_response(action, tracking_number)
       document_response = DocumentResponse.new
 
-      selenoid_credentials = fetch_credential(:selenoid)
+      selenoid_credential = fetch_credential(:selenoid)
       website_credentials = fetch_credential(:website)
 
-      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
+      browser = Watir::Browser.new(*selenoid_credential.watir_args)
       browser.goto('https://ssworldtrak.com/WebtrakWTNew/')
 
       browser.text_field(name: 'txtUserId').set(website_credentials.username)
@@ -202,7 +202,7 @@ module Interstellar
 
       sleep(50) # so Chrome can finish downloading, Selenoid default timeout is 60s
 
-      download_url = "#{selenoid_credentials.download_url}/#{browser.driver.session_id}"
+      download_url = "#{selenoid_credential.selenoid_options[:download_url]}/#{browser.driver.session_id}"
       response = HTTParty.get("#{download_url}/?json")
 
       filename = CGI.escape(JSON.parse(response.body)&.last)
