@@ -4,6 +4,9 @@ module Interstellar
   class BTVP < Interstellar::Carrier
     REACTIVE_FREIGHT_CARRIER = true
 
+    include Interstellar::Rateable
+    include Interstellar::Trackable
+
     cattr_reader :name, :scac
     @@name = 'Best Overnite Express'
     @@scac = 'BTVP'
@@ -76,16 +79,17 @@ module Interstellar
 
     # Rates
 
-    def find_rates(shipment:)
-      begin
-        validate_packages(shipment.packages, @tariff)
-      rescue UnserviceableError => e
-        return RateResponse.new(error: e)
-      end
+    # TODO: Remove after regression testing
+    # def find_rates(shipment:)
+    #   begin
+    #     validate_packages(shipment.packages, @tariff)
+    #   rescue UnserviceableError => e
+    #     return RateResponse.new(error: e)
+    #   end
 
-      request = build_rate_request(shipment:)
-      parse_rate_response(shipment:, response: commit(:rates, request))
-    end
+    #   request = build_rate_request(shipment:)
+    #   parse_rate_response(shipment:, response: commit(:rates, request))
+    # end
 
     def find_rates_implemented?
       true
@@ -93,10 +97,11 @@ module Interstellar
 
     # Tracking
 
-    def find_tracking_info(tracking_number, *)
-      request = build_tracking_request(tracking_number)
-      parse_tracking_response(commit(:track, request))
-    end
+    # TODO: Remove after regression testing
+    # def find_tracking_info(tracking_number, *)
+    #   request = build_tracking_request(tracking_number)
+    #   parse_tracking_response(commit(:track, request))
+    # end
 
     def find_tracking_info_implemented?
       true
@@ -111,16 +116,25 @@ module Interstellar
     end
 
     def commit(action, request)
-      Savon.client(
+      client_args = {
         wsdl: build_url(action),
         convert_request_keys_to: :upcase,
         env_namespace: :soapenv
-      ).call(
-        @conf.dig(:api, :actions, action),
+      }
+
+      call_args = {
         headers: { 'SOAPAction' => '""' },
         soap_action: false,
         message: request
-      ).body
+      }
+
+      ::Interstellar::SoapClient.new(
+        carrier: self,
+        action: action,
+        client_args: client_args,
+        call_args: call_args,
+        soap_operation: @conf.dig(:api, :actions, action)
+      ).call
     end
 
     def parse_api_date(date)

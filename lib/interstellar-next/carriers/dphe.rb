@@ -4,6 +4,9 @@ module Interstellar
   class DPHE < Interstellar::Carrier
     REACTIVE_FREIGHT_CARRIER = true
 
+    include Interstellar::Rateable
+    include Interstellar::Trackable
+
     cattr_reader :name, :scac
     @@name = 'Dependable Highway Express'
     @@scac = 'DPHE'
@@ -48,16 +51,17 @@ module Interstellar
 
     # Rates
 
-    def find_rates(shipment:)
-      begin
-        validate_packages(shipment.packages)
-      rescue UnserviceableError => e
-        return RateResponse.new(error: e)
-      end
+    # TODO: Remove after regression testing
+    # def find_rates(shipment:)
+    #   begin
+    #     validate_packages(shipment.packages)
+    #   rescue UnserviceableError => e
+    #     return RateResponse.new(error: e)
+    #   end
 
-      request = build_rate_request(shipment:)
-      parse_rate_response(shipment:, response: commit_soap(:rates, request))
-    end
+    #   request = build_rate_request(shipment:)
+    #   parse_rate_response(shipment:, response: commit_soap(:rates, request))
+    # end
 
     def find_rates_implemented?
       true
@@ -65,10 +69,11 @@ module Interstellar
 
     # Tracking
 
-    def find_tracking_info(tracking_number)
-      request = build_tracking_request(tracking_number)
-      parse_tracking_response(commit_soap(:track, request))
-    end
+    # TODO: Remove after regression testing
+    # def find_tracking_info(tracking_number)
+    #   request = build_tracking_request(tracking_number)
+    #   parse_tracking_response(commit_soap(:track, request))
+    # end
 
     def find_tracking_info_implemented?
       true
@@ -82,16 +87,27 @@ module Interstellar
       { authentication_header: { user_name: api_credentials.username, password: api_credentials.password } }
     end
 
-    def commit_soap(action, request)
-      Savon.client(
+    def commit(action, request)
+      client_args = {
         wsdl: request_url(action),
         convert_request_keys_to: :camelcase,
         env_namespace: :soap,
         element_form_default: :qualified
-      ).call(
-        @conf.dig(:api, :actions, action),
-        message: request
-      ).body.to_hash
+      }
+
+      call_args = { message: request }
+
+      response = ::Interstellar::SoapClient.new(
+        carrier: self,
+        action: action,
+        client_args: client_args,
+        call_args: call_args,
+        soap_operation: @conf.dig(:api, :actions, action)
+      ).call
+
+      return response if response.is_a?(TrackingResponse) || response.is_a?(RateResponse)
+
+      response.to_hash
     end
 
     def request_url(action)
