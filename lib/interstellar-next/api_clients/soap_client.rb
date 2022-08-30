@@ -18,9 +18,9 @@ module Interstellar
         soap_operation,
         **call_args
       ).body
-    rescue Savon::HTTPError, Savon::SOAPFault => error
+    rescue Savon::HTTPError, Savon::SOAPFault, HTTP::Error, Net::ReadTimeout => error
       response = build_response_class(action: action, request: call_args[:message])
-      response.error = ResponseError.new("HTTP Error: #{error.http.code}")
+      response.error = ResponseError.new("HTTP Error: #{error}")
 
       response
     rescue Savon::InvalidResponseError
