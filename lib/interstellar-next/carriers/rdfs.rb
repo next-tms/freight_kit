@@ -110,6 +110,7 @@ module Interstellar
       }
     end
 
+    # CAVEAT: Did not use generic SoapClient because of additional business logic on Credentials Error
     def commit_soap(action, request)
       Savon.client(
         wsdl: request_url(action),

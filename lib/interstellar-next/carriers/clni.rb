@@ -4,6 +4,8 @@ module Interstellar
   class CLNI < Interstellar::Carrier
     REACTIVE_FREIGHT_CARRIER = true
 
+    include Interstellar::Rateable
+
     cattr_reader :name, :scac
     @@name = 'Clear Lane Freight Systems'
     @@scac = 'CLNI'
@@ -48,17 +50,6 @@ module Interstellar
 
     # Rates
 
-    def find_rates(shipment:)
-      begin
-        validate_packages(shipment.packages)
-      rescue UnserviceableError => e
-        return RateResponse.new(error: e)
-      end
-
-      request = build_rate_request(shipment:)
-      parse_rate_response(shipment:, response: commit_soap(:rates, request))
-    end
-
     def find_rates_implemented?
       true
     end
@@ -77,16 +68,23 @@ module Interstellar
 
     protected
 
-    def commit_soap(action, request)
-      Savon.client(
+    def commit(action, request)
+      client_args = {
         wsdl: build_url(:api, action),
         convert_request_keys_to: :none,
         env_namespace: :soap,
         element_form_default: :qualified
-      ).call(
-        @conf.dig(:api, :actions, action),
-        message: request_blueprint.deep_merge(request)
-      )&.body&.to_hash&.with_indifferent_access
+      }
+
+      call_args = { message: request_blueprint.deep_merge(request) }
+
+      ::Interstellar::SoapClient.new(
+        carrier: self,
+        action: action,
+        client_args: client_args,
+        call_args: call_args,
+        soap_operation: @conf.dig(:api, :actions, action)
+      ).call&.to_hash&.with_indifferent_access
     end
 
     def request_blueprint

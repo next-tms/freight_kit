@@ -4,6 +4,8 @@ module Interstellar
   class PENS < Interstellar::Carrier
     REACTIVE_FREIGHT_CARRIER = true
 
+    include Interstellar::Rateable
+
     cattr_reader :name, :scac
     @@name = 'Peninsula Truck Lines'
     @@scac = 'PENS'
@@ -31,16 +33,6 @@ module Interstellar
     # Documents
 
     # Rates
-    def find_rates(shipment:)
-      begin
-        validate_packages(shipment.packages)
-      rescue UnserviceableError => e
-        return RateResponse.new(error: e)
-      end
-
-      request = build_rate_request(shipment:)
-      parse_rate_response(shipment:, response: commit_soap(:rates, request))
-    end
 
     def find_rates_implemented?
       true
@@ -50,16 +42,23 @@ module Interstellar
 
     protected
 
-    def commit_soap(action, request)
-      Savon.client(
+    def commit(action, request)
+      client_args = {
         wsdl: request_url(action),
         convert_request_keys_to: :lower_camelcase,
         env_namespace: :soap,
         element_form_default: :qualified
-      ).call(
-        @conf.dig(:api, :actions, action),
-        message: request
-      ).body
+      }
+
+      call_args = { message: request }
+
+      ::Interstellar::SoapClient.new(
+        carrier: self,
+        action: action,
+        client_args: client_args,
+        call_args: call_args,
+        soap_operation: @conf.dig(:api, :actions, action)
+      ).call
     end
 
     def parse_amount(amount)

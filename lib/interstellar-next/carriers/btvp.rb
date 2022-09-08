@@ -79,29 +79,11 @@ module Interstellar
 
     # Rates
 
-    # TODO: Remove after regression testing
-    # def find_rates(shipment:)
-    #   begin
-    #     validate_packages(shipment.packages, @tariff)
-    #   rescue UnserviceableError => e
-    #     return RateResponse.new(error: e)
-    #   end
-
-    #   request = build_rate_request(shipment:)
-    #   parse_rate_response(shipment:, response: commit(:rates, request))
-    # end
-
     def find_rates_implemented?
       true
     end
 
     # Tracking
-
-    # TODO: Remove after regression testing
-    # def find_tracking_info(tracking_number, *)
-    #   request = build_tracking_request(tracking_number)
-    #   parse_tracking_response(commit(:track, request))
-    # end
 
     def find_tracking_info_implemented?
       true
