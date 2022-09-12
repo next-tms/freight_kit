@@ -5,6 +5,10 @@ module Interstellar
         validate_packages(shipment.packages, @tariff)
       rescue UnserviceableError => e
         return RateResponse.new(error: e)
+      rescue ArgumentError
+        validate_packages(shipment.packages)
+        # CarrierLogistics#validate_packages expects tariff argument but
+        # customer Carrier Classes' #validate_packages expect only shipment.packages
       end
 
       request = build_rate_request(shipment:)
