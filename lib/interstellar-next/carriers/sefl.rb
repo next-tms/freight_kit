@@ -210,10 +210,11 @@ module Interstellar
     def parse_rate_response(shipment:, response:, tries: 0)
       rate_response = RateResponse.new(request: last_request, response:)
 
-      if tries > 10
-        rate_response.error = ResponseError.new("Timeout after #{tries * 5} seconds")
-        return rate_response
-      end
+      # Used begin rescue block's retry instead.
+      # if tries > 10
+      #   rate_response.error = ResponseError.new("Timeout after #{tries * 5} seconds")
+      #   return rate_response
+      # end
 
       if response.body.blank?
         rate_response.error = InvalidCredentialsError if response.code == 401
@@ -226,7 +227,13 @@ module Interstellar
         response = JSON.parse(response.body)
       rescue JSON::ParserError
         sleep(5)
-        parse_rate_response(shipment:, response:, tries: tries + 1)
+        if tries > 10
+          rate_response.error = ResponseError.new("Timeout after #{tries * 5} seconds")
+          return rate_response
+        end
+
+        tries += 1
+        retry
       end
 
       error = response['errorMessage']

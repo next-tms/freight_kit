@@ -215,6 +215,11 @@ module Interstellar
 
       result = response.dig(:create_response, :create_result)
 
+      if result.blank?
+        rate_response.error = ResponseError.new('Unknown result')
+        return rate_response
+      end
+
       if result[:total_invoice].blank?
         rate_response.error = ResponseError.new('Cost is blank')
         return rate_response
