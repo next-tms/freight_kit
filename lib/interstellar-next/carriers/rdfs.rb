@@ -4,6 +4,8 @@ module Interstellar
   class RDFS < Carrier
     REACTIVE_FREIGHT_CARRIER = true
 
+    include Interstellar::Rateable
+
     cattr_reader :name, :scac
     @@name = 'Roadrunner Transportation Services'
     @@scac = 'RRDS'
@@ -54,23 +56,6 @@ module Interstellar
 
     # Rates
 
-    def find_rates(shipment:)
-      begin
-        validate_packages(shipment.packages)
-      rescue UnserviceableError => e
-        return RateResponse.new(error: e)
-      end
-
-      begin
-        request = build_rate_request(shipment:)
-        response = commit_soap(:rates, request)
-      rescue InvalidCredentialsError => e
-        return RateResponse.new(error: e)
-      end
-
-      parse_rate_response(shipment:, response:)
-    end
-
     def find_rates_implemented?
       true
     end
@@ -110,18 +95,26 @@ module Interstellar
       }
     end
 
-    # CAVEAT: Did not use generic SoapClient because of additional business logic on Credentials Error
-    def commit_soap(action, request)
-      Savon.client(
+    def commit(action, request)
+      client_args = {
         wsdl: request_url(action),
         convert_request_keys_to: :camelcase,
         env_namespace: :soap,
         element_form_default: :qualified
-      ).call(
-        @conf.dig(:api, :actions, action),
+      }
+
+      call_args = {
         soap_header: build_soap_header(action),
         message: request
-      ).body
+      }
+
+      ::Interstellar::SoapClient.new(
+        carrier: self,
+        action: action,
+        client_args: client_args,
+        call_args: call_args,
+        soap_operation: @conf.dig(:api, :actions, action)
+      ).call(handle_soap_fault_error: false)
     rescue Savon::SOAPFault => e
       raise InvalidCredentialsError, 'Invalid credentials' if e.message.include?('RRTS.Common.BLL.InvalidUserException')
 
@@ -346,6 +339,8 @@ module Interstellar
       save_request(uri)
 
       uri.open
+    rescue OpenURI::HTTPError, Errno::EHOSTUNREACH
+      nil
     end
 
     def parse_api_location(comment, delimiters)
@@ -477,7 +472,7 @@ module Interstellar
 
       begin
         doc = Nokogiri::HTML(URI.parse(url).open)
-      rescue OpenURI::HTTPError
+      rescue OpenURI::HTTPError, Errno::EHOSTUNREACH
         return nil
       end
 

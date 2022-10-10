@@ -1,5 +1,14 @@
 module Interstellar
   class SoapClient
+    API_EXCEPTIONS = [
+      Savon::HTTPError,
+      Net::ReadTimeout,
+      Net::OpenTimeout,
+      Errno::ECONNREFUSED,
+      Errno::ECONNRESET,
+      Errno::EHOSTUNREACH
+    ]
+
     def initialize(carrier:, action:, client_args:, call_args:, soap_operation:)
       @carrier = carrier
       @action = action
@@ -8,9 +17,12 @@ module Interstellar
       @soap_operation = soap_operation
     end
 
-    def call
+    def call(handle_soap_fault_error: true)
       # http = OpenStruct.new(code: 500, body: {})
       # raise Savon::HTTPError, http
+
+      api_exceptions = API_EXCEPTIONS
+      api_exceptions += [Savon::SOAPFault] if handle_soap_fault_error
 
       Savon.client(
         **client_args
@@ -18,7 +30,7 @@ module Interstellar
         soap_operation,
         **call_args
       ).body
-    rescue Savon::HTTPError, Savon::SOAPFault, HTTP::Error, Net::ReadTimeout => error
+    rescue *api_exceptions => error
       response = build_response_class(action: action, request: call_args[:message])
       response.error = ResponseError.new("HTTP Error: #{error}")
 
