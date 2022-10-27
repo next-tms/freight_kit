@@ -1,0 +1,14 @@
+:api:
+  :domain: tracking.numarktransportation.net
+  :endpoints:
+    :bol: /xr0001.pgm
+    :pickup: /xr0001.pgm
+    :pod: /xr0001.pgm
+    :rates: /web/services/TQUOTEAPI?wsdl
+    :track: /web/services/TRACKAPI?wsdl
+  :ports:
+    :rates: 10010
+    :track: 10010
+:attributes:
+  :rates:
+    :with_excessive_length_fees: false
