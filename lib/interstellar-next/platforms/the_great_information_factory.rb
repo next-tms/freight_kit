@@ -6,6 +6,8 @@ module Interstellar
 
     include Interstellar::Rateable
     include Interstellar::Trackable
+    include Interstellar::Pickupable
+    include Interstellar::Documentable
 
     def overlength_fees_require_tariff?
       true
@@ -13,18 +15,6 @@ module Interstellar
 
     def required_credential_types
       %i[api]
-    end
-
-    # Rates
-
-    def find_rates_implemented?
-      true
-    end
-
-    # Tracking
-
-    def find_tracking_info_implemented?
-      true
     end
 
     protected
@@ -79,7 +69,11 @@ module Interstellar
 
     def build_url(action)
       scheme = @conf.dig(:api, :use_ssl, action) ? 'https://' : 'http://'
-      "#{scheme}#{@conf.dig(:api, :domain)}:#{@conf.dig(:api, :ports, action)}#{@conf.dig(:api, :endpoints, action)}"
+      domain = @conf.dig(:api, :domains, action).presence || @conf.dig(:api, :domain)
+      port = @conf.dig(:api, :ports, action)
+      return [scheme, domain, @conf.dig(:api, :endpoints, action)].join unless port
+
+      "#{scheme}#{domain}:#{port}#{@conf.dig(:api, :endpoints, action)}"
     end
 
     def strip_date(str)
@@ -160,17 +154,9 @@ module Interstellar
         return rate_response
       end
 
-      unless response.dig(:getquote_response, :return, :rating, :errorcode).blank?
-        error_code = response.dig(:getquote_response, :return, :rating, :errorcode)
-
-        rate_response.error = case error_code
-                              when 'BADUSRPWD' then InvalidCredentialsError.new
-                              when 'NOSVC' then UnserviceableError.new('Origin or destination has no service available')
-                              when 'BADCONZIP' then UnserviceableError.new('Invalid destination ZIP code')
-                              else
-                                ResponseError.new("API error code #{error_code}")
-                              end
-
+      error_code = response.dig(:getquote_response, :return, :rating, :errorcode)
+      if error_code
+        rate_response.error = parse_error_response(error_code)
         return rate_response
       end
 
@@ -284,29 +270,37 @@ module Interstellar
       end
     end
 
+    def parse_error_response(error_code)
+      case error_code
+      when 'BADUSRPWD' then InvalidCredentialsError.new
+      when 'NOSVC' then UnserviceableError.new('Origin or destination has no service available')
+      when 'BADCONZIP' then UnserviceableError.new('Invalid destination ZIP code')
+      else
+        ResponseError.new("API error code #{error_code}")
+      end
+    end
+
+    def build_location(city, province)
+      Location.new(city: city.titleize, province: province.upcase, country: ActiveUtils::Country.find('USA'))
+    end
+
     def parse_tracking_response(response)
       tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
+      mapped_response = response.dig(:tracktrace_response, :return, :currentstatus)
 
-      unless response.dig(:tracktrace_response, :return, :currentstatus, :errorcode).blank?
-        tracking_response.error = ShipmentNotFoundError.new
+      if mapped_response.dig(:errorcode)
+        tracking_response.error = parse_error_response(mapped_response.dig(:errorcode))
         return tracking_response
       end
 
-      receiver_location = Location.new(
-        city: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :city).titleize,
-        province: response.dig(:tracktrace_response, :return, :currentstatus, :consignee, :state).upcase,
-        country: ActiveUtils::Country.find('USA')
-      )
+      receiver_location = build_location(mapped_response.dig(:consignee, :city), mapped_response.dig(:consignee, :state))
+      shipper_location = build_location(mapped_response.dig(:shipper, :city), mapped_response.dig(:shipper, :state))
 
-      shipper_location = Location.new(
-        city: response.dig(:tracktrace_response, :return, :currentstatus, :shipper, :city).titleize,
-        province: response.dig(:tracktrace_response, :return, :currentstatus, :shipper, :state).upcase,
-        country: ActiveUtils::Country.find('USA')
-      )
+      actual_delivery_date = mapped_response.dig(:deliverydate)
 
-      actual_delivery_date = response.dig(:tracktrace_response, :return, :currentstatus, :deliverydate)
       unless actual_delivery_date.blank?
-        comment = response.dig(:tracktrace_response, :return, :currentstatus, :status).downcase
+        comment = mapped_response.dig(:status).downcase
+
         if comment.starts_with?('delivered')
           api_date = comment.downcase.split('signed')[0].split('on')[1].strip.sub('at ', '')
           actual_delivery_date = parse_api_date(api_date)
@@ -315,15 +309,11 @@ module Interstellar
 
       shipment_events = []
 
-      api_date = response.dig(:tracktrace_response, :return, :currentstatus, :shipdate)
-      ship_time = parse_api_date(api_date)
-
+      ship_time = parse_api_date(mapped_response.dig(:shipdate))
       # Leave this open for modification later
       picked_up_event = ShipmentEvent.new(location: shipper_location, date_time: ship_time, type_code: :picked_up)
 
-      api_date = response.dig(:tracktrace_response, :return, :currentstatus, :estdeliverydate)
-      scheduled_delivery_date = parse_api_date(api_date)
-
+      scheduled_delivery_date = parse_api_date(mapped_response.dig(:estdeliverydate))
       tracking_number = response.dig(:tracktrace_response, :return, :pronumber)
 
       api_events = response.dig(:tracktrace_response, :return, :history)
@@ -387,10 +377,8 @@ module Interstellar
       status = shipment_events.last&.type_code
 
       # Workarounds for false status on certain events when timestamps are in wrong order
-      status = :out_for_delivery if shipment_events.select do |shipment_event|
-                                      shipment_event.type_code == :out_for_delivery
-                                    end.any?
-      status = :delivered if shipment_events.select { |shipment_event| shipment_event.type_code == :delivered }.any?
+      status = :out_for_delivery if shipment_events.find { |shipment_event| shipment_event.type_code == :out_for_delivery }
+      status = :delivered if shipment_events.find { |shipment_event| shipment_event.type_code == :delivered }
 
       tracking_response.assign_attributes(
         actual_delivery_date:,
@@ -404,6 +392,104 @@ module Interstellar
       )
 
       tracking_response
+    end
+
+    def parse_pickup_response(response)
+      pickup_response = PickupResponse.new(request: last_request, response:)
+
+      result = response.dig(:requestpickup_response, :return, :results)
+      if result[:errorcode]
+        pickup_response.error = Interstellar::ResponseError.new("API Error: #{result[:errorcode]}")
+        return pickup_response
+      end
+
+      pickup_number = result[:pickupnumber]
+
+      if pickup_number == '0'
+        pickup_response.error = Interstellar::ResponseError.new("Unknown Error")
+        return pickup_response
+      end
+
+      pickup_response.pickup_number = pickup_number
+      pickup_response
+    end
+
+    def build_pickup_request(
+      delivery_from:,
+      delivery_to:,
+      dispatcher:,
+      pickup_from:,
+      pickup_to:,
+      scac:,
+      service:,
+      shipment:
+    )
+
+      shipper_phone = shipment.origin.contact.phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
+      shipper_phone = shipper_phone[1..] if shipper_phone.length == 11
+
+      request = {
+        securityinfo: build_soap_header,
+        shipperinfo: {
+          name: shipment.origin.contact.company_name,
+          contact: shipment.origin.contact.name,
+          phonenumber: shipper_phone,
+          address1: shipment.origin.address1,
+          address2: shipment.origin.address2,
+          city: shipment.origin.city,
+          state: shipment.origin.province,
+          ReadyDate: Date.today.strftime("%m/%d/%Y"),
+          ReadyTime: pickup_from.strftime("%H%M").to_i,
+          CloseTime: pickup_to.strftime("%H%M").to_i,
+          zip: shipment.origin.postal_code,
+          SpecialInstructions: ""
+        },
+        ShipmentCount: 1,
+        shipments: [
+          {
+            DestZip: shipment.destination.postal_code,
+            Pieces: shipment.packages.sum(&:quantity),
+            Pallets: shipment.packages.select { |p| p.packaging.pallet? }.sum(&:quantity),
+            Weight: shipment.packages.sum { |p| p.pounds(:total).ceil },
+            HAZ: shipment.packages.any?(&:hazmat?) ? 'Y' : 'N',
+            dblStack: 'N',
+            SortSeg: 'N',
+            Pro: shipment.pro,
+            Liftgate: shipment.accessorials.include?(:liftgate_pickup) ? 'Y' : 'N'
+          }
+        ]
+      }
+
+      request = wrap_request(request)
+      save_request(request)
+
+      request
+    end
+
+    def parse_document_response(type, tracking_number)
+      base_url = build_url(type)
+      website_credentials = fetch_credential(:website)
+      query_parameter = "&username=#{website_credentials.username}&"\
+                        "password=#{website_credentials.password}&"\
+                        "pronumber=#{tracking_number}&"\
+                        "format=PDF"
+
+      url = [base_url, query_parameter].join
+
+      response = HTTParty.get(url)
+      base64_document_data = response.deep_symbolize_keys.dig(:ImageRequest, :Image, :ImageData, :__content__)
+
+      document_response = DocumentResponse.new(request: url)
+
+      unless base64_document_data
+        document_response.error = DocumentNotFoundError.new
+        return document_response
+      end
+
+      decoded_pdf_data = Base64.decode64 base64_document_data
+      document_response.assign_attributes(content_type: "application/pdf", data: decoded_pdf_data)
+
+      document_response
     end
   end
 end

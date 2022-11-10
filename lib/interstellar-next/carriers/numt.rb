@@ -4,9 +4,6 @@ module Interstellar
   class NUMT < TheGreatInformationFactory
     REACTIVE_FREIGHT_CARRIER = true
 
-    include Interstellar::Rateable
-    include Interstellar::Trackable
-
     cattr_reader :name, :scac
     @@name = 'Numark Transportation'
     @@scac = 'NUMT'

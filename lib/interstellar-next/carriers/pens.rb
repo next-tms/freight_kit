@@ -32,12 +32,6 @@ module Interstellar
 
     # Documents
 
-    # Rates
-
-    def find_rates_implemented?
-      true
-    end
-
     # Tracking
 
     protected

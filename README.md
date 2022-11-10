@@ -6,25 +6,27 @@ This library is an [Interstellar](https://github.com/next-tms/interstellar) plug
 
 * [Carrier Logistics](https://carrierlogistics.com)
 * [Next TMS](https://next-tms.com)
+* [The Great Information Factory](https://www.tgifsoftware.com)
 
 ## Carriers
 
-|Carrier                            |BOL|POD|Pickups|Rates|Tracking|
-|-----------------------------------|---|---|-------|-----|--------|
-|Best Overnite Express              |✓  |✓  |✓      |✓    |✓       |
-|Clear Lane Freight Systems         |   |   |       |✓    |        |
-|The Custom Companies               |   |   |       |✓    |✓       |
-|Dependable Highway Express         |✓  |✓  |       |✓    |✓       |
-|Forward Air                        |✓  |✓  |✓      |✓    |✓       |
-|Frontline Freight                  |✓  |✓  |       |✓    |✓       |
-|OnTrac                             |   |   |       |✓    |        |
-|Peninsula Truck Lines              |   |   |       |✓    |        |
-|Roadrunner Transportation Services |✓  |✓  |       |✓    |✓       |
-|Saia                               |   |   |✓      |✓    |✓       |
-|Southeastern Freight Lines         |   |   |       |✓    |        |
-|Tforce Worldwide                   |✓  |✓  |✓      |✓    |        |
-|Total Transportation & Distribution|✓  |✓  |       |✓    |✓       |
-|Western Regional Delivery Service  |   |✓  |       |     |✓       |
+|Carrier                            |Scanned BOL|POD|Pickups|Rates|Tracking|
+|-----------------------------------|-----------|---|-------|-----|--------|
+|Best Overnite Express              |✓          |✓  |✓      |✓    |✓       |
+|Clear Lane Freight Systems         |           |   |       |✓    |        |
+|The Custom Companies               |           |   |       |✓    |✓       |
+|Dependable Highway Express         |✓          |✓  |       |✓    |✓       |
+|Forward Air                        |✓          |✓  |✓      |✓    |✓       |
+|Frontline Freight                  |✓          |✓  |       |✓    |✓       |
+|Numark Transportation              |✓          |✓  |✓      |✓    |✓       |
+|OnTrac                             |           |   |       |✓    |        |
+|Peninsula Truck Lines              |           |   |       |✓    |        |
+|Roadrunner Transportation Services |✓          |✓  |       |✓    |✓       |
+|Saia                               |           |   |✓      |✓    |✓       |
+|Southeastern Freight Lines         |           |   |       |✓    |        |
+|Tforce Worldwide                   |✓          |✓  |✓      |✓    |        |
+|Total Transportation & Distribution|✓          |✓  |       |✓    |✓       |
+|Western Regional Delivery Service  |           |✓  |       |     |✓       |
 
 ## Installation
 

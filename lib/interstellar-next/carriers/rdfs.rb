@@ -54,12 +54,6 @@ module Interstellar
       false
     end
 
-    # Rates
-
-    def find_rates_implemented?
-      true
-    end
-
     # Tracking
 
     def find_tracking_info(tracking_number)

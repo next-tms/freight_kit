@@ -35,10 +35,6 @@ module Interstellar
 
     # Rates
 
-    def find_rates_implemented?
-      true
-    end
-
     def find_rates_with_declared_value?
       true
     end
@@ -47,12 +43,6 @@ module Interstellar
       raise UnserviceableError, 'Must be fewer than 10 items altogether' if packages.sum(&:quantity) > 10
 
       super
-    end
-
-    # Tracking
-
-    def find_tracking_info_implemented?
-      true
     end
 
     protected

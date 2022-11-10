@@ -1,5 +1,9 @@
 module Interstellar
   module Rateable
+    def find_rates_implemented?
+      true
+    end
+
     def find_rates(shipment:)
       begin
         validate_packages(shipment.packages, @tariff)

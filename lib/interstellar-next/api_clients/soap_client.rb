@@ -24,6 +24,13 @@ module Interstellar
       api_exceptions = API_EXCEPTIONS
       api_exceptions += [Savon::SOAPFault] if handle_soap_fault_error
 
+      # For testing and debugging
+      # client_args = client_args.merge(
+      #   logger: Rails.logger,
+      #   log: true,
+      #   pretty_print_xml: true
+      # )
+
       Savon.client(
         **client_args
       ).call(
@@ -50,6 +57,7 @@ module Interstellar
       case action
       when :rates then RateResponse.new(request: request, response: nil)
       when :track then TrackingResponse.new(carrier: carrier, request: request, response: nil)
+      when :pickup then PickupResponse.new(request: request, response: nil)
       end
     end
   end

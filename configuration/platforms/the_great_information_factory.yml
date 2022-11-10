@@ -107,6 +107,7 @@
   :actions:
     :rates: :getquote
     :track: :tracktrace
+    :pickup: :requestpickup
   :use_ssl:
     :rates: false
     :track: false

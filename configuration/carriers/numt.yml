@@ -1,11 +1,11 @@
 :api:
   :domain: tracking.numarktransportation.net
   :endpoints:
-    :bol: /xr0001.pgm
-    :pickup: /xr0001.pgm
-    :pod: /xr0001.pgm
+    :bol: /cgi-bin/timageapi?doctype=BOL
+    :pod: /cgi-bin/timageapi?doctype=POD
     :rates: /web/services/TQUOTEAPI?wsdl
-    :track: /web/services/TRACKAPI?wsdl
+    :track: /web/services/TTRACKAPI?wsdl
+    :pickup: /web/services/TPICKUPAPI?wsdl
   :ports:
     :rates: 10010
     :track: 10010

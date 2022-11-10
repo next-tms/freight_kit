@@ -49,18 +49,6 @@ module Interstellar
       true
     end
 
-    # Rates
-
-    def find_rates_implemented?
-      true
-    end
-
-    # Tracking
-
-    def find_tracking_info_implemented?
-      true
-    end
-
     protected
 
     def build_soap_header(_action)
