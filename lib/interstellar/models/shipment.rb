@@ -13,7 +13,7 @@ module Interstellar
   # @!attribute po_number [String] Purchase order number (also known as PO #).
   # @!attribute pickup_at [Interstellar::DateTime] Pickup date/time.
   class Shipment < Model
-    attr_accessor :accessorials, :declared_value_cents, :destination, :origin, :order_number, :packages, :po_number
+    attr_accessor :accessorials, :declared_value_cents, :destination, :origin, :order_number, :packages, :po_number, :pro
     attr_reader :pickup_at
 
     def loose?
