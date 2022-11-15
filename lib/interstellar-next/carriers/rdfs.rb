@@ -104,9 +104,9 @@ module Interstellar
 
       ::Interstellar::SoapClient.new(
         carrier: self,
-        action: action,
-        client_args: client_args,
-        call_args: call_args,
+        action:,
+        client_args:,
+        call_args:,
         soap_operation: @conf.dig(:api, :actions, action)
       ).call(handle_soap_fault_error: false)
     rescue Savon::SOAPFault => e
@@ -239,11 +239,18 @@ module Interstellar
         end
       end
 
+      cubic_ft = if packages.map { |package| package.cubic_ft(:each) }.any?(nil)
+                   nil
+                 else
+                   packages.sum { |package| package.cubic_ft(:total) }.ceil
+                 end
+
       request = {
         'request' => {
           account: api_credential.account,
+          cubic_feet:,
           destination_zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase,
-          # :linear_feet => linear_ft(packages),
+          # linear_feet: linear_ft(packages),
           origin_type: 'B', # O for shipper, I for consignee, B for third party
           origin_zip: shipment.origin.postal_code.gsub(/\s+/, '').upcase,
           pallet_count: shipment_pallet_count,
