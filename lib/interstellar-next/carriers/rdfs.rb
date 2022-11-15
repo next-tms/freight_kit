@@ -239,10 +239,10 @@ module Interstellar
         end
       end
 
-      cubic_ft = if packages.map { |package| package.cubic_ft(:each) }.any?(nil)
+      cubic_ft = if shipment.packages.map { |package| package.cubic_ft(:each) }.any?(nil)
                    nil
                  else
-                   packages.sum { |package| package.cubic_ft(:total) }.ceil
+                   shipment.packages.sum { |package| package.cubic_ft(:total) }.ceil
                  end
 
       request = {
