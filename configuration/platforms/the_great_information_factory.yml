@@ -111,6 +111,13 @@
   :use_ssl:
     :rates: false
     :track: false
+:events:
+  :types:
+    :arrived_at_terminal: arrived
+    :delivered: delivered
+    :departed: departed
+    :out_for_delivery: out for delvry
+    :pickup_information_sent_to_carrier: p/u dispatched
 :services:
   :types:
     - :standard
