@@ -1,8 +1,8 @@
 :api:
   :domain: tracking.numarktransportation.net
   :endpoints:
-    :bol: /cgi-bin/timageapi?doctype=BOL
-    :pod: /cgi-bin/timageapi?doctype=POD
+    :bol: /cgibin/timageapi?doctype=BOL
+    :pod: /cgibin/timageapi?doctype=POD
     :rates: /web/services/TQUOTEAPI?wsdl
     :track: /web/services/TTRACKAPI?wsdl
     :pickup: /web/services/TPICKUPAPI?wsdl
