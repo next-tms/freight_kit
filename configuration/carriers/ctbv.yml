@@ -103,7 +103,7 @@
     :bol: /scripts/cgiip.exe/web-login.htm?
     :pod: /scripts/cgiip.exe/web-login.htm?
     :rates: /scripts/cgiip.exe/ratequote.xml?
-    :track: /scripts/cgiip.exe/boldetail.htm?
+    :track: /scripts/cgiip.exe/protracexml.htm?
   :use_ssl:
     :bol: false
     :pod: false

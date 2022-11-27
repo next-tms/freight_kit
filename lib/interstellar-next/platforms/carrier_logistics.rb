@@ -13,13 +13,15 @@ module Interstellar
     ].freeze
 
     def required_credential_types
-      %i[api selenoid website]
+      %i[api]
     end
 
     # Documents
 
     def pod(tracking_number)
-      parse_document_response(:pod, tracking_number)
+      query = build_tracking_query(tracking_number)
+      response = commit(:track, query:)
+      parse_document_response(response, :pod)
     end
 
     def pod_implemented?
@@ -27,7 +29,9 @@ module Interstellar
     end
 
     def scanned_bol(tracking_number)
-      parse_document_response(:bol, tracking_number)
+      query = build_tracking_query(tracking_number)
+      response = commit(:track, query:)
+      parse_document_response(response, :bol)
     end
 
     def scanned_bol_implemented?
@@ -43,8 +47,9 @@ module Interstellar
         return RateResponse.new(error: e)
       end
 
-      params = build_rate_params(shipment:)
-      parse_rate_response(shipment:, response: commit(:rates, params:))
+      query = build_rate_query(shipment:)
+      response = commit(:rates, query:)
+      parse_rate_response(shipment:, response:)
     end
 
     def find_rates_implemented?
@@ -54,7 +59,9 @@ module Interstellar
     # Tracking
 
     def find_tracking_info(tracking_number)
-      parse_tracking_response(tracking_number)
+      query = build_tracking_query(tracking_number)
+      response = commit(:track, query:)
+      parse_tracking_response(tracking_number, response:)
     end
 
     def find_tracking_info_implemented?
@@ -63,85 +70,56 @@ module Interstellar
 
     # protected
 
-    def build_url(action, options = {})
+    def build_url(action, query:)
       scheme = @conf.dig(:api, :use_ssl, action) ? 'https://' : 'http://'
-      url = ''.dup
-      url << "#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}"
-      url = url.sub('@CARRIER_CODE@', @conf.dig(:api, :carrier_code)) if url.include?('@CARRIER_CODE@')
-      url << options[:params] unless options[:params].blank?
-      url
+
+      uri = URI.parse("#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}")
+      uri.query = query.to_query
+
+      url = uri.to_s
+      return url unless url.include?('@CARRIER_CODE@')
+
+      url.sub('@CARRIER_CODE@', @conf.dig(:api, :carrier_code))
     end
 
-    def commit(action, options = {})
-      url = build_url(action, params: options[:params])
+    def commit(action, query:)
+      url = build_url(action, query:)
+      save_request(url)
 
-      response = HTTParty.get(url, logger: Logger.new($stdout))
-      response.parsed_response if response&.parsed_response
+      HTTParty.get(url, logger: Logger.new($stdout))
     end
 
     # Documents
 
-    def parse_document_response(action, tracking_number)
+    def parse_document_response(tracking_response, document_type)
       document_response = DocumentResponse.new
 
-      selenoid_credentials = fetch_credential(:selenoid)
-      website_credentials = fetch_credential(:website)
+      document_response.error = case tracking_response.code
+                                when 200 then nil
+                                when 400 then DocumentNotFoundError.new
+                                else
+                                  ResponseError.new("HTTP #{response.code}")
+                                end
 
-      browser = Watir::Browser.new(*selenoid_credentials.watir_args)
-      browser.goto(build_url(action))
+      return document_response if document_response.error.present?
 
-      browser.text_field(name: 'wlogin').set(website_credentials.username)
-      browser.text_field(name: 'wpword').set(website_credentials.password)
-      browser.button(name: 'BtnAction1').click
+      tracking_response.deep_symbolize_keys!
 
-      downcase_html = browser.html.downcase
+      image_type_code = case document_type
+                        when :bol then 'B'
+                        when :pod then 'P'
+                        end
 
-      EXPIRED_CREDENTIALS_MESSAGES.each do |expired_credentials_message|
-        next unless downcase_html.include?(expired_credentials_message.downcase)
-
-        browser.close
-
-        document_response.error = ExpiredCredentialsError.new
-        return document_response
+      image = tracking_response.dig(:protrace, :images, :image)&.find do |image|
+        image[:imagetypecode] == image_type_code
       end
 
-      INVALID_CREDENTIALS_MESSAGES.each do |invalid_credentials_message|
-        next unless downcase_html.include?(invalid_credentials_message.downcase)
-
-        browser.close
-
-        document_response.error = InvalidCredentialsError.new
-        return document_response
-      end
-
-      browser.frameset.frames[1].text_field(id: 'menuquicktrack').set(tracking_number)
-      browser.browser.frameset.frames[1].button(id: 'menusubmit').click
-
-      element = if action == :bol
-                  browser.frameset.frames[1].button(value: 'View Bill Of Lading Image')
-                else
-                  browser.frameset.frames[1].button(value: 'View Delivery Receipt Image')
-                end
-      if element.exists?
-        element.click
-      else
-        browser.close
-
+      if image.blank?
         document_response.error = DocumentNotFoundError.new
         return document_response
       end
 
-      url = nil
-      browser.switch_window.use do
-        url = browser.url
-      end
-
-      browser.close
-
-      if url.include?('viewdoc.php') || url == 'about:blank'
-        document_response.error = ResponseError.new('Documnent cannot be downloaded')
-        return document_response
-      end
+      url = image[:imageurl]
 
       begin
         response = HTTParty.get(url)
@@ -160,6 +138,12 @@ module Interstellar
     end
 
     # Tracking
+
+    def build_tracking_query(tracking_number)
+      api_credentials = fetch_credential(:api)
+
+      { pronum: tracking_number, xmlpass: api_credentials.password, xmluser: api_credentials.username }
+    end
 
     def parse_api_city_state(str)
       return nil if str.blank?
@@ -183,10 +167,11 @@ module Interstellar
     def parse_api_city_state_zip(str)
       return nil if str.blank?
 
+      parts = str.split(', ')
+
       Location.new(
-        city: str.split(', ')[0].titleize,
-        province: str.split(', ')[1].split[0].upcase,
-        postal_code: str.split(', ')[1].split[1],
+        city: parts.first.titleize,
+        province: parts.last.upcase,
         country: ActiveUtils::Country.find('USA')
       )
     end
@@ -201,7 +186,7 @@ module Interstellar
     def parse_api_date_time(date_time, location)
       return nil if date_time.blank?
 
-      local_date_time = ::DateTime.strptime(date_time, '%m/%d/%Y %H:%M %p').to_fs(:db)
+      local_date_time = ::DateTime.strptime(date_time, '%Y-%m-%d %H:%M').to_fs(:db)
       DateTime.new(local_date_time:, location:)
     rescue Date::Error
       raise unless local_date_time.blank?
@@ -209,42 +194,23 @@ module Interstellar
       parse_api_date(local_date_time, location)
     end
 
-    def parse_tracking_response(tracking_number)
-      url = "#{build_url(:track)}wbtn=PRO&wpro1=#{tracking_number}"
-      tracking_response = TrackingResponse.new(carrier: self, request: url)
+    def parse_tracking_response(tracking_number, response:)
+      tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
 
-      save_request(url)
+      tracking_response.error = case response.code
+                                when 200 then nil
+                                when 400 then ShipmentNotFoundError.new
+                                else
+                                  ResponseError.new("HTTP #{response.code}")
+                                end
 
-      begin
-        response = HTTParty.get(url)
-      rescue StandardError => e
-        tracking_response.assign_attributes(error: e)
-        return tracking_response
-      end
+      return tracking_response if tracking_response.error.present?
 
-      case response.code
-      when 400
-        tracking_response.assign_attributes(error: ShipmentNotFoundError.new)
-        return tracking_response
-      else
-        unless response.code == 200
-          tracking_response.assign_attributes(error: ResponseError.new("HTTP #{response.code}"))
-          return tracking_response
-        end
-      end
+      response.deep_symbolize_keys!
 
-      tracking_response.error = ShipmentNotFoundError.new if response.body.downcase.include?('please enter a valid')
-
-      return tracking_response unless tracking_response.error.blank?
-
-      html = Nokogiri::HTML(response.body)
-      tracking_table = html.css('.newtables2')[0]
-
-      tracking_response.response = html
-
-      if tracking_table.blank?
-        tracking_response.error = ResponseError.new('Missing tracking table')
-
+      api_events = response.dig(:protrace, :shiphists, :shiphist)
+      if api_events.blank?
+        tracking_response.error = ResponseError.new('Empty response')
         return tracking_response
       end
 
@@ -255,66 +221,42 @@ module Interstellar
       ship_time = nil
       origin = nil
 
-      shipment_events = []
-      tracking_table.css('tr').reverse.each do |tr|
-        next if tr.text.include?('shipment status')
-        next if tr.css('td').blank?
+      shipment_events = response.dig(:protrace, :shiphists, :shiphist).map do |api_event|
+        api_event_key = api_event[:histcode].downcase
 
-        event = tr.css('td')[0].text
-        location = tr.css('td')[1].text
+        event = nil
+        conf.dig(:events, :types).each_key do |key|
+          next unless conf.dig(:events, :types, key) == api_event_key
 
-        event_key = nil
-        @conf.dig(:events, :types).each do |key, val|
-          if event.downcase.include?(val) && !event.downcase.include?('estimated')
-            event_key = key
-            break
-          end
+          event = key
         end
-        next if event_key.blank?
 
-        event = event_key
+        next if event.blank?
 
-        location = (parse_api_city_state(location.squish) if !location.blank? && location.downcase.include?(','))
+        location = if api_event[:histremarks].match?(/, \w{2}/) # ends in state abbreviation
+                     parse_api_city_state(api_event[:histremarks])
+                   end
 
-        # Sample TR Element
-        # #(Element:0x20c38 {
-        # name = "tr",
-        # attributes = [ #(Attr:0x20b70 { name = "class", value = "oddrow" })],
-        # children = [
-        #   #(Element:0x20bac {
-        #     name = "td",
-        #     attributes = [ #(Attr:0x20b84 { name = "bgcolor", value = "yellow" })],
-        #     children = [ #(Text "DELIVERED; THANK YOU FOR USING THE CUSTOM COMPANIES")]
-        #     }),
-        #   #(Element:0x20bd4 { name = "td", children = [ #(Text "BOISE, ID")] }),
-        #   #(Element:0x20bfc { name = "td", children = [ #(Text "08/10/2022")] }),
-        #   #(Element:0x20c24 { name = "td", children = [ #(Text " ")] })]
-        # })
-        # Some carriers do not provide times 👎
-        # Some table row has no 4th TD entirely, Or has 4th TD but has blank text
-        date_time = if tr.css('td')[3].blank? || (tr.css('td')[3].present? && tr.css('td')[3].text.blank?)
-                      parse_api_date(tr.css('td')[2].text.squish.strip, location)
+        date_time = if api_event[:histdate].present? && api_event[:histtime].present?
+                      parse_api_date_time("#{api_event[:histdate]} #{api_event[:histtime]}", location)
                     else
-                      parse_api_date_time("#{tr.css('td')[2].text} #{tr.css('td')[3].text}".squish.strip, location)
+                      parse_api_date(api_event[:histdate], location)
                     end
 
-        case event_key
+        case event
         when :delivered
           actual_delivery_date = date_time
+          estimated_delivery_date = actual_delivery_date
           destination = location
         when :picked_up
           origin = location
           ship_time = date_time
         end
 
-        shipment_events << ShipmentEvent.new(location:, date_time:, type_code: event)
+        ShipmentEvent.new(location:, date_time:, type_code: event)
       end
-
-      api_estimated_delivery_date = html.css('td.estdeldate')&.text&.split(',')&.last&.strip
-
-      unless api_estimated_delivery_date.blank?
-        estimated_delivery_date = parse_api_date(api_estimated_delivery_date, origin)
-      end
+      shipment_events.compact!
+      shipment_events.reverse!
 
       status = shipment_events.last&.type_code
 
@@ -360,25 +302,26 @@ module Interstellar
       description.squish
     end
 
-    def build_rate_params(shipment:)
+    def build_rate_query(shipment:)
       api_credentials = fetch_credential(:api)
 
-      params = ''.dup
-      params << 'xmlv=yes' # must be first
-      params << '&quotenumber=YES'
-      params << "&vdzip=#{shipment.destination.postal_code}"
-      params << "&vozip=#{shipment.origin.postal_code}"
-      params << "&xmlpass=#{api_credentials.password}"
-      params << "&xmluser=#{api_credentials.username}"
+      query = {
+        xmlv: 'yes', # must be first
+        quotenumber: 'YES',
+        vdzip: shipment.destination.postal_code,
+        vozip: shipment.origin.postal_code,
+        xmlpass: api_credentials.password,
+        xmluser: api_credentials.username
+      }
 
       i = 0
       shipment.packages.each do |package|
         i += 1 # API starts at 1 (not 0)
 
-        params << "&vclass[#{i}]=#{package.freight_class}"
-        params << "&wpallets[#{i}]=#{package.quantity}"
-        params << "&wpieces[#{i}]=#{package.quantity}"
-        params << "&wweight[#{i}]=#{package.pounds(:total).ceil}"
+        query["vclass[#{i}]"] = package.freight_class
+        query["wpallets[#{i}]"] = package.quantity
+        query["wpieces[#{i}]"] = package.quantity
+        query["wweight[#{i}]"] = package.pounds(:total).ceil
       end
 
       accessorials = []
@@ -394,13 +337,9 @@ module Interstellar
       calculated_accessorials = build_calculated_accessorials(shipment.packages, shipment.origin, shipment.destination)
       accessorials += calculated_accessorials unless calculated_accessorials.blank?
 
-      unless accessorials.blank?
-        accessorials.uniq!
-        params << accessorials.join.split('&').uniq.join('&')
-      end
+      accessorials.uniq.each { |accessorial| query[accessorial] = 'Yes' } if accessorials.any?
 
-      save_request({ params: })
-      params
+      query
     end
 
     def parse_rate_response(shipment:, response:)
