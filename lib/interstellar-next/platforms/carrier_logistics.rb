@@ -113,16 +113,13 @@ module Interstellar
       api_images = tracking_response.dig(:protrace, :images, :image)
       api_images = [api_images] if api_images.is_a?(Hash)
 
-      image = api_images&.find do |image|
-        image[:imagetypecode] == image_type_code
-      end
+      image = api_images&.find { |image| image[:imagetypecode] == image_type_code }
+      url = image.blank? ? nil : (image[:directurl].presence || image[:imageurl])
 
-      if image.blank?
+      if url.blank?
         document_response.error = DocumentNotFoundError.new
         return document_response
       end
-
-      url = image[:imageurl]
 
       begin
         response = HTTParty.get(url)
