@@ -110,7 +110,10 @@ module Interstellar
                         when :pod then 'P'
                         end
 
-      image = tracking_response.dig(:protrace, :images, :image)&.find do |image|
+      api_images = tracking_response.dig(:protrace, :images, :image)
+      api_images = [api_images] if api_images.is_a?(Hash)
+
+      image = api_images&.find do |image|
         image[:imagetypecode] == image_type_code
       end
 
@@ -215,13 +218,16 @@ module Interstellar
       end
 
       actual_delivery_date = nil
-      estimated_delivery_date = nil
       destination = nil
+      estimated_delivery_date = nil
+      origin = nil
       scheduled_delivery_date = nil
       ship_time = nil
-      origin = nil
 
-      shipment_events = response.dig(:protrace, :shiphists, :shiphist).map do |api_event|
+      api_events = response.dig(:protrace, :shiphists, :shiphist)
+      api_events = [api_events] if api_events.is_a?(Hash)
+
+      shipment_events = api_events.map do |api_event|
         api_event_key = api_event[:histcode].downcase
 
         event = nil
