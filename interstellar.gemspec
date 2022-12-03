@@ -43,6 +43,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'vcr', '~> 6.1.0'
   spec.add_development_dependency 'webmock', '~> 3.14.0'
 
+  spec.add_development_dependency 'yard', '~> 0.9.28'
+  spec.add_development_dependency 'redcarpet', '~> 3.5.1' # for yard
+
   spec.add_dependency 'active_utils', '~> 3.3.1'
   spec.add_dependency 'activesupport', '>= 4.2', '< 7.0.5'
   spec.add_dependency 'activemodel', '>= 4.2', '< 7.0.5'
