@@ -20,7 +20,7 @@ module Interstellar
       end
 
       def required_credential_types
-        %i[api]
+        %i[api api_key]
       end
     end
 
