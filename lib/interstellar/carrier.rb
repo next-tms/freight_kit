@@ -6,19 +6,152 @@ module Interstellar
   # To implement support for a carrier, you should subclass this class and
   # implement all the methods that the carrier supports.
   #
-  # @see #find_rates
   # @see #create_pickup
   # @see #cancel_shipment
   # @see #find_tracking_info
+  # @see #find_rates
   #
   # @!attribute last_request
   #   The last request performed against the carrier's API.
   #   @see #save_request
   class Carrier
+    class << self
+      # Whether looking up available services is implemented.
+      # @return [Boolean]
+      def available_services_implemented?
+        false
+      end
+
+      # Whether bill of lading (BOL) requires tracking number at time of pickup.
+      # @return [Boolean]
+      def bol_requires_tracking_number?
+        false
+      end
+
+      # Whether canceling a shipment is implemented.
+      # @return [Boolean]
+      def cancel_shipment_implemented?
+        false
+      end
+
+      # Whether creating a pickup is implemented.
+      # @return [Boolean]
+      def create_pickup_implemented?
+        false
+      end
+
+      # The default location to use for {#valid_credentials?}.
+      # @return [Interstellar::Location]
+      def default_location
+        Location.new(
+          address1: '455 N. Rexford Dr.',
+          address2: '3rd Floor',
+          city: 'Beverly Hills',
+          country: 'US',
+          fax: '1-310-275-8159',
+          phone: '1-310-285-1013',
+          state: 'CA',
+          zip: '90210'
+        )
+      end
+
+      # Whether retrieving an existing rate is implemented.
+      # @return [Boolean]
+      def find_estimate_implemented?
+        false
+      end
+
+      # Whether finding rates is implemented.
+      # @return [Boolean]
+      def find_rates_implemented?
+        false
+      end
+
+      # Whether finding rates with declared value (thus insurance) is implemented.
+      # @return [Boolean]
+      def find_rates_with_declared_value?
+        false
+      end
+
+      # Whether retrieving tracking information is implemented.
+      # @return [Boolean]
+      def find_tracking_info_implemented?
+        false
+      end
+
+      # Whether retrieving tracking number from pickup number is implemented.
+      # @return [Boolean]
+      def find_tracking_number_from_pickup_number_implemented?
+        false
+      end
+
+      # The address field maximum length accepted by the carrier
+      # @return [Integer]
+      def maximum_address_field_length
+        255
+      end
+
+      # The maximum height the carrier will accept.
+      # @return [Measured::Length]
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
+
+      # The maximum weight the carrier will accept.
+      # @return [Measured::Weight]
+      def maximum_weight
+        Measured::Weight.new(10_000, :pounds)
+      end
+
+      # What length overlength fees the carrier begins charging at.
+      # @return [Measured::Length]
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(48, :inches)
+      end
+
+      # Whether or not the carrier quotes overlength fees via API.
+      # @note Should the API not calculate these fees, they should be calculated some other way outside of Interstellar.
+      # @return [Boolean]
+      def overlength_fees_require_tariff?
+        true
+      end
+
+      # Whether carrier considers pickup number the same as the tracking number.
+      def pickup_number_is_tracking_number?
+        false
+      end
+
+      # Whether proof of delivery (POD) retrieval is implemented.
+      # @return [Boolean]
+      def pod_implemented?
+        false
+      end
+
+      # Returns the keywords passed to `#initialize` that cannot be blank.
+      # @return [Array<Symbol>]
+      def requirements
+        []
+      end
+
+      # Returns the `Credential` methods (passed to `#initialize`) that cannot respond with blank values.
+      # @return [Array<Symbol>]
+      def required_credential_types
+        %i[api]
+      end
+
+      # Whether scanned bill of lading (BOL) retrieval is implemented.
+      # @return [Boolean]
+      def scanned_bol_implemented?
+        false
+      end
+    end
+
     attr_accessor :conf, :rates_with_excessive_length_fees, :tmpdir
     attr_reader :credentials, :customer_location, :last_request, :tariff
 
-    # Credentials should be a `Credential` or `Array` of `Credential`
+    # @param credentials [Array<Credential>]
+    # @param customer_location [Location]
+    # @param tariff [Tariff]
     def initialize(credentials, customer_location: nil, tariff: nil)
       credentials = [credentials] if credentials.is_a?(Credential)
 
@@ -27,7 +160,7 @@ module Interstellar
               "#{self.class.name}#new: `credentials` must be a Credential or Array of Credential"
       end
 
-      missing_credential_types = required_credential_types.uniq - credentials.map(&:type).uniq
+      missing_credential_types = self.class.required_credential_types.uniq - credentials.map(&:type).uniq
 
       unless missing_credential_types.empty?
         raise ArgumentError,
@@ -64,20 +197,12 @@ module Interstellar
       @rates_with_excessive_length_fees = @conf.dig(:attributes, :rates, :with_excessive_length_fees)
     end
 
-    def bol_requires_tracking_number?
-      false
-    end
-
     # Asks the carrier for the scanned proof of delivery that the carrier would provide after delivery.
     #
     # @param [String] tracking_number Tracking number.
     # @return [DocumentResponse]
     def pod(tracking_number)
       raise NotImplementedError, "#{self.class.name}: #pod not supported"
-    end
-
-    def pod_implemented?
-      false
     end
 
     # Asks the carrier for the bill of lading that the carrier would provide before shipping.
@@ -90,10 +215,6 @@ module Interstellar
       raise NotImplementedError, "#{self.class.name}: #bol not supported"
     end
 
-    def bol_implemented?
-      false
-    end
-
     # Asks the carrier for the scanned bill of lading that the carrier would provide after shipping.
     #
     # @see #bol
@@ -104,16 +225,8 @@ module Interstellar
       raise NotImplementedError, "#{self.class.name}: #scanned_bol not supported"
     end
 
-    def scanned_bol_implemented?
-      false
-    end
-
     def find_estimate(*)
       raise NotImplementedError, "#{self.class.name}: #find_estimate not supported"
-    end
-
-    def find_estimate_implemented?
-      false
     end
 
     # Asks the carrier for a list of locations (terminals) for a given country
@@ -128,10 +241,6 @@ module Interstellar
       raise NotImplementedError, "#{self.class.name}: #find_tracking_number_from_pickup_number not supported"
     end
 
-    def find_tracking_number_from_pickup_number_implemented?
-      false
-    end
-
     # Asks the carrier for rate estimates for a given shipment.
     #
     # @note Override with whatever you need to get the rates from the carrier.
@@ -141,14 +250,6 @@ module Interstellar
     #   includes 0 or more rate estimates for different shipping products
     def find_rates(shipment:)
       raise NotImplementedError, "#find_rates is not supported by #{self.class.name}."
-    end
-
-    def find_rates_implemented?
-      false
-    end
-
-    def find_rates_with_declared_value?
-      false
     end
 
     # Registers a new pickup with the carrier, to get a tracking number and
@@ -185,10 +286,6 @@ module Interstellar
       raise NotImplementedError, "#create_pickup is not supported by #{self.class.name}."
     end
 
-    def create_pickup_implemented?
-      false
-    end
-
     # Cancels a shipment with a carrier.
     #
     # @note Override with whatever you need to cancel a shipping label
@@ -198,10 +295,6 @@ module Interstellar
     #   response in most cases has a cancellation id.
     def cancel_shipment(tracking_number)
       raise NotImplementedError, "#cancel_shipment is not supported by #{self.class.name}."
-    end
-
-    def cancel_shipment_implemented?
-      false
     end
 
     # Retrieves tracking information for a previous shipment
@@ -215,14 +308,6 @@ module Interstellar
       raise NotImplementedError, "#find_tracking_info is not supported by #{self.class.name}."
     end
 
-    def find_tracking_info_implemented?
-      false
-    end
-
-    def pickup_number_is_tracking_number?
-      false
-    end
-
     # Get a list of services available for the a specific route.
     #
     # @param origin [Location] The origin location.
@@ -233,13 +318,9 @@ module Interstellar
       raise NotImplementedError, "#available_services is not supported by #{self.class.name}."
     end
 
-    def available_services_implemented?
-      false
-    end
-
     # Fetch credential of given type.
     #
-    # @param [Symbol] Type of credential to find. One of: `:api`, `:selenoid`, `:website`
+    # @param type [Symbol] Type of credential to find, should be one of: `:api`, `:selenoid`, `:website`.
     # @return [Interstellar::Credential|NilClass]
     def fetch_credential(type)
       @fetch_credentials ||= {}
@@ -272,40 +353,10 @@ module Interstellar
       raise NotImplementedError, "#valid_pro is not supported by #{self.class.name}."
     end
 
-    # The address field maximum length accepted by the carrier
-    # @return [Integer]
-    def maximum_address_field_length
-      255
-    end
-
-    # The maximum height the carrier will accept.
-    # @return [Measured::Weight]
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
-
-    # The maximum weight the carrier will accept.
-    # @return [Measured::Weight]
-    def maximum_weight
-      Measured::Weight.new(10_000, :pounds)
-    end
-
-    # What length overlength fees the carrier begins charging at.
-    # @return [Measured::Length]
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(48, :inches)
-    end
-
-    # Whether or not the carrier quotes overlength fees via API
-    # @return [Boolean]
-    def overlength_fees_require_tariff?
-      true
-    end
-
     def overlength_fee(tarrif, package)
       max_dimension_inches = [package.length(:inches), package.width(:inches)].max
 
-      return 0 if max_dimension_inches < minimum_length_for_overlength_fees.convert_to(:inches).value
+      return 0 if max_dimension_inches < self.class.minimum_length_for_overlength_fees.convert_to(:inches).value
 
       tarrif.overlength_rules.each do |overlength_rule|
         next if max_dimension_inches < overlength_rule[:min_length].convert_to(:inches).value
@@ -318,26 +369,26 @@ module Interstellar
       0
     end
 
-    # Determine whether the carrier will accept the packages.
-    # @param packages [Array<Package>]
-    # @param tariff [Hash]
+    # Determine whether the carrier will accept the packages based on credentials and/or tariff.
+    # @param packages [Array<Interstellar::Package>]
+    # @param tariff [Interstellar::Tariff]
     # @return [Boolean]
     def validate_packages(packages, tariff = nil)
       return false if packages.blank?
 
       message = []
 
-      max_height_inches = maximum_height.convert_to(:inches).value
+      max_height_inches = self.class.maximum_height.convert_to(:inches).value
       unless packages.map { |p| p.height(:inches) }.max <= max_height_inches
         message << "items must be #{max_height_inches.to_f} inches tall or less"
       end
 
-      max_weight_pounds = maximum_weight.convert_to(:pounds).value
+      max_weight_pounds = self.class.maximum_weight.convert_to(:pounds).value
       unless packages.sum { |p| p.pounds(:total) } <= max_weight_pounds
         message << "items must weigh #{max_weight_pounds.to_f} lbs or less"
       end
 
-      if overlength_fees_require_tariff? && (tariff.blank? || !tariff.is_a?(Interstellar::Tariff))
+      if self.class.overlength_fees_require_tariff? && (tariff.blank? || !tariff.is_a?(Interstellar::Tariff))
         missing_dimensions = packages.map do |p|
           [p.height(:inches), p.length(:inches), p.width(:inches)].any?(&:zero?)
         end.any?(true)
@@ -345,7 +396,7 @@ module Interstellar
         if missing_dimensions
           message << 'item dimensions are required'
         else
-          max_length_inches = minimum_length_for_overlength_fees.convert_to(:inches).value
+          max_length_inches = self.class.minimum_length_for_overlength_fees.convert_to(:inches).value
 
           unless packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max < max_length_inches
             message << 'tariff must be defined to calculate overlength fees'
@@ -396,27 +447,6 @@ module Interstellar
 
     include ActiveUtils::RequiresParameters
     include ActiveUtils::PostsData
-
-    # Returns the keys that are required to be passed to the options hash
-    # @note Override to return required keys in options hash for initialize method.
-    # @return [Array<Symbol>]
-    def requirements
-      []
-    end
-
-    # The default location to use for {#valid_credentials?}.
-    # @note Override for non-U.S.-based carriers.
-    # @return [Interstellar::Location]
-    def self.default_location
-      Location.new(country: 'US',
-                   state: 'CA',
-                   city: 'Beverly Hills',
-                   address1: '455 N. Rexford Dr.',
-                   address2: '3rd Floor',
-                   zip: '90210',
-                   phone: '1-310-285-1013',
-                   fax: '1-310-275-8159')
-    end
 
     # Use after building the request to save for later inspection.
     # @return [void]
