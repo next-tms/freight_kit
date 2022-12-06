@@ -11,24 +11,26 @@ module Interstellar
     @@name = 'Saia'
     @@scac = 'SAIA'
 
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
+    class << self
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
 
-    def maximum_weight
-      Measured::Weight.new(10_000, :pounds)
-    end
+      def maximum_weight
+        Measured::Weight.new(10_000, :pounds)
+      end
 
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(8, :feet)
-    end
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(8, :feet)
+      end
 
-    def overlength_fees_require_tariff?
-      false
-    end
+      def overlength_fees_require_tariff?
+        false
+      end
 
-    def required_credential_types
-      %i[api]
+      def required_credential_types
+        %i[api]
+      end
     end
 
     # Documents
@@ -59,9 +61,9 @@ module Interstellar
 
       ::Interstellar::SoapClient.new(
         carrier: self,
-        action: action,
-        client_args: client_args,
-        call_args: call_args,
+        action:,
+        client_args:,
+        call_args:,
         soap_operation: @conf.dig(:api, :actions, action)
       ).call&.to_hash&.with_indifferent_access
     end

@@ -2,6 +2,12 @@
 
 module Interstellar
   class Next < Platform
+    class << self
+      def required_credential_types
+        %i[api]
+      end
+    end
+
     REACTIVE_FREIGHT_PLATFORM = true
 
     JSON_HEADERS = {
@@ -9,10 +15,6 @@ module Interstellar
       'Content-Type': 'application/json',
       charset: 'utf-8'
     }.freeze
-
-    def required_credential_types
-      %i[api]
-    end
 
     # Documents
 

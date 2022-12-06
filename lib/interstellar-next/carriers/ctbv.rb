@@ -2,27 +2,29 @@
 
 module Interstellar
   class CTBV < CarrierLogistics
+    class << self
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
+
+      def maximum_weight
+        Measured::Weight.new(6999, :pounds)
+      end
+
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(8, :feet)
+      end
+
+      def overlength_fees_require_tariff?
+        false
+      end
+    end
+
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
     @@name = 'The Custom Companies'
     @@scac = 'CTBV'
-
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
-
-    def maximum_weight
-      Measured::Weight.new(6999, :pounds)
-    end
-
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(8, :feet)
-    end
-
-    def overlength_fees_require_tariff?
-      false
-    end
 
     # Documents
 

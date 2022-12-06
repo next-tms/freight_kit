@@ -2,19 +2,21 @@
 
 module Interstellar
   class WRDS < Interstellar::Carrier
+    class << self
+      def available_services
+        []
+      end
+
+      def required_credential_types
+        %i[selenoid website]
+      end
+    end
+
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
     @@name = 'Western Regional Delivery Service'
     @@scac = 'WRDS'
-
-    def available_services
-      nil
-    end
-
-    def required_credential_types
-      %i[selenoid website]
-    end
 
     # Documents
     def pod(tracking_number)
@@ -120,8 +122,8 @@ module Interstellar
 
       Location.new(
         city: str.split(', ')[0].titleize,
-        province: str.split(', ')[1].split(' ')[0].upcase,
-        postal_code: str.split(', ')[1].split(' ')[1],
+        province: str.split(', ')[1].split[0].upcase,
+        postal_code: str.split(', ')[1].split[1],
         country: ActiveUtils::Country.find('USA')
       )
     end
@@ -224,7 +226,7 @@ module Interstellar
           next if tr.text.include?('DateNotes')
           next unless tr.css('td')[1].text.include?('Estimated Delivery Date')
 
-          api_date = tr.css('td')[0].text.split(' ')&.first
+          api_date = tr.css('td')[0].text.split&.first
           scheduled_delivery_date = parse_api_date(api_date, shipment_events.last.location)
 
           break

@@ -2,6 +2,28 @@
 
 module Interstellar
   class CLNI < Interstellar::Carrier
+    class << self
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
+
+      def maximum_weight
+        Measured::Weight.new(10_000, :pounds)
+      end
+
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(8, :feet)
+      end
+
+      def overlength_fees_require_tariff?
+        false
+      end
+
+      def required_credential_types
+        %i[api website]
+      end
+    end
+
     REACTIVE_FREIGHT_CARRIER = true
 
     include Interstellar::Rateable
@@ -9,26 +31,6 @@ module Interstellar
     cattr_reader :name, :scac
     @@name = 'Clear Lane Freight Systems'
     @@scac = 'CLNI'
-
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
-
-    def maximum_weight
-      Measured::Weight.new(10_000, :pounds)
-    end
-
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(8, :feet)
-    end
-
-    def overlength_fees_require_tariff?
-      false
-    end
-
-    def required_credential_types
-      %i[api website]
-    end
 
     # Documents
 
@@ -76,9 +78,9 @@ module Interstellar
 
       ::Interstellar::SoapClient.new(
         carrier: self,
-        action: action,
-        client_args: client_args,
-        call_args: call_args,
+        action:,
+        client_args:,
+        call_args:,
         soap_operation: @conf.dig(:api, :actions, action)
       ).call&.to_hash&.with_indifferent_access
     end

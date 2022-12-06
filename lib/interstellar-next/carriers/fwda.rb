@@ -2,6 +2,28 @@
 
 module Interstellar
   class FWDA < Interstellar::Carrier
+    class << self
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
+
+      def maximum_weight
+        Measured::Weight.new(10_000, :pounds)
+      end
+
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(6, :feet)
+      end
+
+      def overlength_fees_require_tariff?
+        false
+      end
+
+      def required_credential_types
+        %i[api]
+      end
+    end
+
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
@@ -13,26 +35,6 @@ module Interstellar
       charset: 'utf-8',
       'Content-Type' => 'application/json'
     }.freeze
-
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
-
-    def maximum_weight
-      Measured::Weight.new(10_000, :pounds)
-    end
-
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(6, :feet)
-    end
-
-    def overlength_fees_require_tariff?
-      false
-    end
-
-    def required_credential_types
-      %i[api]
-    end
 
     # Override Carrier#serviceable_accessorials? since we have separate delivery/pickup accessorials
     def serviceable_accessorials?(accessorials)
@@ -69,9 +71,9 @@ module Interstellar
       rescue Interstellar::ResponseError => e
         if e.message.downcase.include?('no airbills found')
           return DocumentResponse.new(error: Interstellar::DocumentNotFoundError)
-        else
-          return DocumentResponse.new(error: e)
         end
+
+        return DocumentResponse.new(error: e)
       end
 
       begin
@@ -97,9 +99,9 @@ module Interstellar
       rescue Interstellar::ResponseError => e
         if e.message.downcase.include?('no airbills found')
           return DocumentResponse.new(error: Interstellar::DocumentNotFoundError)
-        else
-          return DocumentResponse.new(error: e)
         end
+
+        return DocumentResponse.new(error: e)
       end
 
       begin
@@ -209,11 +211,9 @@ module Interstellar
       unless accessorials.blank?
         serviceable_accessorials?(accessorials)
         accessorials.each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            if @conf.dig(:accessorials, :mappable, :pickup).include?(a)
-              pickup_accessorials << @conf.dig(:accessorials, :mappable, :pickup)[a]
-            elsif delivery_accessorials << @conf.dig(:accessorials, :mappable, :delivery)[a]
-            end
+          if !@conf.dig(:accessorials,
+                        :unserviceable).include?(a) && @conf.dig(:accessorials, :mappable, :pickup).include?(a)
+            pickup_accessorials << @conf.dig(:accessorials, :mappable, :pickup)[a]
           end
         end
       end

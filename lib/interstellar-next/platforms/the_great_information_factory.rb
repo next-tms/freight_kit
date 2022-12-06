@@ -2,20 +2,26 @@
 
 module Interstellar
   class TheGreatInformationFactory < Platform
+    class << self
+      def overlength_fees_require_tariff?
+        true
+      end
+
+      def required_credential_types
+        %i[api]
+      end
+
+      def requirements
+        %i[credentials tariff]
+      end
+    end
+
     REACTIVE_FREIGHT_PLATFORM = true
 
     include Interstellar::Rateable
     include Interstellar::Trackable
     include Interstellar::Pickupable
     include Interstellar::Documentable
-
-    def overlength_fees_require_tariff?
-      true
-    end
-
-    def required_credential_types
-      %i[api]
-    end
 
     protected
 
@@ -288,18 +294,19 @@ module Interstellar
       tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
       mapped_response = response.dig(:tracktrace_response, :return, :currentstatus)
 
-      if mapped_response.dig(:errorcode)
-        tracking_response.error = parse_error_response(mapped_response.dig(:errorcode))
+      if mapped_response[:errorcode]
+        tracking_response.error = parse_error_response(mapped_response[:errorcode])
         return tracking_response
       end
 
-      receiver_location = build_location(mapped_response.dig(:consignee, :city), mapped_response.dig(:consignee, :state))
+      receiver_location = build_location(mapped_response.dig(:consignee, :city),
+                                         mapped_response.dig(:consignee, :state))
       shipper_location = build_location(mapped_response.dig(:shipper, :city), mapped_response.dig(:shipper, :state))
 
-      actual_delivery_date = mapped_response.dig(:deliverydate)
+      actual_delivery_date = mapped_response[:deliverydate]
 
       unless actual_delivery_date.blank?
-        comment = mapped_response.dig(:status).downcase
+        comment = mapped_response[:status].downcase
 
         if comment.starts_with?('delivered')
           api_date = comment.downcase.split('signed')[0].split('on')[1].strip.sub('at ', '')
@@ -309,11 +316,11 @@ module Interstellar
 
       shipment_events = []
 
-      ship_time = parse_api_date(mapped_response.dig(:shipdate))
+      ship_time = parse_api_date(mapped_response[:shipdate])
       # Leave this open for modification later
       picked_up_event = ShipmentEvent.new(location: shipper_location, date_time: ship_time, type_code: :picked_up)
 
-      scheduled_delivery_date = parse_api_date(mapped_response.dig(:estdeliverydate))
+      scheduled_delivery_date = parse_api_date(mapped_response[:estdeliverydate])
       tracking_number = response.dig(:tracktrace_response, :return, :pronumber)
 
       api_events = response.dig(:tracktrace_response, :return, :history)
@@ -377,7 +384,9 @@ module Interstellar
       status = shipment_events.last&.type_code
 
       # Workarounds for false status on certain events when timestamps are in wrong order
-      status = :out_for_delivery if shipment_events.find { |shipment_event| shipment_event.type_code == :out_for_delivery }
+      status = :out_for_delivery if shipment_events.find do |shipment_event|
+                                      shipment_event.type_code == :out_for_delivery
+                                    end
       status = :delivered if shipment_events.find { |shipment_event| shipment_event.type_code == :delivered }
 
       tracking_response.assign_attributes(
@@ -406,7 +415,7 @@ module Interstellar
       pickup_number = result[:pickupnumber]
 
       if pickup_number == '0'
-        pickup_response.error = Interstellar::ResponseError.new("Unknown Error")
+        pickup_response.error = Interstellar::ResponseError.new('Unknown Error')
         return pickup_response
       end
 
@@ -438,11 +447,11 @@ module Interstellar
           address2: shipment.origin.address2,
           city: shipment.origin.city,
           state: shipment.origin.province,
-          ReadyDate: Date.today.strftime("%m/%d/%Y"),
-          ReadyTime: pickup_from.strftime("%H%M").to_i,
-          CloseTime: pickup_to.strftime("%H%M").to_i,
+          ReadyDate: Date.today.strftime('%m/%d/%Y'),
+          ReadyTime: pickup_from.strftime('%H%M').to_i,
+          CloseTime: pickup_to.strftime('%H%M').to_i,
           zip: shipment.origin.postal_code,
-          SpecialInstructions: ""
+          SpecialInstructions: ''
         },
         ShipmentCount: 1,
         shipments: [
@@ -469,10 +478,10 @@ module Interstellar
     def parse_document_response(type, tracking_number)
       base_url = build_url(type)
       website_credentials = fetch_credential(:website)
-      query_parameter = "&username=#{website_credentials.username}&"\
-                        "password=#{website_credentials.password}&"\
-                        "pronumber=#{tracking_number}&"\
-                        "format=PDF"
+      query_parameter = "&username=#{website_credentials.username}&" \
+                        "password=#{website_credentials.password}&" \
+                        "pronumber=#{tracking_number}&" \
+                        'format=PDF'
 
       url = [base_url, query_parameter].join
 
@@ -487,7 +496,7 @@ module Interstellar
       end
 
       decoded_pdf_data = Base64.decode64 base64_document_data
-      document_response.assign_attributes(content_type: "application/pdf", data: decoded_pdf_data)
+      document_response.assign_attributes(content_type: 'application/pdf', data: decoded_pdf_data)
 
       document_response
     end

@@ -2,31 +2,33 @@
 
 module Interstellar
   class CNWY < Carrier
+    class << self
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
+
+      def maximum_weight
+        Measured::Weight.new(10_000, :pounds)
+      end
+
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(8, :feet)
+      end
+
+      def overlength_fees_require_tariff?
+        false
+      end
+
+      def required_credential_types
+        %i[api]
+      end
+    end
+
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
     @@name = 'XPO Logistics'
     @@scac = 'CNWY'
-
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
-
-    def maximum_weight
-      Measured::Weight.new(10_000, :pounds)
-    end
-
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(8, :feet)
-    end
-
-    def overlength_fees_require_tariff?
-      false
-    end
-
-    def required_credential_types
-      %i[api]
-    end
 
     # Documents
 
@@ -109,7 +111,7 @@ module Interstellar
         # CNWY returns a string during runtime/server error
         raise Interstellar::ResponseError, 'Runtime Error' if response.body.include?('Runtime Error')
 
-        raise
+        raise e
       end
 
       error = if json.is_a?(Hash)

@@ -2,6 +2,20 @@
 
 module Interstellar
   class DRRQ < Interstellar::Carrier
+    class << self
+      def available_services
+        nil
+      end
+
+      def overlength_fees_require_tariff?
+        false
+      end
+
+      def required_credential_types
+        %i[api selenoid website]
+      end
+    end
+
     REACTIVE_FREIGHT_CARRIER = true
 
     JSON_HEADERS = {
@@ -13,18 +27,6 @@ module Interstellar
     cattr_reader :name, :scac
     @@name = 'TForce Worldwide'
     @@scac = 'DRRQ'
-
-    def available_services
-      nil
-    end
-
-    def overlength_fees_require_tariff?
-      false
-    end
-
-    def required_credential_types
-      %i[api selenoid website]
-    end
 
     # Documents
 

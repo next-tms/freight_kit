@@ -2,39 +2,41 @@
 
 module Interstellar
   class TOTL < CarrierLogistics
+    class << self
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
+
+      def maximum_weight
+        Measured::Weight.new(10_000, :pounds)
+      end
+
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(40, :inches)
+      end
+
+      def overlength_fees_require_tariff?
+        false
+      end
+
+      def pickup_number_is_tracking_number?
+        true
+      end
+
+      def required_credential_types
+        %i[api]
+      end
+    end
+
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
     @@name = 'Total Transportation'
     @@scac = 'TOTL'
 
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
-
-    def maximum_weight
-      Measured::Weight.new(10_000, :pounds)
-    end
-
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(40, :inches)
-    end
-
-    def overlength_fees_require_tariff?
-      false
-    end
-
-    def required_credential_types
-      %i[api]
-    end
-
     # Documents
 
     # Pickups
-
-    def pickup_number_is_tracking_number?
-      true
-    end
 
     # Rates
 

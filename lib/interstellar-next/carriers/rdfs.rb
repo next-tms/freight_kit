@@ -10,24 +10,26 @@ module Interstellar
     @@name = 'Roadrunner Transportation Services'
     @@scac = 'RRDS'
 
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
+    class << self
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
 
-    def maximum_weight
-      Measured::Weight.new(10_000, :pounds)
-    end
+      def maximum_weight
+        Measured::Weight.new(10_000, :pounds)
+      end
 
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(8, :feet)
-    end
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(8, :feet)
+      end
 
-    def overlength_fees_require_tariff?
-      false
-    end
+      def overlength_fees_require_tariff?
+        false
+      end
 
-    def required_credential_types
-      %i[api website]
+      def required_credential_types
+        %i[api website]
+      end
     end
 
     # Documents

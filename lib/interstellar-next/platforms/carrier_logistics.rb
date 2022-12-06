@@ -2,6 +2,12 @@
 
 module Interstellar
   class CarrierLogistics < Platform
+    class << self
+      def required_credential_types
+        %i[api]
+      end
+    end
+
     REACTIVE_FREIGHT_PLATFORM = true
 
     EXPIRED_CREDENTIALS_MESSAGES = [
@@ -11,10 +17,6 @@ module Interstellar
       'Unable to log in',
       'Your Username or Password is Incorrect'
     ].freeze
-
-    def required_credential_types
-      %i[api]
-    end
 
     # Documents
 
@@ -407,7 +409,7 @@ module Interstellar
         )
       ] + prices
 
-      if overlength_fees_require_tariff?
+      if self.class.overlength_fees_require_tariff?
         cents = 0
 
         shipment.packages.each do |package|

@@ -2,6 +2,28 @@
 
 module Interstellar
   class OTCL < Interstellar::Carrier
+    class << self
+      def maximum_height
+        Measured::Length.new(105, :inches)
+      end
+
+      def maximum_weight
+        Measured::Weight.new(150, :pounds)
+      end
+
+      def minimum_length_for_overlength_fees
+        Measured::Length.new(6, :feet)
+      end
+
+      def overlength_fees_require_tariff?
+        false
+      end
+
+      def required_credential_types
+        %i[api]
+      end
+    end
+
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
@@ -13,26 +35,6 @@ module Interstellar
       charset: 'utf-8',
       'Content-Type': 'application/xml'
     }.freeze
-
-    def maximum_height
-      Measured::Length.new(105, :inches)
-    end
-
-    def maximum_weight
-      Measured::Weight.new(150, :pounds)
-    end
-
-    def minimum_length_for_overlength_fees
-      Measured::Length.new(6, :feet)
-    end
-
-    def overlength_fees_require_tariff?
-      false
-    end
-
-    def required_credential_types
-      %i[api]
-    end
 
     # Override Carrier#serviceable_accessorials? since we have separate delivery/pickup accessorials
     def serviceable_accessorials?(accessorials)
@@ -203,14 +205,6 @@ module Interstellar
     )
 
       dispatcher_phone = dispatcher.phone.sub('+1', '').delete('^0-9')
-      shipper_phone = shipment.origin.contact.phone.sub('+1', '').delete('^0-9')
-      receiver_phone = shipment.destination.contact.phone.sub('+1', '').delete('^0-9')
-
-      declared_value = if shipment.declared_value_cents.blank?
-                         '0'
-                       else
-                         format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
-                       end
 
       raise UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
 
@@ -223,7 +217,7 @@ module Interstellar
         DelZip: shipment.destination.postal_code,
         Instructions: '',
         Name: shipment.origin.contact.company_name,
-        Phone: shipper_phone,
+        Phone: dispatcher_phone,
         ReadyAt: pickup_from.strftime('%H:%M:00'),
         State: shipment.origin.province,
         Zip: shipment.origin.postal_code
@@ -252,7 +246,6 @@ module Interstellar
     )
 
       dispatcher_phone = dispatcher.phone.sub('+1', '').delete('^0-9')
-      shipper_phone = shipment.origin.contact.phone.sub('+1', '').delete('^0-9')
       receiver_phone = shipment.destination.contact.phone.sub('+1', '').delete('^0-9')
 
       declared_value = if shipment.declared_value_cents.blank?
@@ -282,7 +275,7 @@ module Interstellar
           State: shipment.origin.province,
           Zip: shipment.origin.postal_code,
           Contact: shipment.origin.contact.name || 'Shipping',
-          Phone: shipper_phone
+          Phone: dispatcher_phone
         },
         BillTo: '0',
         CargoType: '0',
@@ -407,11 +400,11 @@ module Interstellar
       # leave the support baked-in below anyway.
       raise Interstellar::UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
 
-      dim_weights_too_heavy = shipment.packages.map(&:dim_weight).select { |w| w > maximum_weight.value }
+      dim_weights_too_heavy = shipment.packages.map(&:dim_weight).select { |w| w > self.class.maximum_weight.value }
 
       unless dim_weights_too_heavy.empty?
         raise Interstellar::UnserviceableError,
-              "Dimensional weight(s) of #{dim_weights_too_heavy.map(&:round).join('lbs, ')} lbs more than maximum of #{maximum_weight.value.round} lbs"
+              "Dimensional weight(s) of #{dim_weights_too_heavy.map(&:round).join('lbs, ')} lbs more than maximum of #{self.class.maximum_weight.value.round} lbs"
       end
 
       params = ''.dup
@@ -431,7 +424,6 @@ module Interstellar
                            end
 
           declared_value = declared_value.to_s
-          service = shipment.palletized? ? 'H' : 'C'
 
           parts = []
 
