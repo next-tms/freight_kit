@@ -41,6 +41,7 @@ module Interstellar
     # @param [String] access_token Required when type is `:oauth2`
     # @param [DateTime] expires_at Required when type is `:oauth2`
     # @param [String] scope Required when type is `:oauth2`
+    # @param [String] proxy_url Required when type is `:api_proxy`
     def initialize(hash)
       raise ArgumentError, 'Credential#new: `type` cannot be blank' if hash[:type].blank?
 
@@ -51,6 +52,8 @@ module Interstellar
                        { api_key: String }
                      when :api, :website
                        { password: String }
+                     when :api_proxy
+                       { api_key: String, proxy_url: String }
                      when :oauth2
                        { access_token: String, expires_at: ::DateTime, scope: String }
                      when :selenoid
