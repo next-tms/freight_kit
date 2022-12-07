@@ -477,7 +477,7 @@ module Interstellar
 
     def parse_document_response(type, tracking_number)
       base_url = build_url(type)
-      website_credentials = fetch_credential(:website)
+      website_credentials = fetch_credential(:api)
       query_parameter = "&username=#{website_credentials.username}&" \
                         "password=#{website_credentials.password}&" \
                         "pronumber=#{tracking_number}&" \
