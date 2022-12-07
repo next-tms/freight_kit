@@ -3,6 +3,11 @@
 module Interstellar
   class CLNI < Interstellar::Carrier
     class << self
+      # @note Explicitly set to `false` because though API allows this, it "doesn't quote correctly" per customer service
+      def find_rates_with_declared_value?
+        false
+      end
+
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -19,8 +24,20 @@ module Interstellar
         false
       end
 
+      def pod_implemented?
+        true
+      end
+
       def required_credential_types
         %i[api website]
+      end
+
+      def requirements
+        %i[credentials]
+      end
+
+      def scanned_bol_implemented?
+        true
       end
     end
 
@@ -38,23 +55,11 @@ module Interstellar
       parse_document_response(:pod, tracking_number)
     end
 
-    def pod_implemented?
-      true
-    end
-
     def scanned_bol(tracking_number)
       parse_document_response(:bol, tracking_number)
     end
 
-    def scanned_bol_implemented?
-      true
-    end
-
     # Rates
-
-    def find_rates_with_declared_value?
-      false # API allows it but doesn't quote correctly per support
-    end
 
     def validate_packages(packages)
       raise UnserviceableError, 'Must be fewer than 10 items altogether' if packages.sum(&:quantity) > 10

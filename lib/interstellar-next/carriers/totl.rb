@@ -26,6 +26,10 @@ module Interstellar
       def required_credential_types
         %i[api]
       end
+
+      def requirements
+        %i[credentials]
+      end
     end
 
     REACTIVE_FREIGHT_CARRIER = true
@@ -51,23 +55,39 @@ module Interstellar
     # Rates
 
     def parse_rate_response(shipment:, response:)
-      raise Interstellar::ResponseError, 'API Error: Unknown response' if response.blank?
+      rate_response = RateResponse.new(request: last_request, response:)
+
+      if response.blank?
+        rate_response.error = ResponseError.new('Unknown response')
+        return rate_response
+      end
 
       if response.is_a?(String) && response.include?('WebSpeed error')
-        raise Interstellar::ResponseError, 'API Error: Temporary error (CarrierLogistics WebSpeed error)'
+        rate_response.error = ResponseError.new('API Error: Temporary error (CarrierLogistics WebSpeed error)')
+        return rate_response
       end
 
       error = response.dig('error', 'errormessage')
 
-      unless error.blank?
-        raise Interstellar::InvalidCredentialsError if error.downcase.include?('invalid username/password')
-        raise Interstellar::UnserviceableError, error if error.downcase.include?('is not available')
-        raise Interstellar::UnserviceableError, error if error.downcase.include?('out of the serviceable area')
+      if error.present?
+        if error.downcase.include?('invalid username/password')
+          rate_response.error = InvalidCredentialsError.new
+          return rate_response
+        end
 
-        raise ResponseError, "API Error: #{error}"
+        if error.downcase.include?('is not available') || error.downcase.include?('out of the serviceable area')
+          rate_response.error = UnserviceableError.new
+          return rate_response
+        end
+
+        rate_response.error = ResponseError.new("API Error: #{error}")
+        return rate_response
       end
 
-      raise ResponseError, 'Cost is blank' if response.dig('ratequote', 'quotetotal').blank?
+      if response.dig('ratequote', 'quotetotal').blank?
+        rate_response.error = ResponseError.new('Cost is blank')
+        return rate_response
+      end
 
       total_cents = parse_amount(response.dig('ratequote', 'quotetotal'))
 
@@ -75,8 +95,8 @@ module Interstellar
       estimate_reference = response.dig('ratequote', 'quotenumber')
 
       ratequote_lines = response.dig('ratequote', 'ratequoteline')
-      prices = []
 
+      prices = []
       ratequote_lines.each do |ratequote_line|
         next if ratequote_line['chrg'].blank?
         next if ratequote_line['chargedesc'] == 'FREIGHT'

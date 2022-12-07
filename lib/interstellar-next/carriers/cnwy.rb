@@ -3,6 +3,10 @@
 module Interstellar
   class CNWY < Carrier
     class << self
+      def find_rates_implemented?
+        true
+      end
+
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -21,6 +25,10 @@ module Interstellar
 
       def required_credential_types
         %i[api api_key]
+      end
+
+      def requirements
+        %i[credentials]
       end
     end
 
@@ -45,10 +53,6 @@ module Interstellar
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit(request))
-    end
-
-    def find_rates_implemented?
-      true
     end
 
     # Tracking

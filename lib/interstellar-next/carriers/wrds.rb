@@ -3,12 +3,20 @@
 module Interstellar
   class WRDS < Interstellar::Carrier
     class << self
-      def available_services
-        []
+      def find_tracking_info_implemented?
+        true
+      end
+
+      def pod_implemented?
+        true
       end
 
       def required_credential_types
         %i[selenoid website]
+      end
+
+      def requirements
+        %i[credentials]
       end
     end
 
@@ -23,19 +31,11 @@ module Interstellar
       parse_pod_response(tracking_number)
     end
 
-    def pod_implemented?
-      true
-    end
-
     # Rates
 
     # Tracking
     def find_tracking_info(tracking_number)
       parse_tracking_response(tracking_number)
-    end
-
-    def find_tracking_info_implemented?
-      true
     end
 
     protected

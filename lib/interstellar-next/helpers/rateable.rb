@@ -1,7 +1,17 @@
+# frozen_string_literal: true
+
 module Interstellar
   module Rateable
-    def find_rates_implemented?
-      true
+    class << self
+      def included(base)
+        base.send :extend, ClassMethods
+      end
+    end
+
+    module ClassMethods
+      def find_rates_implemented?
+        true
+      end
     end
 
     def find_rates(shipment:)
@@ -20,7 +30,7 @@ module Interstellar
 
       return response if response.is_a?(RateResponse)
 
-      parse_rate_response(shipment:, response: response)
+      parse_rate_response(shipment:, response:)
     end
   end
 end

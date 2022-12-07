@@ -3,8 +3,30 @@
 module Interstellar
   class CarrierLogistics < Platform
     class << self
+      def find_rates_implemented?
+        true
+      end
+
+      def find_tracking_info_implemented?
+        true
+      end
+
+      def pod_implemented?
+        true
+      end
+
+      def scanned_bol_implemented?
+        true
+      end
+
       def required_credential_types
         %i[api]
+      end
+
+      def requirements
+        return %i[credentials tariff] if overlength_fees_require_tariff?
+
+        %i[credentials]
       end
     end
 
@@ -26,18 +48,10 @@ module Interstellar
       parse_document_response(response, :pod)
     end
 
-    def pod_implemented?
-      true
-    end
-
     def scanned_bol(tracking_number)
       query = build_tracking_query(tracking_number)
       response = commit(:track, query:)
       parse_document_response(response, :bol)
-    end
-
-    def scanned_bol_implemented?
-      true
     end
 
     # Rates
@@ -54,20 +68,12 @@ module Interstellar
       parse_rate_response(shipment:, response:)
     end
 
-    def find_rates_implemented?
-      true
-    end
-
     # Tracking
 
     def find_tracking_info(tracking_number)
       query = build_tracking_query(tracking_number)
       response = commit(:track, query:)
       parse_tracking_response(tracking_number, response:)
-    end
-
-    def find_tracking_info_implemented?
-      true
     end
 
     # protected

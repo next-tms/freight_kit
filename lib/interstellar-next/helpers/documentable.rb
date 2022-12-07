@@ -1,5 +1,19 @@
+# frozen_string_literal: true
+
 module Interstellar
   module Documentable
+    class << self
+      def included(base)
+        base.send :extend, ClassMethods
+      end
+    end
+
+    module ClassMethods
+      def find_tracking_info_implemented?
+        true
+      end
+    end
+
     def pod(tracking_number)
       parse_document_response(:pod, tracking_number)
     end

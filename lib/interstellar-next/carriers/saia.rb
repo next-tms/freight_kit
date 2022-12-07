@@ -12,6 +12,14 @@ module Interstellar
     @@scac = 'SAIA'
 
     class << self
+      def find_rates_implemented?
+        true
+      end
+
+      def find_rates_with_declared_value?
+        true
+      end
+
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -31,15 +39,15 @@ module Interstellar
       def required_credential_types
         %i[api]
       end
+
+      def requirements
+        %i[credentials]
+      end
     end
 
     # Documents
 
     # Rates
-
-    def find_rates_with_declared_value?
-      true
-    end
 
     def validate_packages(packages)
       raise UnserviceableError, 'Must be fewer than 10 items altogether' if packages.sum(&:quantity) > 10
@@ -331,22 +339,32 @@ module Interstellar
 
       search_result = response.dig(:get_by_pro_number_response, :get_by_pro_number_result)
 
+      address1 = [
+        search_result.dig(:shipper, :address1),
+        search_result.dig(:shipper, :address2)
+      ]
+                 .select(&:present?)
+                 .map { |line| line.squish.strip.titleize }
+                 .join(', ')
+
       shipper_location = Location.new(
-        address1: (
-          search_result.dig(:shipper, :address1) || '' \
-                                                    " #{search_result.dig(:shipper, :address2) || ''}"
-        ).squish.strip.titleize,
+        address1:,
         city: search_result.dig(:shipper, :city)&.squish&.strip&.titleize,
         province: search_result.dig(:shipper, :state)&.strip&.upcase,
         postal_code: search_result.dig(:shipper, :zipcode)&.strip,
         country: ActiveUtils::Country.find('USA')
       )
 
+      address1 = [
+        search_result.dig(:consignee, :address1),
+        search_result.dig(:consignee, :address2)
+      ]
+                 .select(&:present?)
+                 .map { |line| line.squish.strip.titleize }
+                 .join(', ')
+
       receiver_location = Location.new(
-        address1: (
-          search_result.dig(:consignee, :address1) || '' \
-                                                      " #{search_result.dig(:consignee, :address2) || ''}"
-        ).squish.strip.titleize,
+        address1:,
         city: search_result.dig(:consignee, :city)&.squish&.strip&.titleize,
         province: search_result.dig(:consignee, :state)&.strip&.upcase,
         postal_code: search_result.dig(:consignee, :zipcode)&.strip,
@@ -356,7 +374,7 @@ module Interstellar
       api_date_time = search_result[:delivery_date_time_arrive]
       actual_delivery_date = parse_api_date_time(api_date_time, receiver_location)
 
-      api_date_date = search_result[:pickup_date_time]
+      api_date_time = search_result[:pickup_date_time]
       pickup_date = parse_api_date_time(api_date_time, shipper_location)
 
       api_date_time = search_result[:delivery_appointment_date_time]

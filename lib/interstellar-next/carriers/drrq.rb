@@ -3,16 +3,36 @@
 module Interstellar
   class DRRQ < Interstellar::Carrier
     class << self
-      def available_services
-        nil
+      def bol_implemented?
+        true
+      end
+
+      def create_pickup_implemented?
+        true
+      end
+
+      def find_rates_implemented?
+        true
       end
 
       def overlength_fees_require_tariff?
         false
       end
 
+      def pickup_number_is_tracking_number?
+        true
+      end
+
+      def pod_implemented?
+        true
+      end
+
       def required_credential_types
         %i[api selenoid website]
+      end
+
+      def requirements
+        %i[credentials]
       end
     end
 
@@ -39,16 +59,8 @@ module Interstellar
       parse_bol_response(commit(request), :bol, tracking_number)
     end
 
-    def bol_implemented?
-      true
-    end
-
     def pod(tracking_number)
       parse_pod_response(tracking_number)
-    end
-
-    def pod_implemented?
-      true
     end
 
     # Pickups
@@ -77,14 +89,6 @@ module Interstellar
       parse_pickup_response(commit(request))
     end
 
-    def create_pickup_implemented?
-      true
-    end
-
-    def pickup_number_is_tracking_number?
-      true
-    end
-
     # Rates
 
     def find_rates(shipment:)
@@ -93,10 +97,6 @@ module Interstellar
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit(request))
-    end
-
-    def find_rates_implemented?
-      true
     end
 
     # Tracking

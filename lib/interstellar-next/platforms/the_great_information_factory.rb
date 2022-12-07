@@ -3,16 +3,16 @@
 module Interstellar
   class TheGreatInformationFactory < Platform
     class << self
-      def overlength_fees_require_tariff?
-        true
-      end
-
       def required_credential_types
         %i[api]
       end
 
       def requirements
         %i[credentials tariff]
+      end
+
+      def overlength_fees_require_tariff?
+        true
       end
     end
 

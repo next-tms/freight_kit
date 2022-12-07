@@ -3,6 +3,14 @@
 module Interstellar
   class DPHE < Interstellar::Carrier
     class << self
+      def pod_implemented?
+        true
+      end
+
+      def scanned_bol_implemented?
+        true
+      end
+
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -22,6 +30,10 @@ module Interstellar
       def required_credential_types
         %i[api selenoid website]
       end
+
+      def requirements
+        %i[credentials]
+      end
     end
 
     REACTIVE_FREIGHT_CARRIER = true
@@ -39,16 +51,8 @@ module Interstellar
       parse_document_response(:pod, tracking_number)
     end
 
-    def pod_implemented?
-      true
-    end
-
     def scanned_bol(tracking_number)
       parse_document_response(:bol, tracking_number)
-    end
-
-    def scanned_bol_implemented?
-      true
     end
 
     protected

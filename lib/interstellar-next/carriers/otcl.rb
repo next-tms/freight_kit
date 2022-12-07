@@ -3,6 +3,18 @@
 module Interstellar
   class OTCL < Interstellar::Carrier
     class << self
+      def create_pickup_implemented?
+        true
+      end
+
+      def find_rates_implemented?
+        true
+      end
+
+      def find_rates_with_declared_value?
+        true
+      end
+
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -19,8 +31,16 @@ module Interstellar
         false
       end
 
+      def pickup_number_is_tracking_number?
+        true
+      end
+
       def required_credential_types
         %i[api]
+      end
+
+      def requirements
+        %i[credentials]
       end
     end
 
@@ -102,14 +122,6 @@ module Interstellar
       parse_pickup_response(response: commit(request), labels:)
     end
 
-    def create_pickup_implemented?
-      true
-    end
-
-    def pickup_number_is_tracking_number?
-      true
-    end
-
     # Rates
 
     def find_rates(shipment:)
@@ -121,14 +133,6 @@ module Interstellar
 
       request = build_rate_request(shipment:)
       parse_rate_response(shipment:, response: commit(request))
-    end
-
-    def find_rates_implemented?
-      true
-    end
-
-    def find_rates_with_declared_value?
-      true
     end
 
     # Tracking

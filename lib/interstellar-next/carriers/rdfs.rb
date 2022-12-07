@@ -11,6 +11,14 @@ module Interstellar
     @@scac = 'RRDS'
 
     class << self
+      def find_tracking_info_implemented?
+        true
+      end
+
+      def find_tracking_number_from_pickup_number_implemented?
+        true
+      end
+
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -27,8 +35,20 @@ module Interstellar
         false
       end
 
+      def pod_implemented?
+        true
+      end
+
       def required_credential_types
-        %i[api website]
+        %i[website]
+      end
+
+      def requirements
+        %i[credentials]
+      end
+
+      def scanned_bol_implemented?
+        true
       end
     end
 
@@ -38,16 +58,8 @@ module Interstellar
       parse_document_response(:pod, tracking_number)
     end
 
-    def pod_implemented?
-      true
-    end
-
     def scanned_bol(tracking_number)
       parse_document_response(:bol, tracking_number)
-    end
-
-    def scanned_bol_implemented?
-      true
     end
 
     # Pickups
@@ -64,22 +76,14 @@ module Interstellar
       parse_tracking_response(response)
     end
 
-    def find_tracking_info_implemented?
-      true
-    end
-
     def find_tracking_number_from_pickup_number(pickup_number, _date)
       parse_tracking_number_from_pickup_number_response(pickup_number)
-    end
-
-    def find_tracking_number_from_pickup_number_implemented?
-      true
     end
 
     protected
 
     def build_soap_header(action)
-      api_credential = fetch_credential(:api)
+      api_credential = fetch_credential(:website)
       validate_api_credential!(api_credential)
 
       {
@@ -189,7 +193,7 @@ module Interstellar
     # Rates
 
     def build_rate_request(shipment:)
-      api_credential = fetch_credential(:api)
+      api_credential = fetch_credential(:website)
       validate_api_credential!(api_credential)
 
       service_delivery_options = [

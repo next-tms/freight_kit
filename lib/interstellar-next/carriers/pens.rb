@@ -2,15 +2,11 @@
 
 module Interstellar
   class PENS < Interstellar::Carrier
-    REACTIVE_FREIGHT_CARRIER = true
-
-    include Interstellar::Rateable
-
-    cattr_reader :name, :scac
-    @@name = 'Peninsula Truck Lines'
-    @@scac = 'PENS'
-
     class << self
+      def find_rates_implemented?
+        true
+      end
+
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -30,7 +26,19 @@ module Interstellar
       def required_credential_types
         %i[api]
       end
+
+      def requirements
+        %i[credentials]
+      end
     end
+
+    REACTIVE_FREIGHT_CARRIER = true
+
+    include Interstellar::Rateable
+
+    cattr_reader :name, :scac
+    @@name = 'Peninsula Truck Lines'
+    @@scac = 'PENS'
 
     # Documents
 

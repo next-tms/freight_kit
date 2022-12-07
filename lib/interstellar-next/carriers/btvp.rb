@@ -2,8 +2,6 @@
 
 module Interstellar
   class BTVP < TheGreatInformationFactory
-    REACTIVE_FREIGHT_CARRIER = true
-
     class << self
       def maximum_height
         Measured::Length.new(105, :inches)
@@ -17,6 +15,8 @@ module Interstellar
         Measured::Length.new(8, :feet)
       end
     end
+
+    REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
     @@name = 'Best Overnite Express'

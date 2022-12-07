@@ -3,6 +3,22 @@
 module Interstellar
   class FWDA < Interstellar::Carrier
     class << self
+      def create_pickup_implemented?
+        true
+      end
+
+      def find_rates_implemented?
+        true
+      end
+
+      def find_rates_with_declared_value?
+        true
+      end
+
+      def find_tracking_info_implemented?
+        true
+      end
+
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -19,8 +35,24 @@ module Interstellar
         false
       end
 
+      def pickup_number_is_tracking_number?
+        true
+      end
+
+      def pod_implemented?
+        true
+      end
+
       def required_credential_types
         %i[api]
+      end
+
+      def requirements
+        %i[credentials]
+      end
+
+      def scanned_bol_implemented?
+        true
       end
     end
 
@@ -88,10 +120,6 @@ module Interstellar
       parse_document_response(:pod, tracking_number, response)
     end
 
-    def pod_implemented?
-      true
-    end
-
     def scanned_bol(tracking_number, _options = {})
       # Retrieve list of available documents first
       begin
@@ -114,10 +142,6 @@ module Interstellar
       response = commit(request)
 
       parse_document_response(:bol, tracking_number, response)
-    end
-
-    def scanned_bol_implemented?
-      true
     end
 
     # Pickups
@@ -146,14 +170,6 @@ module Interstellar
       parse_pickup_response(commit(request))
     end
 
-    def create_pickup_implemented?
-      true
-    end
-
-    def pickup_number_is_tracking_number?
-      true
-    end
-
     # Locations
 
     def find_locations(country)
@@ -176,14 +192,6 @@ module Interstellar
       parse_rate_response(shipment:, response: commit(request))
     end
 
-    def find_rates_implemented?
-      true
-    end
-
-    def find_rates_with_declared_value?
-      true
-    end
-
     # Tracking
 
     def find_tracking_info(tracking_number, *)
@@ -196,10 +204,6 @@ module Interstellar
       end
 
       parse_tracking_response(response)
-    end
-
-    def find_tracking_info_implemented?
-      true
     end
 
     protected

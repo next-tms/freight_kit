@@ -1,7 +1,17 @@
+# frozen_string_literal: true
+
 module Interstellar
   module Pickupable
-    def create_pickup_implemented?
-      true
+    class << self
+      def included(base)
+        base.send :extend, ClassMethods
+      end
+    end
+
+    module ClassMethods
+      def create_pickup_implemented?
+        true
+      end
     end
 
     def create_pickup(
