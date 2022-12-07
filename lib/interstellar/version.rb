@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module Interstellar
-  VERSION = '0.1.pre27'
+  VERSION = '0.1.pre28'
 end
