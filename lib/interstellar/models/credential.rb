@@ -5,7 +5,7 @@ module Interstellar
   #
   # @!attribute kind
   #   What kind?
-  #   @return [Symbol] One of `:api`, `:oauth2`, `:website`
+  #   @return [Symbol] One of `:api`, `:api_key`, `:oauth2`, `:website`
   #
   # @!attribute access_token
   #   Access token when type is `:oauth2`
@@ -47,6 +47,8 @@ module Interstellar
       type = hash[:type]
 
       requirements = case type
+                     when :api_key
+                       { api_key: String }
                      when :api, :website
                        { password: String }
                      when :oauth2
