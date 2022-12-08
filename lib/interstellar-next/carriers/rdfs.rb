@@ -158,7 +158,7 @@ module Interstellar
     def validate_api_credential!(api_credential)
       %i[account password username].each do |attribute|
         if !api_credential.respond_to?(attribute) || api_credential.send(attribute).blank?
-          raise InvalidCredentialsError, "Invalid #{attr}"
+          raise InvalidCredentialsError, "Invalid #{attribute}"
         end
 
         next unless attribute == :account
