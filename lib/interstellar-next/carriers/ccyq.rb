@@ -12,7 +12,7 @@ module Interstellar
       end
 
       def required_credential_types
-        %i[api_proxy]
+        %i[api_key api_proxy]
       end
 
       def requirements
