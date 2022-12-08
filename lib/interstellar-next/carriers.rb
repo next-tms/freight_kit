@@ -24,6 +24,7 @@ module Interstellar
 end
 
 Interstellar::Carriers.register :BTVP, 'interstellar-next/carriers/btvp'
+Interstellar::Carriers.register :CCYQ, 'interstellar-next/carriers/ccyq'
 Interstellar::Carriers.register :CLNI, 'interstellar-next/carriers/clni'
 Interstellar::Carriers.register :CNWY, 'interstellar-next/carriers/cnwy'
 Interstellar::Carriers.register :DPHE, 'interstellar-next/carriers/dphe'
