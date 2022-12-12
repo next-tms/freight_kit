@@ -214,10 +214,18 @@ module Interstellar
 
       unless accessorials.blank?
         serviceable_accessorials?(accessorials)
+
         accessorials.each do |a|
-          if !@conf.dig(:accessorials,
-                        :unserviceable).include?(a) && @conf.dig(:accessorials, :mappable, :pickup).include?(a)
+          if @conf.dig(:accessorials, :unserviceable).exclude?(a) &&
+             @conf.dig(:accessorials, :mappable, :pickup).include?(a)
             pickup_accessorials << @conf.dig(:accessorials, :mappable, :pickup)[a]
+          end
+        end
+
+        accessorials.each do |a|
+          if @conf.dig(:accessorials, :unserviceable).exclude?(a) &&
+             @conf.dig(:accessorials, :mappable, :delivery).include?(a)
+            delivery_accessorials << @conf.dig(:accessorials, :mappable, :delivery)[a]
           end
         end
       end
