@@ -15,108 +15,107 @@
 :attributes:
   :rates:
     :with_excessive_length_fees: true
-
+# Per carrier at 2022-12-16T02:31:00Z
 :accessorials:
   :mappable:
     :afterhours_delivery: AFTERHRS
     :afterhours_pickup: AFTERHRS
     :airport_delivery: AIRPORT PD
     :airport_pickup: AIRPORT PD
+    :amusement_park_delivery: LIMITEDACC
+    :amusement_park_pickup: LIMITEDACC
+    :appointment_delivery: APPT_NOTIF
+    :appointment_pickup: APPT_NOTIF
+    :athletic_facility_delivery: LIMITEDACC
+    :athletic_facility_delivery: LIMITEDACC
+    :athletic_facility_pickup: LIMITEDACC
+    :athletic_facility_pickup: LIMITEDACC
+    :brewery_delivery: LIMITEDACC
+    :brewery_pickup: LIMITEDACC
+    :cemetery_delivery: LIMITEDACC
+    :cemetery_delivery: LIMITEDACC
+    :cemetery_pickup: LIMITEDACC
+    :cemetery_pickup: LIMITEDACC
+    :church_delivery: LIMITEDACC
+    :church_pickup: LIMITEDACC
+    :construction_delivery: LIMITEDACC
+    :construction_pickup: LIMITEDACC
+    :convention_delivery: LIMITEDACC
+    :convention_pickup: LIMITEDACC
     :corrected_bol: BOL_CORR
+    :driver_assist: EXTRA LBR
+    :early_morning_delivery: AFTERHRS
+    :fair_delivery: LIMITEDACC
+    :fair_pickup: LIMITEDACC
+    :farm_delivery: LIMITEDACC
+    :farm_pickup: LIMITEDACC
+    :fitness_center_delivery: LIMITEDACC
+    :fitness_center_pickup: LIMITEDACC
+    :golf_course_delivery: LIMITEDACC
+    :golf_course_pickup: LIMITEDACC
+    :government_delivery: LIMITEDACC
+    :government_pickup: LIMITEDACC
+    :grocery_store_delivery: LIMITEDACC
+    :grocery_store_pickup: LIMITEDACC
+    :grocery_warehouse_delivery: FOODWREHSE
+    :grocery_warehouse_pickup: FOODWREHSE
+    :hospital_delivery: LIMITEDACC
+    :hospital_pickup: LIMITEDACC
+    :hotel_delivery: LIMITEDACC
+    :hotel_pickup: LIMITEDACC
+    :inside_delivery: INSIDE
+    :inside_pickup: INSIDE
+    :inspection_site_delivery: LIMITEDACC
+    :inspection_site_pickup: LIMITEDACC
+    :jobsite_delivery: LIMITEDACC
+    :jobsite_pickup: LIMITEDACC
     :liftgate_delivery: LIFTGT
     :liftgate_pickup: LIFTGT
     :mall_delivery: MALL
     :mall_pickup: MALL
-  # May be inaccurate
+    :marina_delivery: LIMITEDACC
+    :marina_pickup: LIMITEDACC
+    :military_site_delivery: LIMITEDACC
+    :military_site_pickup: LIMITEDACC
+    :mine_site_pickup: LIMITEDACC
+    :motel_delivery: LIMITEDACC
+    :motel_pickup: LIMITEDACC
+    :nursing_home_delivery: LIMITEDACC
+    :nursing_home_pickup: LIMITEDACC
+    :park_delivery: LIMITEDACC
+    :park_pickup: LIMITEDACC
+    :prison_delivery: LIMITEDACC
+    :prison_pickup: LIMITEDACC
+    :ranch_delivery: LIMITEDACC
+    :ranch_pickup: LIMITEDACC
+    :reservation_delivery: APPT_NOTIF
+    :reservation_pickup: APPT_NOTIF
+    :residential_delivery: RESIDENT
+    :residential_pickup: RESIDENT
+    :resort_delivery: LIMITEDACC
+    :resort_pickup: LIMITEDACC
+    :restaurant_delivery: LIMITEDACC
+    :restaurant_pickup: LIMITEDACC
+    :school_delivery: LIMITEDACC
+    :school_pickup: LIMITEDACC
+    :steel_mill_delivery: LIMITEDACC
+    :steel_mill_pickup: LIMITEDACC
+    :storage_facility_delivery: LIMITEDACC
+    :storage_facility_pickup: LIMITEDACC
+    :university_delivery: LIMITEDACC
+    :university_pickup: LIMITEDACC
+    :utility_site_delivery: LIMITEDACC
+    :utility_site_pickup: LIMITEDACC
+    :winery_delivery: LIMITEDACC
+    :winery_pickup: LIMITEDACC
   :unquotable:
     - :athletic_facility_delivery
-    - :athletic_facility_pickup
-    - :cemetery_delivery
-    - :cemetery_pickup
-    - :church_delivery
-    - :church_pickup
-    - :construction_delivery
-    - :construction_pickup
     - :dock_dropoff
     - :dock_pickup
-    - :farm_delivery
-    - :farm_pickup
-    - :fitness_center_delivery
-    - :fitness_center_pickup
-    - :golf_course_delivery
-    - :golf_course_pickup
-    - :government_delivery
-    - :government_pickup
-    - :grocery_store_delivery
-    - :grocery_store_pickup
-    - :inspection_site_delivery
-    - :inspection_site_pickup
-    - :hospital_delivery
-    - :hospital_pickup
-    - :hotel_delivery
-    - :hotel_pickup
-    - :jobsite_delivery
-    - :jobsite_pickup
-    - :marina_delivery
-    - :marina_pickup
-    - :military_site_delivery
-    - :military_site_pickup
-    - :mine_site_pickup
-    - :motel_delivery
-    - :motel_pickup
-    - :nursing_home_delivery
-    - :nursing_home_pickup
-    - :park_delivery
-    - :park_pickup
-    - :prison_delivery
-    - :prison_pickup
-    - :ranch_delivery
-    - :ranch_pickup
-    - :reservation_delivery
-    - :reservation_pickup
-    - :residential_delivery
-    - :residential_pickup
-    - :resort_delivery
-    - :resort_pickup
-    - :restaurant_delivery
-    - :restaurant_pickup
-    - :school_delivery
-    - :school_pickup
-    - :steel_mill_delivery
-    - :steel_mill_pickup
-    - :university_delivery
-    - :university_pickup
-    - :storage_facility_delivery
-    - :storage_facility_pickup
-    - :utility_site_delivery
-    - :utility_site_pickup
-  # May be inaccurate
   :unserviceable:
-    - :amusement_park_delivery
-    - :amusement_park_pickup
-    - :appointment_delivery
-    - :appointment_pickup
-    - :athletic_facility_delivery
-    - :athletic_facility_pickup
-    - :brewery_delivery
-    - :brewery_pickup
-    - :cemetery_delivery
-    - :cemetery_pickup
-    - :convention_delivery
-    - :convention_pickup
     - :customs_brokerage
-    - :driver_assist
-    - :early_morning_delivery
-    - :fair_delivery
-    - :fair_pickup
     - :flatbed_delivery
     - :flatbed_pickup
-    - :grocery_warehouse_delivery
-    - :grocery_warehouse_pickup
+    - :guaranteed_delivery
     - :guaranteed_delivery_am
     - :guaranteed_delivery_pm
-    - :guaranteed_delivery
-    - :inside_delivery
-    - :inside_pickup
-    - :winery_delivery
-    - :winery_pickup
