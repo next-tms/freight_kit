@@ -62,21 +62,18 @@ module Interstellar
     end
 
     # Documents
-    def parse_document_response(type, tracking_number, url)
-      path = File.join(Dir.tmpdir, "#{@@name} #{tracking_number} #{type.to_s.upcase}.pdf")
-      file = Tempfile.new(binmode: true)
+    def parse_document_response(url)
+      document_response = DocumentResponse.new(request: URI.parse(url))
 
-      File.open(file.path, 'wb') do |f|
-        URI.parse(url).open do |input|
-          f.write(input.read)
-        end
-      rescue OpenURI::HTTPError
-        raise Interstellar::DocumentNotFoundError, "API Error: #{@@name}: Document not found"
+      begin
+        response = HTTParty.get(url)
+      rescue StandardError => e
+        document_response.error = e
+        return document_response
       end
 
-      file = Magick::ImageList.new(file.path)
-      file.write(path)
-      File.exist?(path) ? path : false
+      document_response.assign_attributes(content_type: response.headers['content-type'], data: response.body)
+      document_response
     end
 
     def parse_pod_response(tracking_number)
@@ -110,7 +107,7 @@ module Interstellar
       end
       browser.close
 
-      parse_document_response(:pod, tracking_number, image_url)
+      parse_document_response(image_url)
     end
 
     # Rates
