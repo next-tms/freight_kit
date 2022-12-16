@@ -6,13 +6,17 @@ module Interstellar
     def initialize(credentials, customer_location: nil, tariff: nil)
       super
 
+      # Use #superclass instead of using #ancestors to fetch the parent class which the carrier class is inheriting from
+      # (#ancestors returns an array including the parent class and all the modules that were included)
+      parent_class_name = self.class.superclass.name.demodulize.underscore
+
       conf_path = File
                   .join(
                     File.expand_path(
                       '../../../../configuration/platforms',
                       self.class.const_source_location(:REACTIVE_FREIGHT_PLATFORM).first
                     ),
-                    "#{self.class.ancestors[1].name.split('::')[1].underscore}.yml"
+                    "#{parent_class_name}.yml"
                   )
       @conf = YAML.safe_load(File.read(conf_path), permitted_classes: [Symbol])
 
@@ -22,7 +26,7 @@ module Interstellar
                       '../../../../configuration/carriers',
                       self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first
                     ),
-                    "#{self.class.to_s.split('::')[1].underscore}.yml"
+                    "#{self.class.to_s.demodulize.underscore}.yml"
                   )
       @conf = @conf.deep_merge(YAML.safe_load(File.read(conf_path), permitted_classes: [Symbol]))
 
