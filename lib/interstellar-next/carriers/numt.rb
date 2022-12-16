@@ -16,8 +16,6 @@ module Interstellar
       end
     end
 
-    include Interstellar::Documentable
-
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
