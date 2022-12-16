@@ -21,7 +21,6 @@ module Interstellar
     include Interstellar::Rateable
     include Interstellar::Trackable
     include Interstellar::Pickupable
-    include Interstellar::Documentable
 
     protected
 
