@@ -36,7 +36,7 @@ module Interstellar
       end
 
       def required_credential_types
-        %i[api]
+        %i[api_key]
       end
 
       def requirements
@@ -140,14 +140,14 @@ module Interstellar
     protected
 
     def build_url(action, options = {})
-      api_credentials = fetch_credential(:api)
+      api_credentials = fetch_credential(:api_key)
 
       env = @test_mode ? :test : :production
 
       url = "https://#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, env, action)}"
       url = url.gsub('%ACCOUNT_NUMBER%', api_credentials.account)
 
-      url += "?pw=#{api_credentials.password}"
+      url += "?pw=#{api_credentials.api_key}"
       url << "&#{options[:params]}" unless options[:params].blank?
 
       url
