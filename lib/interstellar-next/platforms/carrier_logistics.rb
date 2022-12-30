@@ -187,10 +187,18 @@ module Interstellar
     def parse_api_date(date, location)
       return nil if date.blank?
 
-      separator = %w(? -).find { |separator| date.include?(separator) }
+      separator = %w[? -].find { |separator| date.include?(separator) }
       return nil unless separator.present?
 
-      local_date = ::Date.strptime(date, "%m#{separator}%d#{separator}%Y")
+      format = case date
+               when /^\d{4}#{separator}/
+                 %w[%Y %m %d].join(separator)
+               when /^\d{2}#{separator}/
+                 %w[%m %d %Y].join(separator)
+               end
+      return nil unless format.present?
+
+      local_date = ::Date.strptime(date, format)
       DateTime.new(local_date:, location:)
     end
 
