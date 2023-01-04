@@ -493,6 +493,11 @@ module Interstellar
       api_shipments = response.dig('OnTracRateResponse', 'Shipments', 'Shipment')
       api_shipments = [api_shipments] unless api_shipments.is_a?(Array)
 
+      if api_shipments.any? { |api_shipment| api_shipment['Error']&.downcase&.include?('not serviced') }
+        rate_response.error = UnserviceableError.new
+        return rate_response
+      end
+
       api_shipments.each do |api_shipment|
         api_rate = api_shipment.dig('Rates', 'Rate')
         api_transit_days = api_rate['TransitDays'].to_i
