@@ -485,7 +485,12 @@ module Interstellar
       url = [base_url, query_parameter].join
 
       response = HTTParty.get(url)
-      base64_document_data = response.deep_symbolize_keys.dig(:ImageRequest, :Image, :ImageData, :__content__)
+
+      image = response.deep_symbolize_keys.dig(:ImageRequest, :Image)
+      image = image.last if image.is_a?(Array)
+      # ImageRequest[:Image] sometimes return an Array and both images are identical
+
+      base64_document_data = image.dig(:ImageData, :__content__)
 
       document_response = DocumentResponse.new(request: url)
 
