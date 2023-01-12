@@ -490,9 +490,14 @@ module Interstellar
       image = image.last if image.is_a?(Array)
       # ImageRequest[:Image] sometimes return an Array and both images are identical
 
-      base64_document_data = image.dig(:ImageData, :__content__)
-
       document_response = DocumentResponse.new(request: url)
+
+      unless image
+        document_response.error = DocumentNotFoundError.new
+        return document_response
+      end
+
+      base64_document_data = image.dig(:ImageData, :__content__)
 
       unless base64_document_data
         document_response.error = DocumentNotFoundError.new
