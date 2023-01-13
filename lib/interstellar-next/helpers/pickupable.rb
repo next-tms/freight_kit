@@ -35,7 +35,12 @@ module Interstellar
         shipment:
       )
 
-      response = commit(:pickup, request)
+      begin
+        response = commit(:pickup, request)
+      rescue Interstellar::Error => error
+        response = PickupResponse.new(request: request, response: nil, error: error)
+      end
+
       return response if response.is_a?(PickupResponse)
 
       parse_pickup_response(response)

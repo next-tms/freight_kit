@@ -3,19 +3,7 @@
 module Interstellar
   class FWDA < Interstellar::Carrier
     class << self
-      def create_pickup_implemented?
-        true
-      end
-
-      def find_rates_implemented?
-        true
-      end
-
       def find_rates_with_declared_value?
-        true
-      end
-
-      def find_tracking_info_implemented?
         true
       end
 
@@ -57,6 +45,10 @@ module Interstellar
     end
 
     REACTIVE_FREIGHT_CARRIER = true
+
+    include Interstellar::Rateable
+    include Interstellar::Trackable
+    include Interstellar::Pickupable
 
     cattr_reader :name, :scac
     @@name = 'Forward Air'
@@ -144,32 +136,6 @@ module Interstellar
       parse_document_response(:bol, tracking_number, response)
     end
 
-    # Pickups
-
-    def create_pickup(
-      delivery_from:,
-      delivery_to:,
-      dispatcher:,
-      pickup_from:,
-      pickup_to:,
-      scac:,
-      service:,
-      shipment:
-    )
-      request = build_pickup_request(
-        delivery_from:,
-        delivery_to:,
-        dispatcher:,
-        pickup_from:,
-        pickup_to:,
-        scac:,
-        service:,
-        shipment:
-      )
-
-      parse_pickup_response(commit(request))
-    end
-
     # Locations
 
     def find_locations(country)
@@ -177,33 +143,6 @@ module Interstellar
 
       request = build_locations_request
       parse_locations_response(country:, response: commit(request))
-    end
-
-    # Rates
-
-    def find_rates(shipment:)
-      begin
-        validate_packages(shipment.packages)
-      rescue UnserviceableError => e
-        return RateResponse.new(error: e)
-      end
-
-      request = build_rate_request(shipment:)
-      parse_rate_response(shipment:, response: commit(request))
-    end
-
-    # Tracking
-
-    def find_tracking_info(tracking_number, *)
-      request = build_tracking_request(tracking_number)
-
-      begin
-        response = commit(request)
-      rescue StandardError => e
-        return TrackingResponse.new(error: e, request:)
-      end
-
-      parse_tracking_response(response)
     end
 
     protected
@@ -311,7 +250,7 @@ module Interstellar
       request
     end
 
-    def commit(request)
+    def commit(_action, request)
       url = request[:url]
       headers = request[:headers]
       method = request[:method]

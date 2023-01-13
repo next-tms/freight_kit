@@ -61,7 +61,7 @@ module Interstellar
 
     # Rates
 
-    def validate_packages(packages)
+    def validate_packages(packages, tariff = nil)
       raise UnserviceableError, 'Must be fewer than 10 items altogether' if packages.sum(&:quantity) > 10
 
       super

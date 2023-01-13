@@ -16,7 +16,11 @@ module Interstellar
 
     def find_tracking_info(tracking_number, *)
       request = build_tracking_request(tracking_number)
-      response = commit(:track, request)
+      begin
+        response = commit(:track, request)
+      rescue StandardError => e
+        return TrackingResponse.new(error: e, request:)
+      end
 
       return response if response.is_a?(TrackingResponse)
 
