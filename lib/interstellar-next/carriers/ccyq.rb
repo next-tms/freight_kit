@@ -262,6 +262,9 @@ module Interstellar
         return rate_response
       end
 
+      estimate_reference = response['QuoteNum']
+      expires_at = ::Time.iso8601(response['QuoteExpiryDate'])
+
       transit_days = (
         ::Time.iso8601(response['EarliestDeliveryDate']).to_date -
         ::Time.iso8601(response['PickupDate']).to_date
@@ -281,6 +284,8 @@ module Interstellar
         carrier: self,
         carrier_name: self.class.name,
         currency: 'USD',
+        estimate_reference:,
+        expires_at:,
         scac: self.class.scac.upcase,
         service_name: :standard,
         shipment:,
