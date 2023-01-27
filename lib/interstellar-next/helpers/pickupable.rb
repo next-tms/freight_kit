@@ -36,7 +36,9 @@ module Interstellar
       )
 
       begin
-        response = commit(:pickup, request)
+        # For SOAP APIs, the :action parameter is required
+        response = commit(:pickup, request) if method(:commit).parameters.count == 2
+        response ||= commit(request)
       rescue Interstellar::Error => error
         response = PickupResponse.new(request: request, response: nil, error: error)
       end

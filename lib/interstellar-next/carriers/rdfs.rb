@@ -184,6 +184,11 @@ module Interstellar
         return document_response
       end
 
+      if doc.css('img').blank?
+        document_response.error = Interstellar::DocumentNotFoundError.new
+        return document_response
+      end
+
       data = Base64.decode64(doc.css('img').first['src'].split('data:image/jpg;base64,').last)
 
       document_response.assign_attributes(content_type: 'image/jpeg', data:)

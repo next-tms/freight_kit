@@ -22,7 +22,10 @@ module Interstellar
       end
 
       request = build_rate_request(shipment:)
-      response = commit(:rates, request)
+
+      # For SOAP APIs, the :action parameter is required
+      response = commit(:rates, request) if method(:commit).parameters.count == 2
+      response ||= commit(request)
 
       return response if response.is_a?(RateResponse)
 

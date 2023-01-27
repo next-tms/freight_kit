@@ -250,7 +250,7 @@ module Interstellar
       request
     end
 
-    def commit(_action, request)
+    def commit(request)
       url = request[:url]
       headers = request[:headers]
       method = request[:method]

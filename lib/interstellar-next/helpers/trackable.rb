@@ -17,7 +17,9 @@ module Interstellar
     def find_tracking_info(tracking_number, *)
       request = build_tracking_request(tracking_number)
       begin
-        response = commit(:track, request)
+        # For SOAP APIs, the :action parameter is required
+        response = commit(:track, request) if method(:commit).parameters.count == 2
+        response ||= commit(request)
       rescue StandardError => e
         return TrackingResponse.new(error: e, request:)
       end
