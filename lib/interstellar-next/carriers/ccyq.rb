@@ -92,15 +92,13 @@ module Interstellar
     # Documents
 
     def parse_document_response(type, tracking_number)
+      # Tracking Endpoint returns Images for the Shipment
       request = build_request(:track, query: { ReferenceNum: tracking_number })
       response = commit(type, request)
       document_response = DocumentResponse.new
 
-      unless document
-        document_response.error = DocumentNotFoundError.new
-        return document_response
-      end
-
+      # API response sometimes returns an array
+      response = response.first if response.is_a?(Array)
       document = response['Images'].find { |image| image['DocumentType'] == type.upcase }
 
       unless document
