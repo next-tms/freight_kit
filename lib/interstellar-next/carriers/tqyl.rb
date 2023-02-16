@@ -57,7 +57,7 @@ module Interstellar
     end
 
     def commit(request)
-      binding.pry
+      
       response = HTTParty.send(
         request[:method],
         request[:url],
@@ -77,7 +77,7 @@ module Interstellar
         raise Interstellar::ResponseError, message
       end
 
-      binding.pry
+      
       JSON.parse(response.body)
     end
 
@@ -115,7 +115,7 @@ module Interstellar
     # Tracking
 
     def build_tracking_request(tracking_number)
-      binding.pry
+      
       request = {
         url: build_url(:track).gsub("%TRACKING_NUMBER%", tracking_number.to_s),
         method: @conf.dig(:api, :methods, :track),
