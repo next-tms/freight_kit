@@ -37,6 +37,7 @@ Interstellar::Carriers.register :PENS, 'interstellar-next/carriers/pens'
 Interstellar::Carriers.register :RDFS, 'interstellar-next/carriers/rdfs'
 Interstellar::Carriers.register :SAIA, 'interstellar-next/carriers/saia'
 Interstellar::Carriers.register :SEFL, 'interstellar-next/carriers/sefl'
+Interstellar::Carriers.register :TQYL, 'interstellar-next/carriers/tqyl'
 Interstellar::Carriers.register :WRDS, 'interstellar-next/carriers/wrds'
 
 # Based on Platform
