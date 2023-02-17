@@ -227,7 +227,7 @@ module Interstellar
             state: destination.province.upcase,
             country: destination.country.code(:alpha3).value
           },
-          shipmentDate: shipment.pickup_at.to_s,
+          shipmentDate: shipment.pickup_at.date_time_with_zone.iso8601,
           quoteCommodities: shipment.packages.map do |package|
 
             unit_type = package.packaging.type.to_s
