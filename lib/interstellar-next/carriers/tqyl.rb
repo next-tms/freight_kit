@@ -18,6 +18,18 @@ module Interstellar
       def requirements
         %i[credentials]
       end
+
+      def pod_implemented?
+        true
+      end
+
+      def scanned_bol_implemented?
+        true
+      end
+
+      def create_pickup_implemented?
+        true
+      end
     end
 
     REACTIVE_FREIGHT_CARRIER = true
@@ -30,8 +42,6 @@ module Interstellar
 
     include Interstellar::Rateable
     include Interstellar::Trackable
-    include Interstellar::Documentable
-    include Interstellar::Pickupable
 
     protected
 
@@ -69,7 +79,12 @@ module Interstellar
 
       unless [200, 201].include? response.code
         message = begin
-          JSON.parse(response.body).dig('content', 'message') || "HTTP #{response.code}"
+          parsed_response = JSON.parse(response.body)
+          if parsed_response.is_a?(String)
+            parsed_response
+          else
+            parsed_response.dig('content', 'message') || "HTTP #{response.code}"
+          end
         rescue JSON::ParserError
           "HTTP #{response.code}"
         end
