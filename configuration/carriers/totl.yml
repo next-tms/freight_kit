@@ -1,14 +1,18 @@
 :accessorials:
   :mappable:
-    :appointment_delivery: '&APPT=yes'
-    :inside_delivery: '&IDL=yes'
-    :inside_pickup: '&IDL=yes'
-    :liftgate_delivery: '&LIFT=yes'
-    :liftgate_pickup: '&LIFTP=yes'
-    :residential_delivery: '&RESI=yes'
-    :residential_pickup: '&RESP=yes'
-    :restaurant_delivery: '&IDL=yes&LIFT=yes'
-    :restaurant_pickup: '&IDL=yes&LIFTP=yes'
+    :appointment_delivery: 'APPT'
+    :inside_delivery: 'IDL'
+    :inside_pickup: 'IDL'
+    :liftgate_delivery: 'LIFT'
+    :liftgate_pickup: 'LIFTP'
+    :residential_delivery: 'RESI'
+    :residential_pickup: 'RESP'
+    :restaurant_delivery:
+     - 'IDL'
+     - 'LIFT'
+    :restaurant_pickup:
+     - 'IDL'
+     - 'LIFTP'
   # May be inaccurate
   :unquotable:
     - :amusement_park_delivery

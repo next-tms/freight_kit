@@ -83,7 +83,6 @@ module Interstellar
 
       uri = URI.parse("#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}")
       uri.query = query.to_query
-
       url = uri.to_s
       return url unless url.include?('@CARRIER_CODE@')
 
@@ -351,7 +350,14 @@ module Interstellar
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            accessorials << @conf.dig(:accessorials, :mappable)[a]
+            conf_acc = @conf.dig(:accessorials, :mappable)[a]
+            if conf_acc.is_a?(String)
+              accessorials << conf_acc
+            else
+              conf_acc.each do |c|
+                accessorials << c
+              end
+            end
           end
         end
       end

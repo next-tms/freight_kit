@@ -1,10 +1,10 @@
 :accessorials:
   :mappable:
-    :appointment_delivery: '&NOT=yes'
-    :liftgate_delivery: '&LIFTGATE=yes'
-    :liftgate_pickup: '&LIFTPU=yes'
-    :residential_delivery: '&RESIDENT=yes'
-    :residential_pickup: '&NONCMPU=yes'
+    :appointment_delivery: 'NOT'
+    :liftgate_delivery: 'LIFTGATE'
+    :liftgate_pickup: 'LIFTPU'
+    :residential_delivery: 'RESIDENT'
+    :residential_pickup: 'NONCMPU'
   # May be inaccurate
   :unquotable:
     - :airport_delivery
