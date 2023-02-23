@@ -20,15 +20,11 @@ module Interstellar
       end
 
       def pod_implemented?
-        true
+        false
       end
 
       def scanned_bol_implemented?
-        true
-      end
-
-      def create_pickup_implemented?
-        true
+        false
       end
     end
 
@@ -42,6 +38,7 @@ module Interstellar
 
     include Interstellar::Rateable
     include Interstellar::Trackable
+    include Interstellar::Pickupable
 
     protected
 
@@ -190,6 +187,90 @@ module Interstellar
       )
     end
 
+    # Pickup
+
+    def build_pickup_request(
+      delivery_from:,
+      delivery_to:,
+      dispatcher:,
+      pickup_from:,
+      pickup_to:,
+      scac:,
+      service:,
+      shipment:
+    )
+
+      origin = shipment.origin
+      destination = shipment.destination
+      shipper_phone = shipment.origin.contact.phone.delete('^0-9')
+      receiver_phone = shipment.destination.contact.phone.delete('^0-9')
+
+      build_request(
+        :pickup,
+        body: {
+          scac: scac,
+          serviceLevel: service.to_s.capitalize,
+          shipmentDate: pickup_from.iso8601,
+          commodities: build_commodities(shipment),
+          accessorials: build_accessorials(shipment: shipment),
+          pickupDetails: {
+            address1: origin.address1,
+            postalCode: origin.postal_code.to_i,
+            city: origin.city,
+            state: origin.province.upcase,
+            country: origin.country.code(:alpha3).value,
+            contactName: origin.contact.name || 'Shipping',
+            contactPhone: shipper_phone || '',
+            stopName: origin.contact.name || 'Shipping',
+            hoursOpen: pickup_from.strftime('%I:%M %p'),
+            hoursClosed: pickup_to.strftime('%I:%M %p')
+          },
+          deliveryDetails: {
+            address1: destination.address1,
+            postalCode: destination.postal_code.to_i,
+            city: destination.city,
+            state: destination.province.upcase,
+            country: destination.country.code(:alpha3).value,
+            contactName: destination.contact.name || 'Receiving',
+            contactPhone: receiver_phone || '',
+            stopName: destination.contact.name || 'Receiving',
+            hoursOpen: delivery_from.strftime('%I:%M %p'),
+            hoursClosed: delivery_to.strftime('%I:%M %p')
+          }
+        }
+      )
+    end
+
+    def parse_pickup_response(response)
+      pickup_response = PickupResponse.new(request: last_request, response:)
+      pickup_number = response.dig('content', 'poNumber')
+
+      if pickup_number.blank?
+        pickup_response.error = Interstellar::ResponseError.new('Unknown response')
+        return pickup_response
+      end
+
+      pickup_response.pickup_number = pickup_number
+      pickup_response
+    end
+
+    def build_commodities(shipment)
+      shipment.packages.map do |package|
+        unit_type = package.packaging.type.to_s
+        {
+          freightClassCode: package.freight_class,
+          unitTypeCode: package.packaging.pallet? ? 'PLT' : unit_type.upcase,
+          description: package.description,
+          quantity: package.quantity.to_i,
+          weight: package.pounds(:total).ceil.to_i,
+          dimensionHeight: package.inches(:height).ceil.to_i,
+          dimensionLength: package.inches(:length).ceil.to_i,
+          dimensionWidth: package.inches(:width).ceil.to_i,
+          isHazmat: package.hazmat?
+        }
+      end
+    end
+
     # Rates
 
     def build_accessorials(shipment:)
@@ -228,21 +309,7 @@ module Interstellar
             country: destination.country.code(:alpha3).value
           },
           shipmentDate: shipment.pickup_at.date_time_with_zone.iso8601,
-          quoteCommodities: shipment.packages.map do |package|
-
-            unit_type = package.packaging.type.to_s
-            {
-              freightClassCode: package.freight_class,
-              unitTypeCode: unit_type == 'pallet' ? 'PLT' : unit_type.upcase,
-              description: package.description,
-              quantity: package.quantity.to_i,
-              weight: package.pounds(:total).ceil.to_i,
-              dimensionHeight: package.inches(:height).ceil.to_i,
-              dimensionLength: package.inches(:length).ceil.to_i,
-              dimensionWidth: package.inches(:width).ceil.to_i,
-              isHazmat: package.hazmat
-            }
-          end
+          quoteCommodities: build_commodities(shipment)
         }.to_json
       )
     end

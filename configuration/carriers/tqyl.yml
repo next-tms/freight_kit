@@ -3,7 +3,7 @@
   :endpoints:
     :rates: /ltl/quotes
     :track: /tracking/%TRACKING_NUMBER%
-    :pickup: /Pickup
+    :pickup: /ltl/loads/tender
     :auth: /identity/token
   :methods:
     :rates: :post
