@@ -349,15 +349,13 @@ module Interstellar
       unless shipment.accessorials.blank?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            conf_acc = @conf.dig(:accessorials, :mappable)[a]
-            if conf_acc.is_a?(String)
-              accessorials << conf_acc
-            else
-              conf_acc.each do |c|
-                accessorials << c
-              end
-            end
+          next if @conf.dig(:accessorials, :unserviceable).include?(a)
+
+          conf_acc = @conf.dig(:accessorials, :mappable)[a]
+
+          case conf_acc
+          when Array then conf_acc.each { |c| accessorials << c }
+          when String then accessorials << conf_acc
           end
         end
       end
