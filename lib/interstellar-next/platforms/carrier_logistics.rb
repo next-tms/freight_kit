@@ -105,7 +105,7 @@ module Interstellar
                                 when 200 then nil
                                 when 400 then DocumentNotFoundError.new
                                 else
-                                  ResponseError.new("HTTP #{response.code}")
+                                  ResponseError.new("HTTP #{tracking_response.code}")
                                 end
 
       return document_response if document_response.error.present?
@@ -224,7 +224,13 @@ module Interstellar
 
       return tracking_response if tracking_response.error.present?
 
-      response.deep_symbolize_keys!
+      begin
+        response.deep_symbolize_keys!
+      rescue NoMethodError => e
+        # There are instances that the HTTP Response returns a 200 response but returns an
+        # error message e.g <TITLE>WebSpeed error from messenger process (6019)</TITLE> HTTPOK 200
+        tracking_response.error = ResponseError.new("HTTP #{response}")
+      end
 
       api_events = response.dig(:protrace, :shiphists, :shiphist)
       if api_events.blank?
@@ -381,6 +387,15 @@ module Interstellar
         return rate_response
       end
 
+      rate_response.error = case response.code
+                            when 200 then nil
+                            when 400 then DocumentNotFoundError.new
+                            else
+                              ResponseError.new("HTTP #{response.code}")
+                            end
+
+      return rate_response if rate_response.error.present?
+      
       error = response.dig('error', 'errormessage')
 
       unless error.blank?
