@@ -37,19 +37,19 @@ module Interstellar
         soap_operation,
         **call_args
       ).body
-    rescue *api_exceptions => error
-      response = build_response_class(action: action, request: call_args[:message])
-      response.error = ResponseError.new("HTTP Error: #{error}")
+    rescue *api_exceptions => e
+      response = build_response_class(action:)
+      response.error = ResponseError.new("HTTP Error: #{e}")
 
       response
     rescue Savon::InvalidResponseError
-      response = build_response_class(action: action)
-      response.error = ResponseError.new("Invalid Response Error")
+      response = build_response_class(action:)
+      response.error = ResponseError.new('Invalid Response Error')
 
       response
-    rescue => error
-      response = build_response_class(action: action)
-      response.error = ResponseError.new("Unknown API Error #{error}")
+    rescue StandardError => e
+      response = build_response_class(action:)
+      response.error = ResponseError.new("Unknown API Error #{e}")
 
       response
     end
@@ -58,11 +58,13 @@ module Interstellar
 
     attr_reader :carrier, :action, :client_args, :call_args, :soap_operation
 
-    def build_response_class(action:, request:)
+    def build_response_class(action:)
+      request = call_args[:message]
+
       case action
-      when :rates then RateResponse.new(request: request, response: nil)
-      when :track then TrackingResponse.new(carrier: carrier, request: request, response: nil)
-      when :pickup then PickupResponse.new(request: request, response: nil)
+      when :rates then RateResponse.new(request:, response: nil)
+      when :track then TrackingResponse.new(carrier:, request:, response: nil)
+      when :pickup then PickupResponse.new(request:, response: nil)
       end
     end
   end
