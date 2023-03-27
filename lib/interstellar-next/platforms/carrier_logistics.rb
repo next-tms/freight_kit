@@ -232,6 +232,8 @@ module Interstellar
         tracking_response.error = ResponseError.new("HTTP #{response}")
       end
 
+      return tracking_response if tracking_response.error.present?
+
       api_events = response.dig(:protrace, :shiphists, :shiphist)
       if api_events.blank?
         tracking_response.error = ResponseError.new('Empty response')

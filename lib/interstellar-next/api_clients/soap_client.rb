@@ -1,6 +1,7 @@
 module Interstellar
   class SoapClient
     API_EXCEPTIONS = [
+      HTTP::ConnectionError,
       Savon::HTTPError,
       Net::ReadTimeout,
       Net::OpenTimeout,
