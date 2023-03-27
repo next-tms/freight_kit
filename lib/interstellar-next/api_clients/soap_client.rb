@@ -1,7 +1,6 @@
 module Interstellar
   class SoapClient
     API_EXCEPTIONS = [
-      HTTP::ConnectionError,
       Savon::HTTPError,
       Net::ReadTimeout,
       Net::OpenTimeout,
@@ -46,6 +45,11 @@ module Interstellar
     rescue Savon::InvalidResponseError
       response = build_response_class(action: action)
       response.error = ResponseError.new("Invalid Response Error")
+
+      response
+    rescue => error
+      response = build_response_class(action: action)
+      response.error = ResponseError.new("Unknown API Error #{error}")
 
       response
     end
