@@ -34,9 +34,9 @@ module Interstellar
 
       longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
       if longest_dimension > 144
-        accessorials << '&OL=yes'
+        accessorials << 'OL'
       elsif longest_dimension >= 96 && longest_dimension <= 144
-        accessorials << '&OL1=yes'
+        accessorials << 'OL1'
       end
 
       accessorials
