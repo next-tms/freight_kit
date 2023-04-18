@@ -3,14 +3,6 @@
 module Interstellar
   class CarrierLogistics < Platform
     class << self
-      def find_rates_implemented?
-        true
-      end
-
-      def find_tracking_info_implemented?
-        true
-      end
-
       def pod_implemented?
         true
       end
@@ -40,40 +32,21 @@ module Interstellar
       'Your Username or Password is Incorrect'
     ].freeze
 
+    include Interstellar::Trackable
+    include Interstellar::Rateable
+
     # Documents
 
     def pod(tracking_number)
       query = build_tracking_query(tracking_number)
-      response = commit(:track, query:)
+      response = commit(:track, query)
       parse_document_response(response, :pod)
     end
 
     def scanned_bol(tracking_number)
       query = build_tracking_query(tracking_number)
-      response = commit(:track, query:)
+      response = commit(:track, query)
       parse_document_response(response, :bol)
-    end
-
-    # Rates
-
-    def find_rates(shipment:)
-      begin
-        validate_packages(shipment.packages, tariff)
-      rescue UnserviceableError => e
-        return RateResponse.new(error: e)
-      end
-
-      query = build_rate_query(shipment:)
-      response = commit(:rates, query:)
-      parse_rate_response(shipment:, response:)
-    end
-
-    # Tracking
-
-    def find_tracking_info(tracking_number)
-      query = build_tracking_query(tracking_number)
-      response = commit(:track, query:)
-      parse_tracking_response(tracking_number, response:)
     end
 
     # protected
@@ -89,25 +62,29 @@ module Interstellar
       url.sub('@CARRIER_CODE@', @conf.dig(:api, :carrier_code))
     end
 
-    def commit(action, query:)
+    def commit(action, query)
       url = build_url(action, query:)
       save_request(url)
 
       HTTParty.get(url, logger: Logger.new($stdout))
     end
 
+    def map_response_errors(response, not_found_error: DocumentNotFoundError)
+      return ResponseError.new('Unknown response') if response.blank?
+
+      webspeed_error = (response.is_a?(String) || response.is_a?(HTTParty::Response)) && response.include?('WebSpeed error')
+      return ResponseError.new('Temporary error (WebSpeed error)') if webspeed_error
+
+      return if response.code == 200
+
+      response.code == 400 ? not_found_error.new : ResponseError.new("HTTP #{response.code}")
+    end
+
     # Documents
 
     def parse_document_response(tracking_response, document_type)
       document_response = DocumentResponse.new
-
-      document_response.error = case tracking_response.code
-                                when 200 then nil
-                                when 400 then DocumentNotFoundError.new
-                                else
-                                  ResponseError.new("HTTP #{tracking_response.code}")
-                                end
-
+      document_response.error = map_response_errors(tracking_response)
       return document_response if document_response.error.present?
 
       tracking_response.deep_symbolize_keys!
@@ -214,25 +191,10 @@ module Interstellar
 
     def parse_tracking_response(tracking_number, response:)
       tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
-
-      tracking_response.error = case response.code
-                                when 200 then nil
-                                when 400 then ShipmentNotFoundError.new
-                                else
-                                  ResponseError.new("HTTP #{response.code}")
-                                end
-
+      tracking_response.error = map_response_errors(response, not_found_error: ShipmentNotFoundError)
       return tracking_response if tracking_response.error.present?
 
-      begin
-        response.deep_symbolize_keys!
-      rescue NoMethodError => e
-        # There are instances that the HTTP Response returns a 200 response but returns an
-        # error message e.g <TITLE>WebSpeed error from messenger process (6019)</TITLE> HTTPOK 200
-        tracking_response.error = ResponseError.new("HTTP #{response}")
-      end
-
-      return tracking_response if tracking_response.error.present?
+      response.deep_symbolize_keys!
 
       api_events = response.dig(:protrace, :shiphists, :shiphist)
       if api_events.blank?
@@ -379,23 +341,7 @@ module Interstellar
     def parse_rate_response(shipment:, response:)
       rate_response = RateResponse.new(request: last_request, response:)
 
-      if response.blank?
-        rate_response.error = ResponseError.new('Unknown response')
-        return rate_response
-      end
-
-      if response.is_a?(String) && response&.include?('WebSpeed error')
-        rate_response.error = ResponseError.new('Temporary error (WebSpeed error)')
-        return rate_response
-      end
-
-      rate_response.error = case response.code
-                            when 200 then nil
-                            when 400 then DocumentNotFoundError.new
-                            else
-                              ResponseError.new("HTTP #{response.code}")
-                            end
-
+      rate_response.error = map_response_errors(response)
       return rate_response if rate_response.error.present?
       
       error = response.dig('error', 'errormessage')
