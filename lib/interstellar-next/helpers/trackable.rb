@@ -26,7 +26,12 @@ module Interstellar
 
       return response if response.is_a?(TrackingResponse)
 
-      parse_tracking_response(response)
+      begin
+        parse_tracking_response(response)
+      rescue ArgumentError
+        # Carrier Logistics requires tracking number argument
+        parse_tracking_response(tracking_number, response:)
+      end
     end
   end
 end
