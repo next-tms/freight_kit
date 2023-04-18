@@ -38,13 +38,13 @@ module Interstellar
     # Documents
 
     def pod(tracking_number)
-      query = build_tracking_query(tracking_number)
+      query = build_tracking_request(tracking_number)
       response = commit(:track, query)
       parse_document_response(response, :pod)
     end
 
     def scanned_bol(tracking_number)
-      query = build_tracking_query(tracking_number)
+      query = build_tracking_request(tracking_number)
       response = commit(:track, query)
       parse_document_response(response, :bol)
     end
@@ -123,7 +123,7 @@ module Interstellar
 
     # Tracking
 
-    def build_tracking_query(tracking_number)
+    def build_tracking_request(tracking_number)
       api_credentials = fetch_credential(:api)
 
       { pronum: tracking_number, xmlpass: api_credentials.password, xmluser: api_credentials.username }
@@ -293,7 +293,7 @@ module Interstellar
       description.squish
     end
 
-    def build_rate_query(shipment:)
+    def build_rate_request(shipment:)
       api_credentials = fetch_credential(:api)
 
       query = {
