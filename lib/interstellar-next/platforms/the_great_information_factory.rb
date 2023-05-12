@@ -326,12 +326,14 @@ module Interstellar
       api_events = [api_events] if api_events.is_a?(Hash)
 
       api_events.each_with_index do |api_event, index|
+        next unless api_event[:description].present?
+
         event = nil
         @conf.dig(:events, :types).each do |key, val|
-          if api_event[:description].downcase.include? val
-            event = key
-            break
-          end
+          next unless api_event[:description].downcase.include?(val)
+
+          event = key
+          break
         end
         next if event.blank?
 
