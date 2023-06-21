@@ -213,15 +213,10 @@ module Interstellar
       api_events = [api_events] if api_events.is_a?(Hash)
 
       shipment_events = api_events.map do |api_event|
-        api_event_key = api_event[:histcode].downcase
+        hist_code = api_event[:histcode]
+        next if hist_code.blank?
 
-        event = nil
-        conf.dig(:events, :types).each_key do |key|
-          next unless conf.dig(:events, :types, key) == api_event_key
-
-          event = key
-        end
-
+        event = conf.dig(:events, :types).key(hist_code.downcase)
         next if event.blank?
 
         location = if api_event[:histremarks].match?(/, \w{2}/) # ends in state abbreviation
@@ -343,7 +338,7 @@ module Interstellar
 
       rate_response.error = map_response_errors(response)
       return rate_response if rate_response.error.present?
-      
+
       error = response.dig('error', 'errormessage')
 
       unless error.blank?
