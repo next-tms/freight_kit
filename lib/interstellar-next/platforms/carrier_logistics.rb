@@ -202,47 +202,75 @@ module Interstellar
         return tracking_response
       end
 
-      actual_delivery_date = nil
-      destination = nil
-      estimated_delivery_date = nil
-      origin = nil
+      origin = Location.new(
+        address1: response.dig(:protrace, :shipaddr)&.titleize,
+        address2: response.dig(:protrace, :shipaddr2)&.titleize,
+        city: response.dig(:protrace, :origcity)&.titleize,
+        province: response.dig(:protrace, :origstate)&.upcase,
+        country: ActiveUtils::Country.find('USA')
+      )
+
+      destination = Location.new(
+        address1: response.dig(:protrace, :consaddr)&.titleize,
+        address2: response.dig(:protrace, :consaddr2)&.titleize,
+        city: response.dig(:protrace, :destcity)&.titleize,
+        province: response.dig(:protrace, :deststate)&.upcase,
+        country: ActiveUtils::Country.find('USA')
+      )
+
+      deldateiso = response.dig(:protrace, :deldateiso)
+      actual_delivery_date = (parse_api_date(deldateiso, destination) if deldateiso.present?)
+
+      estdeliverydateiso = response.dig(:protrace, :estdeliverydateiso)
+      estdeliverytimestart = response.dig(:protrace, :estdeliverytimestart)
+      estimated_delivery_date = if estdeliverydateiso.present? && estdeliverytimestart.present?
+                                  parse_api_date_time([estdeliverydateiso, estdeliverytimestart].join(' '), destination)
+                                elsif estdeliverydateiso.present?
+                                  parse_api_date(estdeliverydateiso, destination)
+                                end
+
       scheduled_delivery_date = nil
       ship_time = nil
 
       api_events = response.dig(:protrace, :shiphists, :shiphist)
       api_events = [api_events] if api_events.is_a?(Hash)
 
-      shipment_events = api_events.map do |api_event|
-        hist_code = api_event[:histcode]
+      last_location = origin
+
+      shipment_events = api_events.reverse.map do |api_event|
+        hist_code = api_event[:histcode]&.downcase
         next if hist_code.blank?
 
-        event = conf.dig(:events, :types).key(hist_code.downcase)
+        event = conf.dig(:events, :types).key(hist_code)
         next if event.blank?
 
-        location = if api_event[:histremarks].match?(/, \w{2}/) # ends in state abbreviation
+        remarks = api_event[:histremarks]
+
+        location = if remarks.present? && remarks.match?(/, \w{2}/) # ends in state abbreviation
                      parse_api_city_state(api_event[:histremarks])
                    end
 
-        date_time = if api_event[:histdate].present? && api_event[:histtime].present?
-                      parse_api_date_time("#{api_event[:histdate]} #{api_event[:histtime]}", location)
-                    else
-                      parse_api_date(api_event[:histdate], location)
+        location ||= case event
+                     when :delivered then destination
+                     when :departed then last_location
+                     when :picked_up, :pickup_scheduled then origin
+                     end
+
+        date = api_event[:histdate]
+        time = api_event[:histtime]
+
+        date_time = if [date, time].all?(&:present?)
+                      parse_api_date_time([date, time].join(' '), location)
+                    elsif date.present?
+                      parse_api_date(date, location)
                     end
 
-        case event
-        when :delivered
-          actual_delivery_date = date_time
-          estimated_delivery_date = actual_delivery_date
-          destination = location
-        when :picked_up
-          origin = location
-          ship_time = date_time
-        end
+        last_location = location
 
         ShipmentEvent.new(location:, date_time:, type_code: event)
       end
+
       shipment_events.compact!
-      shipment_events.reverse!
 
       status = shipment_events.last&.type_code
 
