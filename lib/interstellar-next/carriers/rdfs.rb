@@ -221,7 +221,7 @@ module Interstellar
       shipment.packages.each do |package|
         longest_dimension = [package.width(:inches), package.length(:inches)].max.ceil
 
-        next unless longest_dimension > 96
+        next unless longest_dimension >= 96
 
         package.quantity.times do
           if longest_dimension >= 240
