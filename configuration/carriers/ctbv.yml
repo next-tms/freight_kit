@@ -61,21 +61,20 @@
   # May be inaccurate
   :unquotable:
     - :athletic_facility_delivery
-    - :athletic_facility_delivery: false
-    - :athletic_facility_pickup: false
-    - :dock_dropoff: false
-    - :dock_pickup: false
-    - :grocery_store_delivery: false
-    - :grocery_store_pickup: false
-    - :hospital_delivery: false
-    - :hospital_pickup: false
-    - :mall_delivery: false
-    - :motel_delivery: false
-    - :motel_pickup: false
-    - :restaurant_delivery: false
-    - :restaurant_pickup: false
-    - :steel_mill_delivery: false
-    - :steel_mill_pickup: false
+    - :athletic_facility_pickup
+    - :dock_dropoff
+    - :dock_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
+    - :hospital_delivery
+    - :hospital_pickup
+    - :mall_delivery
+    - :motel_delivery
+    - :motel_pickup
+    - :restaurant_delivery
+    - :restaurant_pickup
+    - :steel_mill_delivery
+    - :steel_mill_pickup
   # May be inaccurate
   :unserviceable:
     - :appointment_pickup

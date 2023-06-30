@@ -339,16 +339,19 @@ module Interstellar
       end
 
       accessorials = []
-      unless shipment.accessorials.blank?
+
+      if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
-        shipment.accessorials.each do |a|
-          next if @conf.dig(:accessorials, :unserviceable).include?(a)
 
-          conf_acc = @conf.dig(:accessorials, :mappable)[a]
+        shipment
+        .accessorials
+        .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
+        .each do |shipment_accessorial|
+          conf_accessorial = conf.dig(:accessorials, :mappable, shipment_accessorial)
 
-          case conf_acc
-          when Array then conf_acc.each { |c| accessorials << c }
-          when String then accessorials << conf_acc
+          case conf_accessorial
+          when Array then accessorials += conf_accessorial
+          when String then accessorials << conf_accessorial
           end
         end
       end
@@ -356,7 +359,7 @@ module Interstellar
       calculated_accessorials = build_calculated_accessorials(shipment.packages, shipment.origin, shipment.destination)
       accessorials += calculated_accessorials unless calculated_accessorials.blank?
 
-      accessorials.uniq.each { |accessorial| query[accessorial] = 'Yes' } if accessorials.any?
+      accessorials.uniq.compact.each { |accessorial| query[accessorial] = 'Yes' } if accessorials.any?
 
       query
     end
