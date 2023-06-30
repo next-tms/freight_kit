@@ -206,13 +206,16 @@ module Interstellar
         # service_options: { service_code: 'SS' }
       ]
 
-      unless shipment.accessorials.blank?
+      if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
-        shipment.accessorials.each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            service_delivery_options << { service_options: { service_code: @conf.dig(:accessorials, :mappable)[a] } }
-          end
-        end
+
+        service_delivery_options = shipment
+                                   .accessorials
+                                   .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
+                                   .map do |shipment_accessorial|
+                                     { service_options: { service_code: conf.dig(:accessorials, :mappable,
+                                                                                 shipment_accessorial) } }
+                                   end
       end
 
       shipment.packages.each do |package|
