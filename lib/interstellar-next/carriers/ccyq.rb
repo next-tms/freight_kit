@@ -95,7 +95,13 @@ module Interstellar
       # Tracking Endpoint returns Images for the Shipment
       request = build_request(:track, query: { ReferenceNum: tracking_number })
       response = commit(type, request)
+
       document_response = DocumentResponse.new
+
+      unless response
+        document_response.error = DocumentNotFoundError.new
+        return document_response
+      end
 
       # API response sometimes returns an array
       response = response.first if response.is_a?(Array)
