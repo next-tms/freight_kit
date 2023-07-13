@@ -1,10 +1,11 @@
 :accessorials:
+  # See https://api.customco.com/scripts/cgiip.exe/keywordlist.xml
   :mappable:
     :airport_delivery: 'LA'
     :airport_pickup: 'LA'
     :amusement_park_delivery: 'LA'
     :amusement_park_pickup: 'LA'
-    :appointment_delivery: 'NOTIFY'
+    :appointment_delivery: 'APPT'
     :cemetery_delivery: 'LA'
     :cemetery_pickup: 'LA'
     :church_delivery: 'LA'
@@ -19,8 +20,12 @@
     :golf_course_pickup: 'LA'
     :government_delivery: 'LA'
     :government_pickup: 'LA'
+    :grocery_warehouse_delivery: 'GWF'
+    :grocery_warehouse_pickup: 'GWF'
     :hotel_delivery: 'LA'
     :hotel_pickup: 'LA'
+    :inside_delivery: 'INSIDE'
+    :inside_pickup: 'INSIDE'
     :inspection_site_delivery: 'LA'
     :inspection_site_pickup: 'LA'
     :jobsite_delivery: 'CS'
@@ -50,14 +55,12 @@
     :resort_pickup: 'LA'
     :school_delivery: 'LA'
     :school_pickup: 'LA'
-    :university_delivery: 'LA'
-    :university_pickup: 'LA'
     :storage_facility_delivery: 'LA'
     :storage_facility_pickup: 'LA'
+    :university_delivery: 'LA'
+    :university_pickup: 'LA'
     :utility_site_delivery: 'LA'
     :utility_site_pickup: 'LA'
-    :inside_delivery: 'INSIDE'
-    :inside_pickup: 'INSIDE'
   # May be inaccurate
   :unquotable:
     - :athletic_facility_delivery
@@ -89,8 +92,6 @@
     - :fair_pickup
     - :flatbed_delivery
     - :flatbed_pickup
-    - :grocery_warehouse_delivery
-    - :grocery_warehouse_pickup
     - :guaranteed_delivery_am
     - :guaranteed_delivery_pm
     - :guaranteed_delivery
