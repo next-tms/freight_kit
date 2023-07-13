@@ -97,7 +97,7 @@
     - :winery_delivery
     - :winery_pickup
 :api:
-  :domain: www.customco.com
+  :domain: api.customco.com
   :endpoints:
     :bol: /scripts/cgiip.exe/web-login.htm?
     :pod: /scripts/cgiip.exe/web-login.htm?
