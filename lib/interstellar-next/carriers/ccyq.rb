@@ -105,7 +105,7 @@ module Interstellar
 
       # API response sometimes returns an array
       response = response.first if response.is_a?(Array)
-      document = response['Images'].find { |image| image['DocumentType'] == type.upcase }
+      document = response['Images']&.find { |image| image['DocumentType'] == type.upcase }
 
       unless document
         document_response.error = DocumentNotFoundError.new
