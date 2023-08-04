@@ -26,9 +26,9 @@ module Interstellar
 
       return response if response.is_a?(TrackingResponse)
 
-      begin
+      if method(:parse_tracking_response).parameters.count == 1
         parse_tracking_response(response)
-      rescue ArgumentError
+      else
         # Carrier Logistics requires tracking number argument
         parse_tracking_response(tracking_number, response:)
       end

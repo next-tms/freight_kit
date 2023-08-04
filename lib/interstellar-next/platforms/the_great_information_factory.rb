@@ -349,7 +349,7 @@ module Interstellar
                    end
 
         api_date_time = "#{api_event[:date]} #{api_event[:time]}"
-        date_time = parse_api_date_time(api_date_time, location)
+        date_time = api_event[:date].present? ? parse_api_date_time(api_date_time, location) : nil
 
         case event
         when :arrived_at_terminal
@@ -377,9 +377,11 @@ module Interstellar
 
       shipment_events << picked_up_event
 
-      shipment_events = shipment_events.sort_by do |shipment_event|
-        d = shipment_event.date_time
-        d&.local_date_time || d.date_time_with_zone&.to_fs(:db) || d.local_date&.to_fs(:db)
+      unless shipment_events.collect(&:date_time).any?(nil)
+        shipment_events = shipment_events.sort_by do |shipment_event|
+          d = shipment_event.date_time
+          d&.local_date_time || d.date_time_with_zone&.to_fs(:db) || d.local_date&.to_fs(:db)
+        end
       end
 
       status = shipment_events.last&.type_code
