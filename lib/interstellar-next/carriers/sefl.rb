@@ -117,11 +117,19 @@ module Interstellar
     # Rates
     def build_rate_request(shipment:)
       accessorials = []
-      unless shipment.accessorials.blank?
+
+      if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
-        shipment.accessorials.each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            accessorials << @conf.dig(:accessorials, :mappable)[a]
+
+        shipment
+          .accessorials
+          .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
+          .each do |shipment_accessorial|
+          conf_accessorial = conf.dig(:accessorials, :mappable, shipment_accessorial)
+
+          case conf_accessorial
+          when Array then accessorials += conf_accessorial
+          when String then accessorials << conf_accessorial
           end
         end
       end
@@ -129,7 +137,8 @@ module Interstellar
       longest_dimension = shipment.packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
       accessorials << 'chkOD' if longest_dimension >= 96
 
-      accessorials = accessorials.uniq
+      accessorials.uniq!
+
       pickup_on = Date.current
       shipment_description = shipment.packages.map(&:description).reject(&:blank?).uniq.join(', ')
       shipment_description = 'Freight All Kinds' if shipment_description.blank?
@@ -165,28 +174,16 @@ module Interstellar
       }
 
       declared_value = if shipment.declared_value_cents.blank?
-                         '0'
+                         0
                        else
-                         format('%.2f', (shipment.declared_value_cents.to_f / 100).ceil)
+                         (shipment.declared_value_cents.to_f / 100).ceil
                        end
 
-      unless declared_value.blank?
-        body = body.deep_merge(
-          {
-            chkIN: 'on',
-            FVInsuranceAmount: declared_value
-          }
-        )
+      if declared_value.positive?
+        body.deep_merge!({ chkIN: 'on',
+                           FVInsuranceAmount: format('%.2f', declared_value) })
       end
-
-      if longest_dimension >= 96
-        body = body.deep_merge(
-          {
-            ODLength: longest_dimension,
-            ODLengthUnit: 'I'
-          }
-        )
-      end
+      body.deep_merge!({ ODLength: longest_dimension, ODLengthUnit: 'I' }) if longest_dimension >= 96
 
       cubic_ft_required = shipment.destination.province.upcase == 'PR'
 
@@ -206,7 +203,11 @@ module Interstellar
         end
       end
 
-      body = body.deep_merge({ accessorial: 'on' }) unless accessorials.blank?
+      if accessorials.any?
+        body[:accessorial] = 'on'
+
+        accessorials.each { |accessorial| body[accessorial] = 'on' }
+      end
 
       request = build_request(:rates, body:)
       save_request(request)
