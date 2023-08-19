@@ -94,9 +94,6 @@ module Interstellar
     end
 
     def build_access_token
-      cached_token = Rails.cache.read('tqyl_access_token')
-      return cached_token if cached_token
-
       url = build_url(:auth)
       credentials = fetch_credential(:api)
 
@@ -111,10 +108,7 @@ module Interstellar
       request = build_request(:auth, query: request_body)
       response = commit(request)
 
-      token = response['access_token']
-      Rails.cache.write('tqyl_access_token', token, expires_in: 30.minutes)
-
-      token
+      response['access_token']
     end
 
     def subscription_key_headers
@@ -330,13 +324,15 @@ module Interstellar
       rates = []
 
       response.dig('content', 'carrierPrices').each do |response_line|
+
+        rate_in_cents = (response_line['customerRate'].to_f * 100).round
         rates <<  Rate.new(
           carrier_name: response_line['carrier'],
           carrier: self,
           currency: 'USD',
           estimate_reference: response_line['id'],
           prices: [
-            Price.new(blame: :api, cents: response_line['customerRate'], description: response_line['CarrierName'])
+            Price.new(blame: :api, cents: rate_in_cents, description: response_line['CarrierName'])
           ],
           scac: response_line['scac'],
           service_name: :standard,
