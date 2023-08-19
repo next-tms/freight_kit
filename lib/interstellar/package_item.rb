@@ -1,6 +1,8 @@
-module Interstellar #:nodoc:
+# frozen_string_literal: true
+
+module Interstellar # :nodoc:
   class PackageItem
-    attr_reader :sku, :hs_code, :value, :name, :weight, :quantity, :options
+    attr_reader :sku, :hs_code, :value, :name, :quantity, :options
 
     def initialize(name, grams_or_ounces, value, quantity, options = {})
       @name = name
@@ -10,7 +12,10 @@ module Interstellar #:nodoc:
       @unit_system = imperial ? :imperial : :metric
 
       @weight = grams_or_ounces
-      @weight = Measured::Weight.new(grams_or_ounces, (@unit_system == :imperial ? :oz : :g)) unless @weight.is_a?(Measured::Weight)
+      @weight = Measured::Weight.new(
+        grams_or_ounces,
+        (@unit_system == :imperial ? :oz : :g),
+      ) unless @weight.is_a?(Measured::Weight)
 
       @value = Package.cents_from(value)
       @quantity = quantity > 0 ? quantity : 1
@@ -30,7 +35,7 @@ module Interstellar #:nodoc:
           @unit_system == :imperial ? m.in_ounces : m
         end
       when :billable
-        [weight, weight(:type => :volumetric)].max
+        [weight, weight(type: :volumetric)].max
       end
     end
     alias_method :mass, :weight

@@ -7,18 +7,15 @@ module Interstellar
     def initialize(body:, code:)
       @body = body
       @code = code
+
+      super(message)
     end
 
     def message
-      return @message if @message
-
-      @message = "HTTP error (#{@code})"
-      @message += ": #{@body}" unless @body.blank?
-      @message
-    end
-
-    def to_s
-      message
+      @message ||= ''.tap do |builder|
+        builder << "HTTP #{@code}"
+        builder << ":\n#{@body}" if @body.present?
+      end
     end
 
     def to_hash

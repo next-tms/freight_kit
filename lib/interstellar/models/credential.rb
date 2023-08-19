@@ -73,15 +73,15 @@ module Interstellar
       hash.each do |k, _v|
         next if k == :type
 
-        singleton_class.class_eval { attr_accessor k.to_s } unless singleton_class.respond_to?(k)
+        singleton_class.class_eval { attr_accessor(k.to_s) } unless singleton_class.respond_to?(k)
       end
 
       super
     end
 
     def selenoid_options
-      return nil unless type == :selenoid
-      return @selenoid_options unless @selenoid_options.blank?
+      return unless type == :selenoid
+      return @selenoid_options if @selenoid_options.present?
 
       download_url = base_url.dup
       download_url.path = '/download'
@@ -91,27 +91,27 @@ module Interstellar
     end
 
     def watir_args
-      return nil unless type == :selenoid
-      return @watir_args unless @watir_args.blank?
+      return unless type == :selenoid
+      return @watir_args if @watir_args.present?
 
       url = base_url.dup
       url.path = '/wd/hub/'
       url = url.to_s
 
       @watir_args = [
-        browser,
-        {
-          options: {
-            prefs: {
-              download: {
-                directory_upgrade: true,
-                prompt_for_download: false
-              }
-            }
-          },
-          url:
-        }
-      ]
+                      browser,
+                      {
+                        options: {
+                          prefs: {
+                            download: {
+                              directory_upgrade: true,
+                              prompt_for_download: false
+                            }
+                          }
+                        },
+                        url:
+                      },
+                    ]
     end
   end
 end

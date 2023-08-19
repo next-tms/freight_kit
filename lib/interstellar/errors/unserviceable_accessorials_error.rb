@@ -6,10 +6,12 @@ module Interstellar
 
     def initialize(accessorials:)
       @accessorials = accessorials
+
+      super(message)
     end
 
     def message
-      "Unable to service #{@accessorials.map { |accessorial| accessorial.to_s.gsub('_', ' ') }.join(', ')}"
+      @message ||= "Unable to service #{@accessorials.map { |accessorial| accessorial.to_s.gsub("_", " ") }.join(", ")}"
     end
   end
 end

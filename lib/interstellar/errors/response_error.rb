@@ -5,7 +5,7 @@ module Interstellar
     attr_reader :response
 
     def initialize(response = nil)
-      if response.is_a? Response
+      if response.is_a?(Response)
         super(response.message)
         @response = response
       else

@@ -92,7 +92,7 @@ module Interstellar
     end
 
     def time_zone
-      return nil if country&.code(:alpha2)&.blank? || province.blank? || city.blank?
+      return if country&.code(:alpha2)&.blank? || province.blank? || city.blank?
 
       Spacetime.lookup(country.code(:alpha2).to_s, province, city)
     end
@@ -100,7 +100,7 @@ module Interstellar
     def type=(value)
       return @type = nil if value.blank?
 
-      raise ArgumentError, "type must be one of :#{TYPES.join(', :')}" unless TYPES.include?(value)
+      raise ArgumentError, "type must be one of :#{TYPES.join(", :")}" unless TYPES.include?(value)
 
       @type = value
     end
