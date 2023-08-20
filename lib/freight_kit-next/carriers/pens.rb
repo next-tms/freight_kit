@@ -61,14 +61,14 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action)
+        soap_operation: @conf.dig(:api, :actions, action),
       ).call
     end
 
     def parse_amount(amount)
       negative = amount.start_with?('-$') || amount.start_with?('-')
 
-      %w[$ - ,].each do |char|
+      ['$', '-', ','].each do |char|
         amount = amount.sub(char, '')
       end
 
@@ -89,7 +89,7 @@ module FreightKit
 
     # Rates
     def build_rate_request(shipment:)
-      raise UnserviceableError, 'Unable to quote accessorials over API' unless shipment.accessorials.blank?
+      raise UnserviceableError, 'Unable to quote accessorials over API' if shipment.accessorials.present?
 
       api_credentials = fetch_credential(:api)
 
@@ -124,7 +124,7 @@ module FreightKit
 
       error = response.dig(:create_pens_rate_quote_response, :create_pens_rate_quote_result, :errors, :message)
 
-      unless error.blank?
+      if error.present?
         if error.include?('[RatingService.ValidateZipCodes]')
           rate_response.error = UnserviceableError.new('Origin or destination has no service available')
         end
@@ -156,7 +156,7 @@ module FreightKit
       prices << Price.new(
         blame: :api,
         cents: parse_amount(result.dig(:quote, :gross_charge)),
-        description: 'Charge based on class and weight'
+        description: 'Charge based on class and weight',
       )
 
       accessorial_details = result.dig(:quote, :accessorial_detail)
@@ -168,20 +168,20 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents: parse_amount(accessorial_item[:charge]),
-          description: accessorial_item[:description]&.capitalize
+          description: accessorial_item[:description]&.capitalize,
         )
       end
 
       prices << Price.new(
         blame: :api,
         cents: parse_amount(result.dig(:quote, :discount_amount)),
-        description: 'Discount'
+        description: 'Discount',
       )
 
       prices << Price.new(
         blame: :api,
         cents: parse_amount(result.dig(:quote, :fsc_amount)),
-        description: 'Fuel surcharge'
+        description: 'Fuel surcharge',
       )
 
       rate = Rate.new(
@@ -194,7 +194,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]

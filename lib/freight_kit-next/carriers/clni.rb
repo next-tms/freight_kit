@@ -3,7 +3,8 @@
 module FreightKit
   class CLNI < FreightKit::Carrier
     class << self
-      # @note Explicitly set to `false` because though API allows this, it "doesn't quote correctly" per customer service
+      # @note Explicitly set to `false` because though API allows this, it "doesn't quote correctly" per customer
+      # service
       def find_rates_with_declared_value?
         false
       end
@@ -86,7 +87,7 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action)
+        soap_operation: @conf.dig(:api, :actions, action),
       ).call&.to_hash&.with_indifferent_access
     end
 
@@ -151,9 +152,9 @@ module FreightKit
 
       browser.text_field(name: 'txtToDate').click
       browser
-        .element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div')
-        .wait_until(&:present?)
-        .click
+      .element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div')
+      .wait_until(&:present?)
+      .click
 
       browser.button(name: 'btnSubmit').click
 
@@ -171,9 +172,9 @@ module FreightKit
       end
 
       browser
-        .element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a')
-        .wait_until(&:present?)
-        .click
+      .element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a')
+      .wait_until(&:present?)
+      .click
 
       browser.switch_window
 
@@ -255,7 +256,7 @@ module FreightKit
 
     def build_rate_request(shipment:)
       accessorial_input = []
-      unless shipment.accessorials.blank?
+      if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
@@ -268,8 +269,8 @@ module FreightKit
 
       commodity_input = build_commodity_input(shipment.packages)
 
-      pickup_from = ::DateTime.current.beginning_of_day + 14.hours
-      pickup_from += 1.day if ::DateTime.current > pickup_from
+      pickup_from = ::Time.current.beginning_of_day + 14.hours
+      pickup_from += 1.day if ::Time.current > pickup_from
       pickup_to = pickup_from + 3.hours
 
       api_credentials = fetch_credential(:api)
@@ -316,10 +317,10 @@ module FreightKit
 
       error = response.dig(:get_rating_response, :get_rating_result, :rating_output, :message)
 
-      unless error.blank?
+      if error.present?
         if error.include?('do not service this lane')
           rate_response.error = UnserviceableError.new(
-            'Incorrect ZIP code or no service available at origin and/or destination'
+            'Incorrect ZIP code or no service available at origin and/or destination',
           )
           return rate_response
         end
@@ -353,7 +354,7 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents: 0,
-          description: accessorial_output_description(accessorial_output)
+          description: accessorial_output_description(accessorial_output),
         )
       end
 
@@ -369,7 +370,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]
@@ -385,7 +386,7 @@ module FreightKit
     end
 
     def parse_amount(amount)
-      %w[$ ,].each do |char|
+      ['$', ','].each do |char|
         amount = amount.sub(char, '')
       end
 

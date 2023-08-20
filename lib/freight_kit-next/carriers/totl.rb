@@ -107,26 +107,26 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents:,
-          description: ratequote_line_description(ratequote_line)
+          description: ratequote_line_description(ratequote_line),
         )
       end
 
       prices = [
-        Price.new(
-          blame: :api,
-          cents: total_cents - prices.sum(&:cents),
-          description: 'Freight'
-        )
-      ] + prices
+                 Price.new(
+                   blame: :api,
+                   cents: total_cents - prices.sum(&:cents),
+                   description: 'Freight',
+                 ),
+               ] + prices
 
       # Carrier-specific pricing structure
       oversized_pallets_cents = 0
 
       shipment.packages.each do |package|
         short_side, long_side = nil
-        if !package.length(:in).blank? && !package.width(:in).blank? && !package.height(:in).blank?
-          long_side = package.length(:in) > package.width(:in) ? package.length(:in) : package.width(:in)
-          short_side = package.length(:in) < package.width(:in) ? package.length(:in) : package.width(:in)
+        if package.length(:in).present? && package.width(:in).present? && package.height(:in).present?
+          long_side = [package.length(:in), package.width(:in)].max
+          short_side = [package.length(:in), package.width(:in)].min
         end
 
         next unless short_side &&
@@ -141,31 +141,31 @@ module FreightKit
         oversized_pallets_cents += 1500
       end
 
-      unless oversized_pallets_cents.zero?
+      if oversized_pallets_cents.nonzero?
         prices << Price.new(
           blame: :library,
           cents: oversized_pallets_cents,
-          description: 'Overlength fees'
+          description: 'Overlength fees',
         )
       end
 
       RateResponse.new(
         rates: [
-          Rate.new(
-            carrier: self,
-            carrier_name: self.class.name,
-            currency: 'USD',
-            estimate_reference:,
-            scac: self.class.scac.upcase,
-            service_name: :standard,
-            shipment:,
-            prices:,
-            transit_days:,
-            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
-          )
-        ],
+                 Rate.new(
+                   carrier: self,
+                   carrier_name: self.class.name,
+                   currency: 'USD',
+                   estimate_reference:,
+                   scac: self.class.scac.upcase,
+                   service_name: :standard,
+                   shipment:,
+                   prices:,
+                   transit_days:,
+                   with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+                 ),
+               ],
         request: last_request,
-        response:
+        response:,
       )
     end
   end

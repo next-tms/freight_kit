@@ -1,20 +1,11 @@
+inherit_from: .rubocop_todo.yml
+
+inherit_gem:
+  rubocop-next: rubocop.yml
+
 AllCops:
-  NewCops: enable
+  TargetRubyVersion: 3.2.0
 
-Layout/LineLength:
-  Max: 120
-
-Lint/UnusedMethodArgument:
-  Enabled: false
-
-Metrics/AbcSize:
-  Max: 35
-
-Metrics/MethodLength:
-  Max: 30
-
-Metrics/ModuleLength:
-  Max: 150
-
-Style/ModuleFunction:
-  EnforcedStyle: extend_self
+Naming/FileName:
+  Exclude:
+    - 'lib/freight_kit-next.rb'

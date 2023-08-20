@@ -34,7 +34,7 @@ module FreightKit
     @@name = 'Total Quality Logistics'
     @@scac = 'TQYL'
 
-    API_SCOPE = "https://tqlidentity.onmicrosoft.com/services_combined/LTLQuotes.Tender".freeze
+    API_SCOPE = 'https://tqlidentity.onmicrosoft.com/services_combined/LTLQuotes.Tender'
 
     include FreightKit::Rateable
     include FreightKit::Trackable
@@ -47,34 +47,33 @@ module FreightKit
     end
 
     def build_request(action, body: {}, query: {})
-      api_key = fetch_credential(:api).api_key
+      fetch_credential(:api).api_key
 
       request = {
         url: build_url(action),
         method: @conf.dig(:api, :methods, action),
         headers: {},
         body:,
-        query:,
+        query:
       }.compact
 
-      request[:headers] = { "Authorization" => "Bearer #{build_access_token}"} unless action == :auth
+      request[:headers] = { 'Authorization' => "Bearer #{build_access_token}" } unless action == :auth
 
       save_request(request)
       request
     end
 
     def commit(request)
-      
       response = HTTParty.send(
         request[:method],
         request[:url],
         headers: request[:headers].merge(subscription_key_headers),
         query: request[:query],
         body: request[:body],
-        debug_output: $stdout
+        debug_output: $stdout,
       )
 
-      unless [200, 201].include? response.code
+      unless [200, 201].include?(response.code)
         message = begin
           parsed_response = JSON.parse(response.body)
           if parsed_response.is_a?(String)
@@ -89,12 +88,11 @@ module FreightKit
         raise FreightKit::ResponseError, message
       end
 
-      
       JSON.parse(response.body)
     end
 
     def build_access_token
-      url = build_url(:auth)
+      build_url(:auth)
       credentials = fetch_credential(:api)
 
       request_body = {
@@ -112,8 +110,8 @@ module FreightKit
     end
 
     def subscription_key_headers
-      { 
-        "Ocp-Apim-Subscription-Key" => fetch_credential(:api).account,
+      {
+        'Ocp-Apim-Subscription-Key' => fetch_credential(:api).account,
         'Content-Type' => 'application/json'
       }
     end
@@ -121,13 +119,12 @@ module FreightKit
     # Tracking
 
     def build_tracking_request(tracking_number)
-      
       request = {
-        url: build_url(:track).gsub("%TRACKING_NUMBER%", tracking_number.to_s),
+        url: build_url(:track).gsub('%TRACKING_NUMBER%', tracking_number.to_s),
         method: @conf.dig(:api, :methods, :track),
-        headers: { "Authorization" => "Bearer #{build_access_token}"},
+        headers: { 'Authorization' => "Bearer #{build_access_token}" }
       }.compact
- 
+
       save_request(request)
       request
     end
@@ -164,7 +161,7 @@ module FreightKit
         shipment_events << ShipmentEvent.new(
           date_time: api_event['time'],
           location: Location.new(city: api_event['city'], province: api_event['state'], country:),
-          type_code: event
+          type_code: event,
         )
       end
 
@@ -177,7 +174,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:
+        tracking_number:,
       )
     end
 
@@ -231,7 +228,7 @@ module FreightKit
             hoursOpen: delivery_from.strftime('%I:%M %p'),
             hoursClosed: delivery_to.strftime('%I:%M %p')
           }
-        }
+        },
       )
     end
 
@@ -304,7 +301,7 @@ module FreightKit
           },
           shipmentDate: shipment.pickup_at.date_time_with_zone.iso8601,
           quoteCommodities: build_commodities(shipment)
-        }.to_json
+        }.to_json,
       )
     end
 
@@ -324,21 +321,20 @@ module FreightKit
       rates = []
 
       response.dig('content', 'carrierPrices').each do |response_line|
-
         rate_in_cents = (response_line['customerRate'].to_f * 100).round
-        rates <<  Rate.new(
+        rates << Rate.new(
           carrier_name: response_line['carrier'],
           carrier: self,
           currency: 'USD',
           estimate_reference: response_line['id'],
           prices: [
-            Price.new(blame: :api, cents: rate_in_cents, description: response_line['CarrierName'])
-          ],
+                    Price.new(blame: :api, cents: rate_in_cents, description: response_line['CarrierName']),
+                  ],
           scac: response_line['scac'],
           service_name: :standard,
           shipment:,
           transit_days: response_line['transitDays'],
-          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
         )
       end
 

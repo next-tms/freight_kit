@@ -103,7 +103,7 @@ module FreightKit
         pickup_to:,
         scac:,
         service:,
-        shipment:
+        shipment:,
       )
 
       labels = parse_shipment_response(commit(request))
@@ -116,7 +116,7 @@ module FreightKit
         pickup_to:,
         scac:,
         service:,
-        shipment:
+        shipment:,
       )
 
       parse_pickup_response(response: commit(request), labels:)
@@ -148,7 +148,7 @@ module FreightKit
       url = url.gsub('%ACCOUNT_NUMBER%', api_credentials.account)
 
       url += "?pw=#{api_credentials.api_key}"
-      url << "&#{options[:params]}" unless options[:params].blank?
+      url << "&#{options[:params]}" if options[:params].present?
 
       url
     end
@@ -181,7 +181,7 @@ module FreightKit
     end
 
     def serviceable_states?(states)
-      valid_states = %w[AZ CA CO ID NV OR UT WA]
+      valid_states = ['AZ', 'CA', 'CO', 'ID', 'NV', 'OR', 'UT', 'WA']
 
       invalid_states = []
       states.each do |state|
@@ -190,7 +190,7 @@ module FreightKit
 
       return true if invalid_states.blank?
 
-      raise FreightKit::UnserviceableError, "No service to #{invalid_states.join(', ')}"
+      raise FreightKit::UnserviceableError, "No service to #{invalid_states.join(", ")}"
     end
 
     # Documents
@@ -314,7 +314,7 @@ module FreightKit
               },
               UID: SecureRandom.uuid,
               Weight: package.pounds(:each).ceil
-            }
+            },
           )
         end
       end
@@ -342,7 +342,7 @@ module FreightKit
 
       error = response.dig('OnTracPickupResponse', 'Error')
 
-      unless error.blank?
+      if error.present?
         pickup_response.error = FreightKit::ResponseError.new(error.capitalize)
         return pickup_response
       end
@@ -367,7 +367,7 @@ module FreightKit
         error = response.dig('OnTracShipmentResponse', 'Shipments', 'Shipment', 'Error')
       end
 
-      unless error.blank?
+      if error.present?
         error = error.capitalize
 
         raise FreightKit::InvalidCredentialsError, error if error.downcase.include?('invalid username')
@@ -406,9 +406,12 @@ module FreightKit
 
       dim_weights_too_heavy = shipment.packages.map(&:dim_weight).select { |w| w > self.class.maximum_weight.value }
 
-      unless dim_weights_too_heavy.empty?
-        raise FreightKit::UnserviceableError,
-              "Dimensional weight(s) of #{dim_weights_too_heavy.map(&:round).join('lbs, ')} lbs more than maximum of #{self.class.maximum_weight.value.round} lbs"
+      if dim_weights_too_heavy.any?
+        message = <<~MESSAGE.squish
+          Dimensional weight(s) of #{dim_weights_too_heavy.map(&:round).join("lbs, ")} lbs more than maximum of
+          #{self.class.maximum_weight.value.round} lbs
+        MESSAGE
+        raise FreightKit::UnserviceableError, message
       end
 
       params = ''.dup
@@ -468,7 +471,7 @@ module FreightKit
         error = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Rates', 'Rate', 'Error')
       end
 
-      unless error.blank?
+      if error.present?
         error = error.capitalize
 
         if error.downcase.include?('invalid username')
@@ -520,7 +523,7 @@ module FreightKit
         service_name: :standard,
         shipment:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]

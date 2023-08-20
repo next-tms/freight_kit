@@ -25,12 +25,12 @@ module FreightKit
     REACTIVE_FREIGHT_PLATFORM = true
 
     EXPIRED_CREDENTIALS_MESSAGES = [
-      'Your password has expired'
-    ].freeze
+                                     'Your password has expired',
+                                   ].freeze
     INVALID_CREDENTIALS_MESSAGES = [
-      'Unable to log in',
-      'Your Username or Password is Incorrect'
-    ].freeze
+                                     'Unable to log in',
+                                     'Your Username or Password is Incorrect',
+                                   ].freeze
 
     include FreightKit::Trackable
     include FreightKit::Rateable
@@ -72,7 +72,8 @@ module FreightKit
     def map_response_errors(response, not_found_error: DocumentNotFoundError)
       return ResponseError.new('Unknown response') if response.blank?
 
-      webspeed_error = (response.is_a?(String) || response.is_a?(HTTParty::Response)) && response.include?('WebSpeed error')
+      webspeed_error = (response.is_a?(String) || response.is_a?(HTTParty::Response)) &&
+                       response.include?('WebSpeed error')
       return ResponseError.new('Temporary error (WebSpeed error)') if webspeed_error
 
       return if response.code == 200
@@ -130,7 +131,7 @@ module FreightKit
     end
 
     def parse_api_city_state(str)
-      return nil if str.blank?
+      return if str.blank?
 
       city = str.split(', ')[0].titleize
       province = str.split(', ')[1].upcase
@@ -144,47 +145,47 @@ module FreightKit
       Location.new(
         city:,
         province:,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
     end
 
     def parse_api_city_state_zip(str)
-      return nil if str.blank?
+      return if str.blank?
 
       parts = str.split(', ')
 
       Location.new(
         city: parts.first.titleize,
         province: parts.last.upcase,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
     end
 
     def parse_api_date(date, location)
-      return nil if date.blank?
+      return if date.blank?
 
-      separator = %w[? -].find { |separator| date.include?(separator) }
-      return nil unless separator.present?
+      separator = ['?', '-'].find { |separator| date.include?(separator) }
+      return if separator.blank?
 
       format = case date
                when /^\d{4}#{separator}/
-                 %w[%Y %m %d].join(separator)
+                 ['%Y', '%m', '%d'].join(separator)
                when /^\d{2}#{separator}/
-                 %w[%m %d %Y].join(separator)
+                 ['%m', '%d', '%Y'].join(separator)
                end
-      return nil unless format.present?
+      return if format.blank?
 
       local_date = ::Date.strptime(date, format)
-      DateTime.new(local_date:, location:)
+      Time.zone.local(local_date:, location:)
     end
 
     def parse_api_date_time(date_time, location)
-      return nil if date_time.blank?
+      return if date_time.blank?
 
-      local_date_time = ::DateTime.strptime(date_time, '%Y-%m-%d %H:%M').to_fs(:db)
-      DateTime.new(local_date_time:, location:)
+      local_date_time = ::Time.strptime(date_time, '%Y-%m-%d %H:%M').to_fs(:db)
+      Time.zone.local(local_date_time:, location:)
     rescue Date::Error
-      raise unless local_date_time.blank?
+      raise if local_date_time.present?
 
       parse_api_date(local_date_time, location)
     end
@@ -207,7 +208,7 @@ module FreightKit
         address2: response.dig(:protrace, :shipaddr2)&.titleize,
         city: response.dig(:protrace, :origcity)&.titleize,
         province: response.dig(:protrace, :origstate)&.upcase,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
 
       destination = Location.new(
@@ -215,7 +216,7 @@ module FreightKit
         address2: response.dig(:protrace, :consaddr2)&.titleize,
         city: response.dig(:protrace, :destcity)&.titleize,
         province: response.dig(:protrace, :deststate)&.upcase,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
 
       deldateiso = response.dig(:protrace, :deldateiso)
@@ -283,7 +284,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:
+        tracking_number:,
       )
 
       tracking_response
@@ -294,7 +295,7 @@ module FreightKit
     def parse_amount(amount)
       negative = amount.include?('-')
 
-      %w[$ , -].each do |char|
+      ['$', ',', '-'].each do |char|
         amount = amount.sub(char, '')
       end
 
@@ -311,7 +312,7 @@ module FreightKit
       description = description.capitalize
 
       code = ratequote_line['chargecode']&.upcase || ''
-      description = "#{description} (#{code})" unless code.blank?
+      description = "#{description} (#{code})" if code.present?
 
       description.squish
     end
@@ -357,7 +358,7 @@ module FreightKit
       end
 
       calculated_accessorials = build_calculated_accessorials(shipment.packages, shipment.origin, shipment.destination)
-      accessorials += calculated_accessorials unless calculated_accessorials.blank?
+      accessorials += calculated_accessorials if calculated_accessorials.present?
 
       accessorials.uniq.compact.each { |accessorial| query[accessorial] = 'Yes' } if accessorials.any?
 
@@ -372,7 +373,7 @@ module FreightKit
 
       error = response.dig('error', 'errormessage')
 
-      unless error.blank?
+      if error.present?
         rate_response.error = InvalidCredentialsError.new if error.downcase.include?('invalid username/password')
 
         if error.downcase.include?('is not available') || error.downcase.include?('out of the serviceable area')
@@ -407,17 +408,17 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents:,
-          description: ratequote_line_description(ratequote_line)
+          description: ratequote_line_description(ratequote_line),
         )
       end
 
       prices = [
-        Price.new(
-          blame: :api,
-          cents: total_cents - prices.sum(&:cents),
-          description: 'Freight'
-        )
-      ] + prices
+                 Price.new(
+                   blame: :api,
+                   cents: total_cents - prices.sum(&:cents),
+                   description: 'Freight',
+                 ),
+               ] + prices
 
       if self.class.overlength_fees_require_tariff?
         cents = 0
@@ -426,7 +427,7 @@ module FreightKit
           cents += overlength_fee(tariff, package)
         end
 
-        prices << Price.new(blame: :tariff, cents:, description: 'Overlength fees') unless cents.zero?
+        prices << Price.new(blame: :tariff, cents:, description: 'Overlength fees') if cents.nonzero?
       end
 
       rate = Rate.new(
@@ -439,7 +440,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]

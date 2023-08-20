@@ -4,7 +4,7 @@ module FreightKit
   module Pickupable
     class << self
       def included(base)
-        base.send :extend, ClassMethods
+        base.send(:extend, ClassMethods)
       end
     end
 
@@ -32,7 +32,7 @@ module FreightKit
         pickup_to:,
         scac:,
         service:,
-        shipment:
+        shipment:,
       )
 
       begin

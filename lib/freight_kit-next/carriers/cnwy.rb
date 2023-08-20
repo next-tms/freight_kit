@@ -77,7 +77,7 @@ module FreightKit
       body = URI.encode_www_form(
         grant_type: 'password',
         password: api_credentials.password,
-        username: api_credentials.username
+        username: api_credentials.username,
       )
 
       {
@@ -151,7 +151,7 @@ module FreightKit
       accessorial_codes << 'ZHM' if shipment.hazmat?
 
       if shipment.destination.province.upcase == 'HI'
-        accessorial_codes = accessorial_codes.map { |code| %w[DID OIP].include?(code) ? 'WHN' : code }.uniq
+        accessorial_codes = accessorial_codes.map { |code| ['DID', 'OIP'].include?(code) ? 'WHN' : code }.uniq
       end
 
       longest_dimension_in = shipment.packages.map { |p| [p.width(:inch), p.length(:inch)].max }.max.ceil
@@ -259,16 +259,16 @@ module FreightKit
       prices << FreightKit::Price.new(
         blame: :api,
         cents: parse_amount(
-          commodities.sum { |c| c.dig(:charge, :chargeAmt, :amt) }
+          commodities.sum { |c| c.dig(:charge, :chargeAmt, :amt) },
         ),
-        description: 'Freight'
+        description: 'Freight',
       )
 
-      unless deficit_weight.blank?
+      if deficit_weight.present?
         prices << FreightKit::Price.new(
           blame: :api,
           cents: parse_amount(deficit_weight.dig(:deficitAmt, :amt)),
-          description: <<~DESC.squish
+          description: <<~DESC.squish,
             Deficit weight
             #{deficit_weight.dig(:deficitWght, :weight).ceil}
             #{deficit_weight.dig(:deficitWght, :weightUom).downcase}
@@ -279,14 +279,14 @@ module FreightKit
       prices << FreightKit::Price.new(
         blame: :api,
         cents: parse_amount(response.dig(:data, :rateQuote, :totDiscountAmt, :amt)) * -1,
-        description: "Discount #{response.dig(:data, :rateQuote, :actlDiscountPct)}%"
+        description: "Discount #{response.dig(:data, :rateQuote, :actlDiscountPct)}%",
       )
 
       prices += accessorials.map do |accessorial|
         FreightKit::Price.new(
           blame: :api,
           cents: parse_amount(accessorial.dig(:chargeAmt, :amt)),
-          description: accessorial[:accessorialDesc].squish.capitalize.gsub('Xpo', 'XPO')
+          description: accessorial[:accessorialDesc].squish.capitalize.gsub('Xpo', 'XPO'),
         )
       end
 
@@ -317,7 +317,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]

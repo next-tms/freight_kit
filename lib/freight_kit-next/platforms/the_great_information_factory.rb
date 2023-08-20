@@ -52,24 +52,24 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action)
+        soap_operation: @conf.dig(:api, :actions, action),
       ).call
     end
 
     def parse_api_date(date)
-      return nil if date.blank?
+      return if date.blank?
 
       local_date = ::Date.strptime(date, '%m/%d/%Y')
-      DateTime.new(local_date:)
+      Time.zone.local(local_date:)
     end
 
     def parse_api_date_time(date_time, location)
-      return nil if date_time.blank?
+      return if date_time.blank?
 
       format = date_time.include?('-') ? '%Y-%m-%d %H:%M' : '%m/%d/%Y %H:%M'
 
-      local_date_time = ::DateTime.strptime(date_time, format).to_fs(:db)
-      DateTime.new(local_date_time:, location:)
+      local_date_time = ::Time.strptime(date_time, format).to_fs(:db)
+      Time.zone.local(local_date_time:, location:)
     end
 
     def build_url(action)
@@ -90,7 +90,7 @@ module FreightKit
     def build_rate_request(shipment:)
       accessorials = []
 
-      unless shipment.accessorials.blank?
+      if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
@@ -192,12 +192,12 @@ module FreightKit
       # appear
       if prices.sum(&:cents) < total_cents
         prices = [
-          Price.new(
-            blame: :api,
-            cents: total_cents - prices.sum(&:cents),
-            description: 'Freight'
-          )
-        ] + prices
+                   Price.new(
+                     blame: :api,
+                     cents: total_cents - prices.sum(&:cents),
+                     description: 'Freight',
+                   ),
+                 ] + prices
       end
 
       shipment.packages.each do |package|
@@ -207,7 +207,7 @@ module FreightKit
         prices << Price.new(
           blame: :tariff,
           cents:,
-          description: 'Overlength fee'
+          description: 'Overlength fee',
         )
       end
 
@@ -215,7 +215,7 @@ module FreightKit
         :getquote_response,
         :return,
         :service,
-        :days
+        :days,
       ).to_i
 
       # Calculate real transit time based on information we have about the destination service days
@@ -227,7 +227,7 @@ module FreightKit
         :getquote_response,
         :return,
         :rating,
-        :quotenumber
+        :quotenumber,
       )
 
       rate = Rate.new(
@@ -240,7 +240,7 @@ module FreightKit
         service_name: :standard,
         shipment:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]
@@ -268,7 +268,7 @@ module FreightKit
         Location.new(
           city: location[:city],
           province: location[:state],
-          country:
+          country:,
         )
       else
         Location.new(city: code, country:)
@@ -298,13 +298,15 @@ module FreightKit
         return tracking_response
       end
 
-      receiver_location = build_location(mapped_response.dig(:consignee, :city),
-                                         mapped_response.dig(:consignee, :state))
+      receiver_location = build_location(
+        mapped_response.dig(:consignee, :city),
+        mapped_response.dig(:consignee, :state),
+      )
       shipper_location = build_location(mapped_response.dig(:shipper, :city), mapped_response.dig(:shipper, :state))
 
       actual_delivery_date = mapped_response[:deliverydate]
 
-      unless actual_delivery_date.blank?
+      if actual_delivery_date.present?
         comment = mapped_response[:status].downcase
 
         if comment.starts_with?('delivered')
@@ -326,7 +328,7 @@ module FreightKit
       api_events = [api_events] if api_events.is_a?(Hash)
 
       api_events.each_with_index do |api_event, index|
-        next unless api_event[:description].present?
+        next if api_event[:description].blank?
 
         event = nil
         @conf.dig(:events, :types).each do |key, val|
@@ -377,7 +379,7 @@ module FreightKit
 
       shipment_events << picked_up_event
 
-      unless shipment_events.collect(&:date_time).any?(nil)
+      if shipment_events.collect(&:date_time).none?(nil)
         shipment_events = shipment_events.sort_by do |shipment_event|
           d = shipment_event.date_time
           d&.local_date_time || d.date_time_with_zone&.to_fs(:db) || d.local_date&.to_fs(:db)
@@ -400,7 +402,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:
+        tracking_number:,
       )
 
       tracking_response
@@ -450,7 +452,7 @@ module FreightKit
           address2: shipment.origin.address2,
           city: shipment.origin.city,
           state: shipment.origin.province,
-          ReadyDate: Date.today.strftime('%m/%d/%Y'),
+          ReadyDate: Time.zone.today.strftime('%m/%d/%Y'),
           ReadyTime: pickup_from.strftime('%H%M').to_i,
           CloseTime: pickup_to.strftime('%H%M').to_i,
           zip: shipment.origin.postal_code,
@@ -458,18 +460,18 @@ module FreightKit
         },
         ShipmentCount: 1,
         shipments: [
-          {
-            DestZip: shipment.destination.postal_code,
-            Pieces: shipment.packages.sum(&:quantity),
-            Pallets: shipment.packages.select { |p| p.packaging.pallet? }.sum(&:quantity),
-            Weight: shipment.packages.sum { |p| p.pounds(:total).ceil },
-            HAZ: shipment.packages.any?(&:hazmat?) ? 'Y' : 'N',
-            dblStack: 'N',
-            SortSeg: 'N',
-            Pro: shipment.pro,
-            Liftgate: shipment.accessorials.include?(:liftgate_pickup) ? 'Y' : 'N'
-          }
-        ]
+                     {
+                       DestZip: shipment.destination.postal_code,
+                       Pieces: shipment.packages.sum(&:quantity),
+                       Pallets: shipment.packages.select { |p| p.packaging.pallet? }.sum(&:quantity),
+                       Weight: shipment.packages.sum { |p| p.pounds(:total).ceil },
+                       HAZ: shipment.packages.any?(&:hazmat?) ? 'Y' : 'N',
+                       dblStack: 'N',
+                       SortSeg: 'N',
+                       Pro: shipment.pro,
+                       Liftgate: shipment.accessorials.include?(:liftgate_pickup) ? 'Y' : 'N'
+                     },
+                   ]
       }
 
       request = wrap_request(request)
@@ -508,7 +510,7 @@ module FreightKit
         return document_response
       end
 
-      decoded_pdf_data = Base64.decode64 base64_document_data
+      decoded_pdf_data = Base64.decode64(base64_document_data)
       document_response.assign_attributes(content_type: 'application/pdf', data: decoded_pdf_data)
 
       document_response

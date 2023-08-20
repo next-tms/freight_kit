@@ -33,14 +33,14 @@ module FreightKit
       url = ''.dup
       url += "#{base_url}#{@conf.dig(:api, :scopes, options[:scope])}#{@conf.dig(:api, :endpoints, action)}"
       url = url.sub(@conf.dig(:api, :scopes, options[:scope]), '') if action == :authenticate
-      url += options[:params] unless options[:params].blank?
+      url += options[:params] if options[:params].present?
       url
     end
 
     def build_request(action, options = {})
       headers = JSON_HEADERS
-      headers = headers.merge(options[:headers]) unless options[:headers].blank?
-      body = options[:body].to_json unless options[:body].blank?
+      headers = headers.merge(options[:headers]) if options[:headers].present?
+      body = options[:body].to_json if options[:body].present?
 
       unless action == :authenticate
         set_auth_token
@@ -79,13 +79,13 @@ module FreightKit
     end
 
     def set_auth_token
-      return @auth_token unless @auth_token.blank?
+      return @auth_token if @auth_token.present?
 
       api_credentials = fetch_credential(:api)
 
       request = build_request(
         :authenticate,
-        body: { email: api_credentials.username, password: api_credentials.password }
+        body: { email: api_credentials.username, password: api_credentials.password },
       )
 
       response = commit(request)

@@ -84,11 +84,11 @@ module FreightKit
     def build_request(action, options = {})
       headers = JSON_HEADERS
       headers = headers.merge(auth_header)
-      headers = headers.merge(options[:headers]) unless options[:headers].blank?
-      body = URI.encode_www_form(options[:body]) unless options[:body].blank?
+      headers = headers.merge(options[:headers]) if options[:headers].present?
+      body = URI.encode_www_form(options[:body]) if options[:body].present?
 
       request = {
-        url: options[:url].blank? ? build_url(action) : options[:url],
+        url: (options[:url].presence || build_url(action)),
         headers:,
         method: @conf.dig(:api, :methods, action),
         body:
@@ -122,9 +122,9 @@ module FreightKit
         serviceable_accessorials?(shipment.accessorials)
 
         shipment
-          .accessorials
-          .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
-          .each do |shipment_accessorial|
+        .accessorials
+        .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
+        .each do |shipment_accessorial|
           conf_accessorial = conf.dig(:accessorials, :mappable, shipment_accessorial)
 
           case conf_accessorial
@@ -180,8 +180,10 @@ module FreightKit
                        end
 
       if declared_value.positive?
-        body.deep_merge!({ chkIN: 'on',
-                           FVInsuranceAmount: format('%.2f', declared_value) })
+        body.deep_merge!({
+          chkIN: 'on',
+          FVInsuranceAmount: format('%.2f', declared_value)
+        })
       end
       body.deep_merge!({ ODLength: longest_dimension, ODLengthUnit: 'I' }) if longest_dimension >= 96
 
@@ -245,7 +247,7 @@ module FreightKit
 
       error = response['errorMessage']
 
-      unless error.blank?
+      if error.present?
         if error.include?('one point must be directly serviced')
           rate_response.error = UnserviceableError.new(error.sub(' by SEFL.', ''))
         end
@@ -279,7 +281,7 @@ module FreightKit
 
         error = response['errorMessage']
 
-        unless error.blank?
+        if error.present?
           if error.downcase.include?('not yet been processed')
             sleep(5)
             tries += 1
@@ -330,7 +332,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]

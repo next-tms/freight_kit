@@ -151,7 +151,7 @@ module FreightKit
       delivery_accessorials = []
       pickup_accessorials = []
 
-      unless accessorials.blank?
+      if accessorials.present?
         serviceable_accessorials?(accessorials)
 
         accessorials.each do |a|
@@ -169,12 +169,12 @@ module FreightKit
         end
       end
 
-      if !delivery_accessorials.blank? && delivery_accessorials.include?('RDE')
+      if delivery_accessorials.present? && delivery_accessorials.include?('RDE')
         # Remove duplicate delivery appointment accessorial when residential delivery (included with RDE)
         delivery_accessorials -= ['ADE']
       end
 
-      if !pickup_accessorials.blank? && pickup_accessorials.include?('RPU')
+      if pickup_accessorials.present? && pickup_accessorials.include?('RPU')
         # Remove duplicate pickup appointment accessorial when residential pickup (included with RPU)
         pickup_accessorials -= ['APP']
       end
@@ -230,14 +230,14 @@ module FreightKit
           customerId: api_credentials.username.upcase,
           password: api_credentials.password,
           user: api_credentials.username
-        }
+        },
       )
     end
 
     def build_request(action, options = {})
       headers = JSON_HEADERS
-      headers = headers.merge(options[:headers]) unless options[:headers].blank?
-      body = options[:body].to_json unless options[:body].blank?
+      headers = headers.merge(options[:headers]) if options[:headers].present?
+      body = options[:body].to_json if options[:body].present?
 
       request = {
         url: build_url(action, options),
@@ -362,7 +362,7 @@ module FreightKit
           city: location['city'],
           province: location['state'],
           country: ActiveUtils::Country.find(location['countrycd']),
-          contact: Contact.new(fax: location['fax'], phone: location['phone'])
+          contact: Contact.new(fax: location['fax'], phone: location['phone']),
         )
       end
 
@@ -471,10 +471,10 @@ module FreightKit
             },
             referenceNumbers: {
               referenceNumber: [
-                shipment.order_number,
-                shipment.po_number,
-                ''
-              ]
+                                 shipment.order_number,
+                                 shipment.po_number,
+                                 '',
+                               ]
             }
           }
         }.to_json
@@ -554,7 +554,7 @@ module FreightKit
 
       error = response.key?('errorMessage')
 
-      unless error.blank?
+      if error.present?
         rate_response.error = ResponseError.new(error)
         return rate_response
       end
@@ -587,7 +587,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]
@@ -600,7 +600,7 @@ module FreightKit
       description = description.capitalize
 
       code = charge_line_item['code']&.upcase || ''
-      description = "#{description} (#{code})" unless code.blank?
+      description = "#{description} (#{code})" if code.present?
       description = description.gsub('Fsc', 'FSC') if description.include?('Fsc')
 
       description.squish
@@ -624,10 +624,10 @@ module FreightKit
     end
 
     def parse_api_date_time(date_time, location)
-      return nil if date_time.blank?
+      return if date_time.blank?
 
-      local_date_time = ::DateTime.strptime(date_time, '%m/%d/%y %H:%M').to_fs(:db)
-      DateTime.new(local_date_time:, location:)
+      local_date_time = ::Time.strptime(date_time, '%m/%d/%y %H:%M').to_fs(:db)
+      Time.zone.local(local_date_time:, location:)
     end
 
     def parse_tracking_response(response)
@@ -657,7 +657,7 @@ module FreightKit
           city: api_event['city'].titleize,
           province: api_event['state'].upcase,
           postal_code: api_event['zip'].upcase,
-          country: ActiveUtils::Country.find(api_event['country'])
+          country: ActiveUtils::Country.find(api_event['country']),
         )
 
         date_time = parse_api_date_time(api_event['recordDate'], location)
@@ -680,7 +680,7 @@ module FreightKit
         shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event)
       end
 
-      estimated_delivery_date = scheduled_delivery_date unless scheduled_delivery_date.blank?
+      estimated_delivery_date = scheduled_delivery_date if scheduled_delivery_date.present?
 
       status = shipment_events.last&.type_code
 
@@ -695,7 +695,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:
+        tracking_number:,
       )
 
       tracking_response

@@ -113,7 +113,7 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action)
+        soap_operation: @conf.dig(:api, :actions, action),
       ).call(handle_soap_fault_error: false)
     rescue Savon::SOAPFault => e
       raise InvalidCredentialsError, 'Invalid credentials' if e.message.include?('RRTS.Common.BLL.InvalidUserException')
@@ -127,7 +127,7 @@ module FreightKit
     def parse_amount(amount)
       negative = amount.start_with?('-$') || amount.start_with?('-')
 
-      %w[$ - ,].each do |char|
+      ['$', '-', ','].each do |char|
         amount = amount.sub(char, '')
       end
 
@@ -140,10 +140,10 @@ module FreightKit
     end
 
     def parse_api_date_time(date_time, location)
-      return nil if date_time.blank? || date_time == '0001-01-01T00:00:00'
+      return if date_time.blank? || date_time == '0001-01-01T00:00:00'
 
-      local_date_time = ::DateTime.strptime(date_time, '%Y-%m-%dT%H:%M:%S').to_fs(:db)
-      DateTime.new(local_date_time:, location:)
+      local_date_time = ::Time.strptime(date_time, '%Y-%m-%dT%H:%M:%S').to_fs(:db)
+      Time.zone.local(local_date_time:, location:)
     end
 
     def request_url(action)
@@ -164,8 +164,8 @@ module FreightKit
         next unless attribute == :account
 
         # Raises vague input exception from API if we don't handle ourselves
-        next unless api_credential.account.gsub(/\D/, '') != api_credential.account ||
-                    api_credential.account.length != 7
+        next if api_credential.account.gsub(/\D/, '') == api_credential.account &&
+                api_credential.account.length == 7
 
         raise InvalidCredentialsError, 'Invalid account'
       end
@@ -202,9 +202,9 @@ module FreightKit
       validate_api_credential!(api_credential)
 
       service_delivery_options = [
-        # API calls this invalid now
-        # service_options: { service_code: 'SS' }
-      ]
+                                   # API calls this invalid now
+                                   # service_options: { service_code: 'SS' }
+                                 ]
 
       if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
@@ -213,15 +213,22 @@ module FreightKit
                                    .accessorials
                                    .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
                                    .map do |shipment_accessorial|
-                                     { service_options: { service_code: conf.dig(:accessorials, :mappable,
-                                                                                 shipment_accessorial) } }
+                                     {
+                                       service_options: {
+                                         service_code: conf.dig(
+                                           :accessorials,
+                                           :mappable,
+                                           shipment_accessorial,
+                                         )
+                                       }
+                                     }
                                    end
       end
 
       shipment.packages.each do |package|
         longest_dimension = [package.width(:inches), package.length(:inches)].max.ceil
 
-        next unless longest_dimension >= 96
+        next if longest_dimension < 96
 
         package.quantity.times do
           if longest_dimension >= 240
@@ -287,7 +294,7 @@ module FreightKit
         return rate_response
       end
 
-      unless response[:error].blank?
+      if response[:error].present?
         ['no standard service', 'not in the standard pickup area'].each do |message|
           if response[:error].downcase.include?(message)
             rate_response.error = UnserviceableError.new(response[:error])
@@ -317,7 +324,7 @@ module FreightKit
           prices << Price.new(
             blame: :api,
             cents: parse_amount(rate_detail[:charge]),
-            description: 'Freight'
+            description: 'Freight',
           )
 
           next
@@ -326,7 +333,7 @@ module FreightKit
         prices << FreightKit::Price.new(
           blame: :api,
           cents: parse_amount(rate_detail[:charge]),
-          description: rate_detail[:description]&.capitalize
+          description: rate_detail[:description]&.capitalize,
         )
       end
 
@@ -340,7 +347,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]
@@ -359,7 +366,7 @@ module FreightKit
     end
 
     def parse_api_location(comment, delimiters)
-      return nil if comment.blank? || !comment.include?(delimiters[0])
+      return if comment.blank? || !comment.include?(delimiters[0])
 
       parts = if delimiters.size == 2
                 comment.split(delimiters[0])[0].split(delimiters[1])[1].split(',')
@@ -373,11 +380,11 @@ module FreightKit
           return Location.new(
             city: 'Long Beach',
             province: 'CA',
-            country: ActiveUtils::Country.find('USA')
+            country: ActiveUtils::Country.find('USA'),
           )
         end
 
-        return nil
+        return
       end
 
       city = parts[0].squish.strip.titleize
@@ -408,13 +415,13 @@ module FreightKit
       receiver_location = Location.new(
         city: search_result.dig('Shipment', 'Consignee', 'City').titleize,
         province: search_result.dig('Shipment', 'Consignee', 'State').upcase,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
 
       shipper_location = Location.new(
         city: search_result.dig('Shipment', 'Origin', 'City').titleize,
         province: search_result.dig('Shipment', 'Origin', 'State').upcase,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
 
       api_date_time = search_result.dig('Shipment', 'DeliveredDateTime')
@@ -476,7 +483,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:
+        tracking_number:,
       )
 
       tracking_response
@@ -488,12 +495,12 @@ module FreightKit
       begin
         doc = Nokogiri::HTML(URI.parse(url).open)
       rescue OpenURI::HTTPError, Errno::EHOSTUNREACH
-        return nil
+        return
       end
 
       pro = doc.css('#lblProNumber')&.text
 
-      return nil if pro.blank? || pro.downcase.include?('not available')
+      return if pro.blank? || pro.downcase.include?('not available')
 
       pro
     end

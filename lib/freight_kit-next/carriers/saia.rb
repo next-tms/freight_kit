@@ -72,7 +72,7 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action)
+        soap_operation: @conf.dig(:api, :actions, action),
       ).call&.to_hash&.with_indifferent_access
     end
 
@@ -100,7 +100,7 @@ module FreightKit
     # Rates
     def build_rate_request(shipment:)
       accessorials = [{ AccessorialItem: { Code: 'SingleShipment' } }]
-      unless shipment.accessorials.blank?
+      if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
@@ -167,14 +167,14 @@ module FreightKit
                          (shipment.declared_value_cents.to_f / 100).ceil
                        end
 
-      unless declared_value.blank?
+      if declared_value.present?
         request = request.deep_merge(
           {
             request: {
               DeclaredValue: declared_value,
               FullValueCoverage: declared_value
             }
-          }
+          },
         )
       end
 
@@ -192,7 +192,7 @@ module FreightKit
 
       error = response.dig(:create_response, :create_result, :code)
 
-      unless error.blank?
+      if error.present?
         message = response.dig(:create_response, :create_result, :message)
 
         case error
@@ -237,7 +237,7 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents: (rate_accessorial_item[:amount].to_f * 100).to_i,
-          description: rate_accessorial_item[:description]&.titleize&.squish
+          description: rate_accessorial_item[:description]&.titleize&.squish,
         )
       end
 
@@ -254,20 +254,20 @@ module FreightKit
         service_name: :standard,
         shipment:,
         prices: [
-          Price.new(
-            blame: :api,
-            cents: standard_ltl_cents,
-            description: 'Freight'
-          )
-        ] + prices,
+                  Price.new(
+                    blame: :api,
+                    cents: standard_ltl_cents,
+                    description: 'Freight',
+                  ),
+                ] + prices,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       [
         { guaranteed_ltl: result[:guarantee_amount] },
         { guaranteed_ltl_am: result[:guarantee_amount12pm] },
-        { guaranteed_ltl_pm: result[:guarantee_amount2pm] }
+        { guaranteed_ltl_pm: result[:guarantee_amount2pm] },
       ].each do |service|
         next if service.values[0] == '0' || service.values[0].blank?
 
@@ -282,13 +282,13 @@ module FreightKit
           service_name: service.keys[0],
           shipment:,
           prices: [
-            Price.new(
-              blame: :api,
-              cents: standard_ltl_cents + cents,
-              description: 'Freight'
-            )
-          ] + prices,
-          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+                    Price.new(
+                      blame: :api,
+                      cents: standard_ltl_cents + cents,
+                      description: 'Freight',
+                    ),
+                  ] + prices,
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
         )
       end
 
@@ -309,17 +309,17 @@ module FreightKit
     end
 
     def parse_api_date_time(date_time, location)
-      return nil if date_time.blank?
+      return if date_time.blank?
 
-      local_date_time = ::DateTime.strptime(date_time, '%Y-%m-%d %H:%M:%S').to_fs(:db)
-      DateTime.new(local_date_time:, location:)
+      local_date_time = ::Time.strptime(date_time, '%Y-%m-%d %H:%M:%S').to_fs(:db)
+      Time.zone.local(local_date_time:, location:)
     end
 
     def parse_api_location(api_event)
       Location.new(
         city: api_event[:city]&.titleize,
         province: api_event[:state]&.upcase,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
     end
 
@@ -332,7 +332,7 @@ module FreightKit
                 'API Error: Unknown response'
               end
 
-      unless error.blank?
+      if error.present?
         tracking_response.error = ResponseError.new(error)
         return tracking_response
       end
@@ -340,9 +340,9 @@ module FreightKit
       search_result = response.dig(:get_by_pro_number_response, :get_by_pro_number_result)
 
       address1 = [
-        search_result.dig(:shipper, :address1),
-        search_result.dig(:shipper, :address2)
-      ]
+                   search_result.dig(:shipper, :address1),
+                   search_result.dig(:shipper, :address2),
+                 ]
                  .select(&:present?)
                  .map { |line| line.squish.strip.titleize }
                  .join(', ')
@@ -352,13 +352,13 @@ module FreightKit
         city: search_result.dig(:shipper, :city)&.squish&.strip&.titleize,
         province: search_result.dig(:shipper, :state)&.strip&.upcase,
         postal_code: search_result.dig(:shipper, :zipcode)&.strip,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
 
       address1 = [
-        search_result.dig(:consignee, :address1),
-        search_result.dig(:consignee, :address2)
-      ]
+                   search_result.dig(:consignee, :address1),
+                   search_result.dig(:consignee, :address2),
+                 ]
                  .select(&:present?)
                  .map { |line| line.squish.strip.titleize }
                  .join(', ')
@@ -368,7 +368,7 @@ module FreightKit
         city: search_result.dig(:consignee, :city)&.squish&.strip&.titleize,
         province: search_result.dig(:consignee, :state)&.strip&.upcase,
         postal_code: search_result.dig(:consignee, :zipcode)&.strip,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
 
       api_date_time = search_result[:delivery_date_time_arrive]
@@ -390,7 +390,7 @@ module FreightKit
         shipment_events << ShipmentEvent.new(
           date_time: pickup_date,
           location: shipper_location,
-          type_code: :picked_up
+          type_code: :picked_up,
         )
       else
         api_events = [api_events] if api_events.is_a?(Hash)
@@ -426,7 +426,7 @@ module FreightKit
         ship_time: pickup_date,
         shipment_events:,
         status:,
-        tracking_number:
+        tracking_number:,
       )
 
       tracking_response

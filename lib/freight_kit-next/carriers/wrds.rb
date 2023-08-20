@@ -115,38 +115,38 @@ module FreightKit
     # Tracking
 
     def parse_api_city_state_zip(str)
-      return nil if str.blank?
+      return if str.blank?
 
       Location.new(
         city: str.split(', ')[0].titleize,
         province: str.split(', ')[1].split[0].upcase,
         postal_code: str.split(', ')[1].split[1],
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
     end
 
     def parse_api_city_state(str)
-      return nil if str.blank?
+      return if str.blank?
 
       Location.new(
         city: str[..-3].strip.titleize,
         province: str[-2..].upcase,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
     end
 
     def parse_api_date(date, location)
-      return nil if date.blank?
+      return if date.blank?
 
       local_date = ::Date.strptime(date, '%m/%d/%Y')
-      DateTime.new(local_date:, location:)
+      Time.zone.local(local_date:, location:)
     end
 
     def parse_api_date_time(date_time, location)
-      return nil if date_time.blank?
+      return if date_time.blank?
 
-      local_date_time = ::DateTime.strptime(date_time, '%m/%d/%Y %l:%M:%S %p').to_fs(:db)
-      DateTime.new(local_date_time:, location:)
+      local_date_time = ::Time.strptime(date_time, '%m/%d/%Y %l:%M:%S %p').to_fs(:db)
+      Time.zone.local(local_date_time:, location:)
     end
 
     def parse_tracking_response(tracking_number)
@@ -243,7 +243,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:
+        tracking_number:,
       )
 
       tracking_response

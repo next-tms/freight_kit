@@ -78,7 +78,7 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action)
+        soap_operation: @conf.dig(:api, :actions, action),
       ).call
 
       return response if response.is_a?(TrackingResponse) || response.is_a?(RateResponse)
@@ -94,7 +94,7 @@ module FreightKit
     def parse_amount(amount)
       negative = amount.include?('(') && amount.include?(')')
 
-      %w[$ , ( )].each do |char|
+      ['$', ',', '(', ')'].each do |char|
         amount = amount.sub(char, '')
       end
 
@@ -134,8 +134,8 @@ module FreightKit
 
       begin
         browser
-          .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
-          .click
+        .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
+        .click
       rescue Watir::Exception::UnknownObjectException
         document_response.error = DocumentNotFoundError.new
         return document_response
@@ -202,7 +202,7 @@ module FreightKit
       end
 
       accessorials = []
-      unless shipment.accessorials.blank?
+      if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
           unless @conf.dig(:accessorials, :unserviceable).include?(a)
@@ -282,7 +282,7 @@ module FreightKit
         :get_rates_response,
         :get_rates_result,
         :shipment_detail_response,
-        :shipment_detail_row
+        :shipment_detail_row,
       )
 
       shipment_details.each do |shipment_detail|
@@ -305,7 +305,7 @@ module FreightKit
         service_name: :standard,
         shipment:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]
@@ -327,17 +327,17 @@ module FreightKit
     end
 
     def parse_api_city_state(str)
-      return nil if str.blank?
+      return if str.blank?
 
       Location.new(
         city: str.split(', ')[0].titleize,
         province: str.split(', ')[1].split[0].upcase,
-        country: ActiveUtils::Country.find('USA')
+        country: ActiveUtils::Country.find('USA'),
       )
     end
 
     def parse_api_city(str)
-      return nil if str.blank?
+      return if str.blank?
 
       city = str.squish.strip.titleize
       province = case city
@@ -356,14 +356,14 @@ module FreightKit
     end
 
     def parse_api_date_time(date_time, location)
-      return nil if date_time.blank?
+      return if date_time.blank?
 
-      local_date_time = ::DateTime.strptime(date_time, '%m/%d/%Y %l:%M:%S %p').to_fs(:db)
-      DateTime.new(local_date_time:, location:)
+      local_date_time = ::Time.strptime(date_time, '%m/%d/%Y %l:%M:%S %p').to_fs(:db)
+      Time.zone.local(local_date_time:, location:)
     end
 
     def parse_location(comment, delimiters)
-      return nil if comment.blank? || !comment.include?(delimiters[0]) || !comment.include?(delimiters[1])
+      return if comment.blank? || !comment.include?(delimiters[0]) || !comment.include?(delimiters[1])
 
       parts = comment.split(delimiters[0])[0].split(delimiters[1])[1].split(',')
 
@@ -391,7 +391,7 @@ module FreightKit
         city: search_result[:shipper_city].squish.strip.titleize,
         province: search_result[:shipper_state].strip.upcase,
         postal_code: search_result[:shipper_zip].strip,
-        country:
+        country:,
       )
 
       receiver_location = Location.new(
@@ -399,7 +399,7 @@ module FreightKit
         city: search_result[:cons_city].squish.strip.titleize,
         province: search_result[:cons_state].strip.upcase,
         postal_code: search_result[:cons_zip].strip,
-        country:
+        country:,
       )
 
       api_date_time = search_result.dig('Shipment', 'DeliveredDateTime')
@@ -471,7 +471,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:
+        tracking_number:,
       )
 
       tracking_response

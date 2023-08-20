@@ -83,7 +83,7 @@ module FreightKit
         pickup_to:,
         scac:,
         service:,
-        shipment:
+        shipment:,
       )
 
       parse_pickup_response(commit(request))
@@ -231,8 +231,8 @@ module FreightKit
 
       begin
         browser
-          .element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
-          .click
+        .element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
+        .click
       rescue Selenium::WebDriver::Error::UnexpectedAlertOpenError => e
         browser.close
 
@@ -244,41 +244,41 @@ module FreightKit
 
       browser.iframes(src: '../mainframe/MainFrame.jsp?bRedirect=true')
       browser
-        .iframe(name: 'AppBody')
-        .frame(id: 'Header')
-        .select(name: 'column')
-        .select('Primary Reference')
+      .iframe(name: 'AppBody')
+      .frame(id: 'Header')
+      .select(name: 'column')
+      .select('Primary Reference')
       browser
-        .iframe(name: 'AppBody')
-        .frame(id: 'Header')
-        .select(name: 'condition')
-        .select('=')
+      .iframe(name: 'AppBody')
+      .frame(id: 'Header')
+      .select(name: 'condition')
+      .select('=')
       browser
-        .iframe(name: 'AppBody')
-        .frame(id: 'Header')
-        .text_field(name: 'filter')
-        .set(tracking_number)
+      .iframe(name: 'AppBody')
+      .frame(id: 'Header')
+      .text_field(name: 'filter')
+      .set(tracking_number)
       browser
-        .iframe(name: 'AppBody')
-        .frame(id: 'Header')
-        .button(value: 'Find')
-        .click
+      .iframe(name: 'AppBody')
+      .frame(id: 'Header')
+      .button(value: 'Find')
+      .click
 
       begin
         browser
-          .iframe(name: 'AppBody')
-          .frame(id: 'Detail')
-          .iframe(id: 'transportsWin')
-          .element(xpath: '/html/body/div/table/tbody/tr[2]/td[1]/span/a[2]')
-          .wait_until(&:present?)
-          .click
+        .iframe(name: 'AppBody')
+        .frame(id: 'Detail')
+        .iframe(id: 'transportsWin')
+        .element(xpath: '/html/body/div/table/tbody/tr[2]/td[1]/span/a[2]')
+        .wait_until(&:present?)
+        .click
 
         browser
-          .iframe(name: 'AppBody')
-          .frame(id: 'Detail')
-          .element(xpath: '/html/body/div[1]/div/div/div[1]/div[1]/div[2]/div/a[5]')
-          .wait_until(&:present?)
-          .click
+        .iframe(name: 'AppBody')
+        .frame(id: 'Detail')
+        .element(xpath: '/html/body/div[1]/div/div/div[1]/div[1]/div[2]/div/a[5]')
+        .wait_until(&:present?)
+        .click
       rescue Watir::Wait::TimeoutError
         # POD not yet available
         browser.close
@@ -417,25 +417,25 @@ module FreightKit
           }
         },
         Pricesheets: [
-          {
-            IsSelected: true,
-            Mode: mode,
-            Scac: scac,
-            Type: 'Carrier'
-          }
-        ],
+                       {
+                         IsSelected: true,
+                         Mode: mode,
+                         Scac: scac,
+                         Type: 'Carrier'
+                       },
+                     ],
         ReferenceNumbers: [
-          {
-            IsPrimary: true,
-            ReferenceNumber: shipment.order_number.to_s,
-            Type: 'Ship Ref'
-          },
-          {
-            IsPrimary: false, # must have one true
-            ReferenceNumber: shipment.po_number.to_s,
-            Type: 'PO Number'
-          }
-        ],
+                            {
+                              IsPrimary: true,
+                              ReferenceNumber: shipment.order_number.to_s,
+                              Type: 'Ship Ref'
+                            },
+                            {
+                              IsPrimary: false, # must have one true
+                              ReferenceNumber: shipment.po_number.to_s,
+                              Type: 'PO Number'
+                            },
+                          ],
         ServiceFlags: accessorials,
         Shipper: {
           AddressLine1: shipment.origin.address1,
@@ -581,7 +581,7 @@ module FreightKit
           service_name: service,
           shipment:,
           transit_days:,
-          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
         )
       end
 

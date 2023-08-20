@@ -73,7 +73,7 @@ module FreightKit
         http_proxyport: proxy_uri.port.to_s,
         http_proxyuser: proxy_uri.user,
         http_proxypass: proxy_uri.password,
-        debug_output: $stdout
+        debug_output: $stdout,
       )
 
       unless response.code == 200
@@ -118,7 +118,7 @@ module FreightKit
         return document_response
       end
 
-      decoded_pdf_data = Base64.decode64 document['Content']
+      decoded_pdf_data = Base64.decode64(document['Content'])
       document_response.assign_attributes(content_type: 'application/pdf', data: decoded_pdf_data)
 
       document_response
@@ -131,7 +131,7 @@ module FreightKit
     end
 
     def parse_tracking_response(response)
-      tracking_response = TrackingResponse.new(carrier: self, request: last_request, response:)
+      TrackingResponse.new(carrier: self, request: last_request, response:)
 
       # TODO
     end
@@ -189,7 +189,7 @@ module FreightKit
           # TODO: Update with actual value: TotalBills desc =>
           # Total number of freight bills that will be picked up
           TestFlag: false
-        }.to_json
+        }.to_json,
       )
     end
 
@@ -217,7 +217,7 @@ module FreightKit
       shipment.packages.each do |package|
         longest_dimension = [package.width(:inches), package.length(:inches)].max.ceil
 
-        next unless longest_dimension >= 96
+        next if longest_dimension < 96
 
         package.quantity.times do
           accessorials << { Code: 'EXLEN', Factor: longest_dimension }
@@ -250,7 +250,7 @@ module FreightKit
               Weight: package.pounds(:total).ceil.to_f
             }
           end
-        }.to_json
+        }.to_json,
       )
     end
 
@@ -282,7 +282,7 @@ module FreightKit
 
       prices = []
 
-      %w[AccessorialCharge FuelCharge HighCostCharge MinCharge].each do |charge_line_key|
+      ['AccessorialCharge', 'FuelCharge', 'HighCostCharge', 'MinCharge'].each do |charge_line_key|
         charge_line = response[charge_line_key]
         next unless charge_line
 
@@ -301,7 +301,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
       )
 
       rate_response.rates = [rate]

@@ -4,7 +4,7 @@ module FreightKit
   module Trackable
     class << self
       def included(base)
-        base.send :extend, ClassMethods
+        base.send(:extend, ClassMethods)
       end
     end
 
