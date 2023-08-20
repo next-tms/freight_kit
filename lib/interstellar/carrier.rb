@@ -51,7 +51,7 @@ module Interstellar
           fax: '1-310-275-8159',
           phone: '1-310-285-1013',
           state: 'CA',
-          zip: '90210'
+          zip: '90210',
         )
       end
 
@@ -155,30 +155,30 @@ module Interstellar
     def initialize(credentials, customer_location: nil, tariff: nil)
       credentials = [credentials] if credentials.is_a?(Credential)
 
-      unless credentials.map(&:class).uniq == [Credential]
-        raise ArgumentError,
-              "#{self.class.name}#new: `credentials` must be a Credential or Array of Credential"
+      if credentials.map(&:class).uniq != [Credential]
+        message = "#{self.class.name}#new: `credentials` must be a Credential or Array of Credential"
+        raise ArgumentError, message
       end
 
       missing_credential_types = self.class.required_credential_types.uniq - credentials.map(&:type).uniq
 
-      unless missing_credential_types.empty?
-        raise ArgumentError,
-              "#{self.class.name}#new: `Credential` of type(s) missing: #{missing_credential_types.join(', ')}"
+      if missing_credential_types.any?
+        message = "#{self.class.name}#new: `Credential` of type(s) missing: #{missing_credential_types.join(", ")}"
+        raise ArgumentError, message
       end
 
       @credentials = credentials
 
-      if customer_location
+      if customer_location.present?
         unless customer_location.is_a?(Location)
-          raise ArgumentError,
-                "#{self.class.name}#new: `customer_location` must be a Location"
+          message = "#{self.class.name}#new: `customer_location` must be a Location"
+          raise ArgumentError, message
         end
 
         @customer_location = customer_location
       end
 
-      if tariff
+      if tariff.present?
         raise ArgumentError, "#{self.class.name}#new: `tariff` must be a Tariff" unless tariff.is_a?(Tariff)
 
         @tariff = tariff
@@ -188,9 +188,9 @@ module Interstellar
                   .join(
                     File.expand_path(
                       '../../../../configuration/carriers',
-                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first
+                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first,
                     ),
-                    "#{self.class.to_s.split('::')[1].underscore}.yml"
+                    "#{self.class.to_s.split("::")[1].underscore}.yml",
                   )
       @conf = YAML.safe_load(File.read(conf_path), permitted_classes: [Symbol])
 
@@ -324,7 +324,7 @@ module Interstellar
     # @return [Interstellar::Credential|NilClass]
     def fetch_credential(type)
       @fetch_credentials ||= {}
-      return @fetch_credentials[type] unless @fetch_credentials[type].blank?
+      return @fetch_credentials[type] if @fetch_credentials[type].present?
 
       @fetch_credentials[type] ||= credentials.find { |credential| credential.type == type }
     end
@@ -361,7 +361,8 @@ module Interstellar
       tarrif.overlength_rules.each do |overlength_rule|
         next if max_dimension_inches < overlength_rule[:min_length].convert_to(:inches).value
 
-        if overlength_rule[:max_length].blank? || max_dimension_inches <= overlength_rule[:max_length].convert_to(:inches).value
+        if overlength_rule[:max_length].blank? ||
+           max_dimension_inches <= overlength_rule[:max_length].convert_to(:inches).value
           return (package.quantity * overlength_rule[:fee_cents])
         end
       end
@@ -379,12 +380,12 @@ module Interstellar
       message = []
 
       max_height_inches = self.class.maximum_height.convert_to(:inches).value
-      unless packages.map { |p| p.height(:inches) }.max <= max_height_inches
+      if packages.map { |p| p.height(:inches) }.max > max_height_inches
         message << "items must be #{max_height_inches.to_f} inches tall or less"
       end
 
       max_weight_pounds = self.class.maximum_weight.convert_to(:pounds).value
-      unless packages.sum { |p| p.pounds(:total) } <= max_weight_pounds
+      if packages.sum { |p| p.pounds(:total) } > max_weight_pounds
         message << "items must weigh #{max_weight_pounds.to_f} lbs or less"
       end
 
@@ -398,13 +399,13 @@ module Interstellar
         else
           max_length_inches = self.class.minimum_length_for_overlength_fees.convert_to(:inches).value
 
-          unless packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max < max_length_inches
+          if packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max >= max_length_inches
             message << 'tariff must be defined to calculate overlength fees'
           end
         end
       end
 
-      raise UnserviceableError, message.join(', ').capitalize unless message.blank?
+      raise UnserviceableError, message.join(', ').capitalize if message.present?
 
       true
     end
@@ -425,18 +426,18 @@ module Interstellar
       unserviceable_accessorials = []
 
       accessorials.each do |accessorial|
-        if !conf_unserviceable_accessorials.blank? && conf_unserviceable_accessorials.any?(accessorial)
+        if conf_unserviceable_accessorials.present? && conf_unserviceable_accessorials.any?(accessorial)
           unserviceable_accessorials << accessorial
           next
         end
 
-        next if !conf_mappable_accessorials.blank? && conf_mappable_accessorials.keys.any?(accessorial)
-        next if !conf_unquotable_accessorials.blank? && conf_unquotable_accessorials.any?(accessorial)
+        next if conf_mappable_accessorials.present? && conf_mappable_accessorials.keys.any?(accessorial)
+        next if conf_unquotable_accessorials.present? && conf_unquotable_accessorials.any?(accessorial)
 
         unserviceable_accessorials << accessorial
       end
 
-      unless unserviceable_accessorials.blank?
+      if unserviceable_accessorials.present?
         raise Interstellar::UnserviceableAccessorialsError.new(accessorials: unserviceable_accessorials)
       end
 
@@ -450,27 +451,23 @@ module Interstellar
 
     # Use after building the request to save for later inspection.
     # @return [void]
-    def save_request(r)
-      @last_request = r
+    def save_request(request)
+      @last_request = request
     end
 
     # Calculates a timestamp that corresponds a given number of business days in the future
     #
     # @param days [Integer] The number of business days from now.
-    # @return [DateTime] A timestamp, the provided number of business days in the future.
+    # @return [Time] A timestamp, the provided number of business days in the future.
     def timestamp_from_business_day(days)
-      return unless days
+      raise ArgumentError, 'days must be an Integer' unless days.is_a?(Integer)
 
-      date = DateTime.now.utc
+      date = Time.current.utc + days.days
 
-      days.times do
-        date += 1.day
+      date += 2.days if date.saturday?
+      date += 1.day if date.sunday?
 
-        date += 2.days if date.saturday?
-        date += 1.day if date.sunday?
-      end
-
-      date.to_datetime
+      date
     end
   end
 end

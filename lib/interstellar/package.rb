@@ -1,5 +1,26 @@
+# frozen_string_literal: true
+
 module Interstellar # :nodoc:
   class Package
+    class << self
+      def cents_from(money)
+        return if money.nil?
+
+        if money.respond_to?(:cents)
+          money.cents
+        else
+          case money
+          when Float
+            (money * 100).round
+          when String
+            money =~ /\./ ? (money.to_f * 100).round : money.to_i
+          else
+            money.to_i
+          end
+        end
+      end
+    end
+
     VALID_FREIGHT_CLASSES = [55, 60, 65, 70, 77.5, 85, 92.5, 100, 110, 125, 150, 175, 200, 250, 300, 400].freeze
 
     cattr_accessor :default_options
@@ -28,7 +49,7 @@ module Interstellar # :nodoc:
 
       @description = options[:description]
       @hazmat = options[:hazmat] == true
-      @nmfc = options[:nmfc].blank? ? nil : options[:nmfc]
+      @nmfc = options[:nmfc].presence
 
       imperial = (options[:units] == :imperial)
 
@@ -48,7 +69,7 @@ module Interstellar # :nodoc:
         Measured::Weight,
         @weight_unit_system,
         :grams,
-        :ounces
+        :ounces,
       )
 
       @each_weight = attribute_from_metric_or_imperial(
@@ -56,7 +77,7 @@ module Interstellar # :nodoc:
         Measured::Weight,
         @weight_unit_system,
         :grams,
-        :ounces
+        :ounces,
       )
 
       if @dimensions.blank?
@@ -92,20 +113,19 @@ module Interstellar # :nodoc:
             raise ArgumentError, 'each_or_total must be one of :each, :total'
           end
 
-      if !inches[0].blank? && !inches[1].blank? && !inches[2].blank?
-        cubic_ft = (inches[0] * inches[1] * inches[2]).to_f / 1728
-        cubic_ft *= q
-        return ('%0.2f' % cubic_ft).to_f
-      end
-      nil
+      return unless inches[..2].all?(&:present?)
+
+      cubic_ft = (inches[0] * inches[1] * inches[2]).to_f / 1728
+      cubic_ft *= q
+
+      format('%0.2f', cubic_ft).to_f
     end
 
     def density
-      if !inches[0].blank? && !inches[1].blank? && !inches[2].blank? && pounds(:each)
-        density = pounds(:each).to_f / cubic_ft(:each)
-        return ('%0.2f' % density).to_f
-      end
-      nil
+      return unless inches[..2].all?(&:present?) && pounds(:each)
+
+      density = pounds(:each).to_f / cubic_ft(:each)
+      format('%0.2f', density).to_f
     end
 
     def calculated_freight_class
@@ -117,7 +137,7 @@ module Interstellar # :nodoc:
     end
 
     def freight_class
-      declared_freight_class.blank? ? calculated_freight_class : declared_freight_class
+      (declared_freight_class.presence || calculated_freight_class)
     end
 
     def length(unit)
@@ -144,7 +164,7 @@ module Interstellar # :nodoc:
       @unpackaged
     end
 
-    alias tube? cylinder?
+    alias_method :tube?, :cylinder?
 
     def gift?
       @gift
@@ -157,36 +177,36 @@ module Interstellar # :nodoc:
     def ounces(options = {})
       weight(options).convert_to(:oz).value.to_f
     end
-    alias oz ounces
+    alias_method :oz, :ounces
 
     def grams(options = {})
       weight(options).convert_to(:g).value.to_f
     end
-    alias g grams
+    alias_method :g, :grams
 
     def pounds(args)
       weight(*args).convert_to(:lb).value.to_f
     end
-    alias lb pounds
-    alias lbs pounds
+    alias_method :lb, :pounds
+    alias_method :lbs, :pounds
 
     def kilograms(options = {})
       weight(options).convert_to(:kg).value.to_f
     end
-    alias kg kilograms
-    alias kgs kilograms
+    alias_method :kg, :kilograms
+    alias_method :kgs, :kilograms
 
     def inches(measurement = nil)
       @inches ||= @dimensions.map { |m| m.convert_to(:in).value.to_f }
       measurement.nil? ? @inches : measure(measurement, @inches)
     end
-    alias in inches
+    alias_method :in, :inches
 
     def centimetres(measurement = nil)
       @centimetres ||= @dimensions.map { |m| m.convert_to(:cm).value.to_f }
       measurement.nil? ? @centimetres : measure(measurement, @centimetres)
     end
-    alias cm centimetres
+    alias_method :cm, :centimetres
 
     def dim_weight
       return if inches(:length).blank? || inches(:width).blank? || inches(:height).blank? || pounds(:each).blank?
@@ -202,23 +222,6 @@ module Interstellar # :nodoc:
       weight(@total_weight, options)
     end
 
-    def self.cents_from(money)
-      return nil if money.nil?
-
-      if money.respond_to?(:cents)
-        money.cents
-      else
-        case money
-        when Float
-          (money * 100).round
-        when String
-          money =~ /\./ ? (money.to_f * 100).round : money.to_i
-        else
-          money.to_i
-        end
-      end
-    end
-
     private
 
     def attribute_from_metric_or_imperial(obj, klass, unit_system, metric_unit, imperial_unit)
@@ -230,29 +233,29 @@ module Interstellar # :nodoc:
     end
 
     def density_to_freight_class(density)
-      return nil unless density
+      return unless density
       return 400 if density < 1
       return 60 if density > 30
 
       density_table = [
-        [1, 2, 300],
-        [2, 4, 250],
-        [4, 6, 175],
-        [6, 8, 125],
-        [8, 10, 100],
-        [10, 12, 92.5],
-        [12, 15, 85],
-        [15, 22.5, 70],
-        [22.5, 30, 65],
-        [30, 35, 60]
-      ]
+                        [1, 2, 300],
+                        [2, 4, 250],
+                        [4, 6, 175],
+                        [6, 8, 125],
+                        [8, 10, 100],
+                        [10, 12, 92.5],
+                        [12, 15, 85],
+                        [15, 22.5, 70],
+                        [22.5, 30, 65],
+                        [30, 35, 60],
+                      ]
       density_table.each do |density_row|
         return density_row[2] if (density >= density_row[0]) && (density < density_row[1])
       end
     end
 
     def sanitized_freight_class(freight_class)
-      return nil if freight_class.blank?
+      return if freight_class.blank?
 
       if VALID_FREIGHT_CLASSES.include?(freight_class)
         return freight_class.to_i == freight_class ? freight_class.to_i : freight_class

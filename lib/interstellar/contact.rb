@@ -13,9 +13,5 @@ module Interstellar
     attr_accessor :company_name, :department, :email, :fax, :name, :phone
 
     alias_method :company, :company_name
-
-    def initialize(attributes = {})
-      assign_attributes(attributes)
-    end
   end
 end

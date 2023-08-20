@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Interstellar
   class Tariff
     attr_accessor :overlength_rules
@@ -6,7 +8,7 @@ module Interstellar
       options.symbolize_keys!
       @options = options
 
-      @options[:overlength_rules] = @options[:overlength_rules].blank? ? [] : @options[:overlength_rules]
+      @options[:overlength_rules] = (@options[:overlength_rules].presence || [])
       raise ArgumentError, 'overlength_rules must be an Array' unless @options[:overlength_rules].is_a?(Array)
 
       @options[:overlength_rules].each do |overlength_rule|

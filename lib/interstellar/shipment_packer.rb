@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Interstellar
   class ShipmentPacker
     class OverweightItem < StandardError
@@ -15,6 +17,7 @@ module Interstellar
     class << self
       def pack(items, dimensions, maximum_weight, currency)
         return [] if items.empty?
+
         packages = []
         items.map!(&:symbolize_keys)
 
@@ -27,7 +30,8 @@ module Interstellar
         while state != :packing_finished
           case state
           when :package_empty
-            package_weight, package_value = 0, 0
+            package_weight = 0
+            package_value = 0
             state = :filling_package
           when :filling_package
             validate_package_quantity(packages.count)
@@ -58,7 +62,11 @@ module Interstellar
           total_weight += item[:quantity].to_i * item[:grams].to_i
 
           if overweight_item?(item[:grams], maximum_weight)
-            raise OverweightItem, "The item with weight of #{item[:grams]}g is heavier than the allowable package weight of #{maximum_weight}g"
+            message = <<~MESSAGE.squish
+              The item with weight of #{item[:grams]}g is heavier than the allowable package weight of
+              #{maximum_weight}g
+            MESSAGE
+            raise OverweightItem, message
           end
 
           raise_excess_quantity_error if maybe_excess_package_quantity?(total_weight, maximum_weight)

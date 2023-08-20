@@ -22,13 +22,13 @@ module Interstellar
     def initialize(*)
       super
 
-      attempt_upgrade_using_location(location) unless location.blank?
+      attempt_upgrade_using_location(location) if location.present?
     end
 
     private
 
     def attempt_upgrade_using_location(location)
-      return if !@date_time_with_zone.blank? || @local_date_time.blank? || location.time_zone.blank?
+      return if @date_time_with_zone.present? || @local_date_time.blank? || location.time_zone.blank?
 
       @date_time_with_zone = location.time_zone.parse(@local_date_time)
       @local_date_time = nil
