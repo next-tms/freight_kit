@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # Class representing a price.
   #
   # @!attribute blame

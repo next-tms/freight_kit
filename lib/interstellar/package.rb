@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar # :nodoc:
+module FreightKit # :nodoc:
   class Package
     class << self
       def cents_from(money)

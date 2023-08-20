@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module Interstellar
-  # Represents the response to a {Interstellar::Carrier#find_tracking_info} call.
+module FreightKit
+  # Represents the response to a {FreightKit::Carrier#find_tracking_info} call.
   #
   # @note Some carriers provide more information than others, so not all attributes
   #   will be set, depending on what carrier you are using.
@@ -22,13 +22,13 @@ module Interstellar
   #   @return [String]
   #
   # @!attribute destination
-  #   @return [Interstellar::Location]
+  #   @return [FreightKit::Location]
   #
   # @!attribute estimated_delivery_date
-  #   @return [Interstellar::DateTime]
+  #   @return [FreightKit::DateTime]
   #
   # @!attribute origin
-  #   @return [Interstellar::Location]
+  #   @return [FreightKit::Location]
   #
   # @!attribute scheduled_delivery_date
   #   @return [DateTime]
@@ -37,10 +37,10 @@ module Interstellar
   #   @return [Date, Time]
   #
   # @!attribute shipment_events
-  #   @return [Array<Interstellar::ShipmentEvent>]
+  #   @return [Array<FreightKit::ShipmentEvent>]
   #
   # @!attribute shipper_address
-  #   @return [Interstellar::Location]
+  #   @return [FreightKit::Location]
   #
   # @!attribute status
   #   @return [Symbol]

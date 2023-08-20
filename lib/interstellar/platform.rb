@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   class Platform < Carrier
     # Credentials should be a `Credential` or `Array` of `Credential`
     def initialize(credentials, customer_location: nil, tariff: nil)

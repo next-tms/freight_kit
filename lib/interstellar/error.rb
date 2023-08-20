@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   class Error < ActiveUtils::ActiveUtilsError; end
 end

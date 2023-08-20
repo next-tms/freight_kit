@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module Interstellar
-  class HTTPError < Interstellar::Error
+module FreightKit
+  class HTTPError < FreightKit::Error
     attr_reader :body, :code
 
     def initialize(body:, code:)

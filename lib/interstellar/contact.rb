@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # Contact is the abstract base class for all contacts.
   #
   # @!attribute company_name [String] Company name.

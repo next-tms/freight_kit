@@ -1,8 +1,8 @@
-# Interstellar
+# FreightKit
 
 This library interfaces with the web services of various shipping carriers. The goal is to abstract the features that are most frequently used into a pleasant and consistent Ruby API.
 
-Interstellar supports:
+FreightKit supports:
 
 - Downloading scanned documents
 - Finding shipping rates
@@ -25,20 +25,20 @@ __Note:__ `Carrier`s may extend `Platform`s and override them when their behavio
 
 ## Plug-in System
 
-Interstellar relies on plug-ins (gems) to define how it connects to individual `Carrier`s and `Platform`s.
+FreightKit relies on plug-ins (gems) to define how it connects to individual `Carrier`s and `Platform`s.
 
 ## Installation
 
 Using bundler, add to the `Gemfile`:
 
 ```ruby
-gem 'interstellar'
+gem 'freight_kit'
 ```
 
 Or standalone:
 
 ```
-$ gem install interstellar
+$ gem install freight_kit
 ```
 
 __Note__: Plug-ins are required to connect to `Carrier`s and `Platforms` (see above).
@@ -48,36 +48,36 @@ __Note__: Plug-ins are required to connect to `Carrier`s and `Platforms` (see ab
 Start off by initializing the `Carrier` provided by a `Carrier` plug-in:
 
 ```ruby
-require 'interstellar'
+require 'freight_kit'
 
 # Typically just one `Credential` is required
 credentials = [
-  Interstellar::Credential.new(
+  FreightKit::Credential.new(
     type: :api,
     account: 'account_number',
     username: 'username',
     password: 'password',
-    tariff: Interstellar::Tariff.new # optional
+    tariff: FreightKit::Tariff.new # optional
   ),
-  Interstellar::Credential.new(
+  FreightKit::Credential.new(
     type: :oauth2,
     access_token: 'token',
     expires_at: DateTime.current + 1.day, # DateTime
     scope: 'scope'
   ),
-  Interstellar::Credential.new(
+  FreightKit::Credential.new(
     type: :website,
     username: 'username',
     password: 'password'
   ),
-  Interstellar::Credential.new(
+  FreightKit::Credential.new(
     type: :selenoid,
     base_url: URI.parse('http://domain:4444'),
     browser: :chrome
   )
 ]
 
-carrier = Interstellar::SCAC.new(credentials)
+carrier = FreightKit::SCAC.new(credentials)
 ```
 
 ### Documents
@@ -106,7 +106,7 @@ end
 
 ```ruby
 packages = [
-  Interstellar::Package.new(
+  FreightKit::Package.new(
     371 * 16, # 371 lbs
     {
       length: 40, # inches
@@ -115,7 +115,7 @@ packages = [
     },
     units: :imperial
   ),
-  Interstellar::Package.new(
+  FreightKit::Package.new(
     371 * 16, # 371 lbs
     {
       length: 40, # inches
@@ -127,14 +127,14 @@ packages = [
   )
 ]
 
-origin = Interstellar::Location.new(
+origin = FreightKit::Location.new(
   country: 'US',
   state: 'CA',
   city: 'Los Angeles',
   zip: '90001'
 )
 
-destination = Interstellar::Location.new(
+destination = FreightKit::Location.new(
   country: 'US',
   state: 'IL',
   city: 'Chicago',

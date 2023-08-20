@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar # :nodoc:
+module FreightKit # :nodoc:
   class PackageItem
     attr_reader :sku, :hs_code, :value, :name, :quantity, :options
 
