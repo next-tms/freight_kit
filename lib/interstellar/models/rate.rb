@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # Class representing a shipping option with estimated price.
   #
   # @!attribute carrier
   #   The carrier.
-  #   @return [Interstellar::Carrier]
-  #   @see Interstellar::Carrier
+  #   @return [FreightKit::Carrier]
+  #   @see FreightKit::Carrier
   #
   # @!attribute carrier_name
   #   Name of the carrier. It may differ from the `Carrier` providing the rate quote
@@ -29,7 +29,7 @@ module Interstellar
   # @!attribute prices
   #   Breakdown of a rate estimate's prices with amounts in cents.
   #   @return [Array<Prices>]
-  #   @see Interstellar::Price
+  #   @see FreightKit::Price
   #
   # @!attribute scac
   #   SCAC code of the carrier. It may differ from the `Carrier` providing the rate
@@ -42,7 +42,7 @@ module Interstellar
   #
   # @!attribute shipment
   #   The shipment.
-  #   @return [Interstellar::Shipment]
+  #   @return [FreightKit::Shipment]
   #
   # @!attribute transit_days
   #   Estimated transit days after date of pickup.

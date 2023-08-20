@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
-module Interstellar
-  class ShipmentNotFoundError < Interstellar::Error; end
+module FreightKit
+  class ShipmentNotFoundError < FreightKit::Error; end
 end

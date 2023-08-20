@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module Interstellar
-  class ResponseError < Interstellar::Error
+module FreightKit
+  class ResponseError < FreightKit::Error
     attr_reader :response
 
     def initialize(response = nil)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   module Carriers
     extend self
 
@@ -9,12 +9,12 @@ module Interstellar
     @registered = []
 
     def register(class_name, autoload_require)
-      Interstellar.autoload(class_name, autoload_require)
+      FreightKit.autoload(class_name, autoload_require)
       registered << class_name
     end
 
     def all
-      Interstellar::Carriers.registered.map { |name| Interstellar.const_get(name) }
+      FreightKit::Carriers.registered.map { |name| FreightKit.const_get(name) }
     end
 
     def find(name)

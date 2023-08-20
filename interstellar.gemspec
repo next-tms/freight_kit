@@ -3,7 +3,7 @@
 version = File.read(File.expand_path('VERSION', __dir__)).strip.freeze
 
 Gem::Specification.new do |spec|
-  spec.name = 'interstellar'
+  spec.name = 'freight_kit'
   spec.version = version
 
   spec.authors = [
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
                ]
 
   spec.description = 'Freight carrier API and website abstraction library for transportation management systems (TMS)'
-  spec.homepage = 'https://github.com/next-tms/interstellar'
+  spec.homepage = 'https://github.com/next-tms/freight_kit'
   spec.summary = spec.description
 
   spec.files = Dir['lib/**/*'] +

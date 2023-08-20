@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
-module Interstellar
-  class InvalidCredentialsError < Interstellar::Error; end
+module FreightKit
+  class InvalidCredentialsError < FreightKit::Error; end
 end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # `ShipmentEvent` is the abstract base class for all shipment events (usually
   # attached to `TrackingEresponse`).
   #

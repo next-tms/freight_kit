@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # Carrier is the abstract base class for all supported carriers.
   #
   # To implement support for a carrier, you should subclass this class and
@@ -41,7 +41,7 @@ module Interstellar
       end
 
       # The default location to use for {#valid_credentials?}.
-      # @return [Interstellar::Location]
+      # @return [FreightKit::Location]
       def default_location
         Location.new(
           address1: '455 N. Rexford Dr.',
@@ -110,7 +110,7 @@ module Interstellar
       end
 
       # Whether or not the carrier quotes overlength fees via API.
-      # @note Should the API not calculate these fees, they should be calculated some other way outside of Interstellar.
+      # @note Should the API not calculate these fees, they should be calculated some other way outside of FreightKit.
       # @return [Boolean]
       def overlength_fees_require_tariff?
         true
@@ -245,8 +245,8 @@ module Interstellar
     #
     # @note Override with whatever you need to get the rates from the carrier.
     #
-    # @param shipment [Interstellar::Shipment] Shipment details.
-    # @return [Interstellar::RateResponse] The response from the carrier, which
+    # @param shipment [FreightKit::Shipment] Shipment details.
+    # @return [FreightKit::RateResponse] The response from the carrier, which
     #   includes 0 or more rate estimates for different shipping products
     def find_rates(shipment:)
       raise NotImplementedError, "#find_rates is not supported by #{self.class.name}."
@@ -262,15 +262,15 @@ module Interstellar
     #   delivery hours begin.
     # @param delivery_to [ActiveSupport::TimeWithZone] Local date, time and time zone that
     #   delivery hours end.
-    # @param dispatcher [Interstellar::Contact] The dispatcher.
+    # @param dispatcher [FreightKit::Contact] The dispatcher.
     # @param pickup_from [ActiveSupport::TimeWithZone] Local date, time and time zone that
     #   pickup hours begin.
     # @param pickup_to [ActiveSupport::TimeWithZone] Local date, time and time zone that
     #   pickup hours end.
     # @param scac [String] The carrier SCAC code (can be `nil`; only used for brokers).
     # @param service [Symbol] The service type.
-    # @param shipment [Interstellar::Shipment] The shipment including `#destination.contact`, `#origin.contact`.
-    # @return [Interstellar::ShipmentResponse] The response from the carrier. This
+    # @param shipment [FreightKit::Shipment] The shipment including `#destination.contact`, `#origin.contact`.
+    # @return [FreightKit::ShipmentResponse] The response from the carrier. This
     #   response should include a shipment identifier or tracking_number if successful,
     #   and potentially shipping labels.
     def create_pickup(
@@ -291,7 +291,7 @@ module Interstellar
     # @note Override with whatever you need to cancel a shipping label
     #
     # @param tracking_number [String] The tracking number of the shipment to cancel.
-    # @return [Interstellar::Response] The response from the carrier. This
+    # @return [FreightKit::Response] The response from the carrier. This
     #   response in most cases has a cancellation id.
     def cancel_shipment(tracking_number)
       raise NotImplementedError, "#cancel_shipment is not supported by #{self.class.name}."
@@ -302,7 +302,7 @@ module Interstellar
     # @note Override with whatever you need to get a shipping label
     #
     # @param tracking_number [String] The tracking number of the shipment to track.
-    # @return [Interstellar::TrackingResponse] The response from the carrier. This
+    # @return [FreightKit::TrackingResponse] The response from the carrier. This
     #   response should a list of shipment tracking events if successful.
     def find_tracking_info(tracking_number)
       raise NotImplementedError, "#find_tracking_info is not supported by #{self.class.name}."
@@ -321,7 +321,7 @@ module Interstellar
     # Fetch credential of given type.
     #
     # @param type [Symbol] Type of credential to find, should be one of: `:api`, `:selenoid`, `:website`.
-    # @return [Interstellar::Credential|NilClass]
+    # @return [FreightKit::Credential|NilClass]
     def fetch_credential(type)
       @fetch_credentials ||= {}
       return @fetch_credentials[type] if @fetch_credentials[type].present?
@@ -339,7 +339,7 @@ module Interstellar
     def valid_credentials?
       location = self.class.default_location
       find_rates(location, location, Package.new(100, [5, 15, 30]))
-    rescue Interstellar::ResponseError
+    rescue FreightKit::ResponseError
       false
     else
       true
@@ -371,8 +371,8 @@ module Interstellar
     end
 
     # Determine whether the carrier will accept the packages based on credentials and/or tariff.
-    # @param packages [Array<Interstellar::Package>]
-    # @param tariff [Interstellar::Tariff]
+    # @param packages [Array<FreightKit::Package>]
+    # @param tariff [FreightKit::Tariff]
     # @return [Boolean]
     def validate_packages(packages, tariff = nil)
       return false if packages.blank?
@@ -389,7 +389,7 @@ module Interstellar
         message << "items must weigh #{max_weight_pounds.to_f} lbs or less"
       end
 
-      if self.class.overlength_fees_require_tariff? && (tariff.blank? || !tariff.is_a?(Interstellar::Tariff))
+      if self.class.overlength_fees_require_tariff? && (tariff.blank? || !tariff.is_a?(FreightKit::Tariff))
         missing_dimensions = packages.map do |p|
           [p.height(:inches), p.length(:inches), p.width(:inches)].any?(&:zero?)
         end.any?(true)
@@ -438,7 +438,7 @@ module Interstellar
       end
 
       if unserviceable_accessorials.present?
-        raise Interstellar::UnserviceableAccessorialsError.new(accessorials: unserviceable_accessorials)
+        raise FreightKit::UnserviceableAccessorialsError.new(accessorials: unserviceable_accessorials)
       end
 
       true

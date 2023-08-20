@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module Interstellar
-  class UnserviceableAccessorialsError < Interstellar::UnserviceableError
+module FreightKit
+  class UnserviceableAccessorialsError < FreightKit::UnserviceableError
     attr_reader :accessorials
 
     def initialize(accessorials:)

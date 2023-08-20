@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   class Packaging
     VALID_TYPES = %i[
                     box

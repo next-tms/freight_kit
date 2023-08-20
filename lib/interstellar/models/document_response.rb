@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # Represents the response to calls:
-  #   - {Interstellar::Carrier#bol}
-  #   - {Interstellar::Carrier#pod}
-  #   - {Interstellar::Carrier#scanned_bol}
+  #   - {FreightKit::Carrier#bol}
+  #   - {FreightKit::Carrier#pod}
+  #   - {FreightKit::Carrier#scanned_bol}
   #
   # @attribute content_type
   #   @return [String] The HTTP `Content-Type`

@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # Basic Response class for requests against a carrier's API.
   #
   # @!attribute error
   #   The error object.
-  #   @return [Interstellar::Error, NilClass]
+  #   @return [FreightKit::Error, NilClass]
   #
   # @!attribute request
   #   The raw request.

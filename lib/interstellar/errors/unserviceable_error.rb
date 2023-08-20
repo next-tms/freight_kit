@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
-module Interstellar
-  class UnserviceableError < Interstellar::Error; end
+module FreightKit
+  class UnserviceableError < FreightKit::Error; end
 end

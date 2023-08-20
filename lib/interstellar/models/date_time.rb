@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # Represent dates and times in varous formats.
   #
   # @attribute date_time_with_zone

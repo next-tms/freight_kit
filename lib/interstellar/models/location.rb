@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Interstellar
+module FreightKit
   # Class representing a location.
   #
   # @attribute address1
@@ -59,7 +59,7 @@ module Interstellar
     def contact=(contact)
       return @contact = nil if contact.blank?
 
-      raise ArgumentError, 'contact must be a Contact' unless contact.is_a?(Interstellar::Contact)
+      raise ArgumentError, 'contact must be a Contact' unless contact.is_a?(FreightKit::Contact)
 
       @contact = contact
     end
