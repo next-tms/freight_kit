@@ -1,6 +1,6 @@
-# Interstellar: Next TMS
+# `FreightKit`: Next TMS Plug-ins
 
-This library is an [Interstellar](https://github.com/next-tms/interstellar) plug-in that enables the following:
+This library is a [`FreightKit`](https://github.com/next-tms/freight_kit) plug-in that enables the following:
 
 ## Platforms
 
@@ -33,6 +33,5 @@ This library is an [Interstellar](https://github.com/next-tms/interstellar) plug
 Using bundler, add to the `Gemfile`:
 
 ```ruby
-gem 'interstellar'
-gem 'interstellar-next'
+gem 'freight_kit-next'
 ```
