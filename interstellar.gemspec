@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-version = File.read(File.expand_path('../../VERSION', __dir__)).strip.freeze
+version = File.read(File.expand_path('VERSION', __dir__)).strip.freeze
 
 Gem::Specification.new do |spec|
   spec.name = 'interstellar'
