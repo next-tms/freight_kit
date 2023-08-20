@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('pry', '~> 0.13.1')
   spec.add_development_dependency('pry-byebug', '~> 3.9.0')
   spec.add_development_dependency('rake', '~> 13.0.3')
-  spec.add_development_dependency('rubocop-next', '~> 1.0.0')
+  spec.add_development_dependency('rubocop-next', '~> 1.0.3')
   spec.add_development_dependency('timecop', '~> 0.9.4')
   spec.add_development_dependency('vcr', '~> 6.1.0')
   spec.add_development_dependency('webmock', '~> 3.14.0')
@@ -53,4 +53,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency('place_kit', '~> 0.0.1')
   spec.add_dependency('savon', '>= 2.0', '< 2.13')
   spec.add_dependency('watir', '>= 7.0', '< 7.2')
+
+  spec.required_ruby_version = '>= 3.2.0'
 end
