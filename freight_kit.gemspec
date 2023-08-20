@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency('activemodel', '>= 4.2', '< 7.0.8')
   spec.add_dependency('activesupport', '>= 4.2', '< 7.0.8')
-  spec.add_dependency('active_utils', '~> 3.3.1')
+  spec.add_dependency('active_utils', '>= 3.3.1', '< 3.5.0')
   spec.add_dependency('httparty', '~> 0.10')
   spec.add_dependency('measured', '>= 2.0', '< 2.8.3')
   spec.add_dependency('mimemagic', '~> 0.4.3')
