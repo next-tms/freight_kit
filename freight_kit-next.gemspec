@@ -3,7 +3,7 @@
 version = File.read(File.expand_path('VERSION', __dir__)).strip.freeze
 
 Gem::Specification.new do |spec|
-  spec.name = 'interstellar-next'
+  spec.name = 'freight_kit-next'
   spec.version = version
 
   spec.authors = 'Third Party Transportation Systems LLC'
