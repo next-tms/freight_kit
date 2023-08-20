@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'interstellar/version'
+version = File.read(File.expand_path('../../VERSION', __dir__)).strip.freeze
 
 Gem::Specification.new do |spec|
   spec.name = 'interstellar'
-  spec.version = Interstellar::VERSION
+  spec.version = version
 
   spec.authors = [
                    'Third Party Transportation Systems LLC',
@@ -23,9 +23,9 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/next-tms/interstellar'
   spec.summary = spec.description
 
-  spec.files = Dir['lib/**/*']
-  spec.files += Dir['[A-Z]*'] + Dir['test/**/*']
-  spec.files.reject! { |fn| fn.include?('CVS') }
+  spec.files = Dir['lib/**/*'] +
+               Dir['[A-Z]*'] +
+               Dir['test/**/*']
   spec.require_paths = ['lib']
 
   spec.add_development_dependency('business_time', '~> 0.11.0')

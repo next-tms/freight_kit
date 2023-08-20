@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module Interstellar
-  VERSION = '0.1.pre28'
+  VERSION = File.read(File.expand_path('../../VERSION', __dir__)).strip.freeze
 end
