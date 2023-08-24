@@ -259,9 +259,11 @@ module FreightKit
 
         date = api_event[:histdate]
         time = api_event[:histtime]
+        # Some api_event[:histtime] returns a string with missing hours and minutes like '  :  '
+        time = nil if (time =~ /\d/).blank?
 
         date_time = if [date, time].all?(&:present?)
-                      parse_api_date_time([date, time].join(' '), location)
+                      parse_api_date_time([date, time].compact.join(' '), location)
                     elsif date.present?
                       parse_api_date(date, location)
                     end
