@@ -139,14 +139,14 @@ module FreightKit
       return if date.blank?
 
       local_date = ::Date.strptime(date, '%m/%d/%Y')
-      Time.zone.local(local_date:, location:)
+      ::FreightKit::DateTime.new(local_date:, location:)
     end
 
     def parse_api_date_time(date_time, location)
       return if date_time.blank?
 
       local_date_time = ::Time.strptime(date_time, '%m/%d/%Y %l:%M:%S %p').to_fs(:db)
-      Time.zone.local(local_date_time:, location:)
+      ::FreightKit::DateTime.new(local_date_time:, location:)
     end
 
     def parse_tracking_response(tracking_number)

@@ -9,3 +9,16 @@ AllCops:
 Naming/FileName:
   Exclude:
     - 'lib/freight_kit-next.rb'
+
+# Disabled these two FirstElement Indentation because it causes a lot of spacing for nested hash or array e.g
+# hash: {
+#        nested_hash: {
+#                     attribute: 1
+#        }
+# }
+
+Layout/FirstHashElementIndentation:
+  Enabled: false
+
+Layout/FirstArrayElementIndentation:
+  Enabled: false

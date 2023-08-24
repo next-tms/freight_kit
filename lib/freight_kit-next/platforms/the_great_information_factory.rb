@@ -60,7 +60,7 @@ module FreightKit
       return if date.blank?
 
       local_date = ::Date.strptime(date, '%m/%d/%Y')
-      Time.zone.local(local_date:)
+      ::FreightKit::DateTime.new(local_date:)
     end
 
     def parse_api_date_time(date_time, location)
@@ -69,7 +69,7 @@ module FreightKit
       format = date_time.include?('-') ? '%Y-%m-%d %H:%M' : '%m/%d/%Y %H:%M'
 
       local_date_time = ::Time.strptime(date_time, format).to_fs(:db)
-      Time.zone.local(local_date_time:, location:)
+      ::FreightKit::DateTime.new(local_date_time:, location:)
     end
 
     def build_url(action)

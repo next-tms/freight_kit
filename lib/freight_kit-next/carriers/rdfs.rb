@@ -143,7 +143,7 @@ module FreightKit
       return if date_time.blank? || date_time == '0001-01-01T00:00:00'
 
       local_date_time = ::Time.strptime(date_time, '%Y-%m-%dT%H:%M:%S').to_fs(:db)
-      Time.zone.local(local_date_time:, location:)
+      ::FreightKit::DateTime.new(local_date_time:, location:)
     end
 
     def request_url(action)

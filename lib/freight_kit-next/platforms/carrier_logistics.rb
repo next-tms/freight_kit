@@ -176,14 +176,14 @@ module FreightKit
       return if format.blank?
 
       local_date = ::Date.strptime(date, format)
-      Time.zone.local(local_date:, location:)
+      ::FreightKit::DateTime.new(local_date:, location:)
     end
 
     def parse_api_date_time(date_time, location)
       return if date_time.blank?
 
       local_date_time = ::Time.strptime(date_time, '%Y-%m-%d %H:%M').to_fs(:db)
-      Time.zone.local(local_date_time:, location:)
+      ::FreightKit::DateTime.new(local_date_time:, location:)
     rescue Date::Error
       raise if local_date_time.present?
 
