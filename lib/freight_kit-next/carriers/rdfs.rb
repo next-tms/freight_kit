@@ -8,7 +8,7 @@ module FreightKit
 
     cattr_reader :name, :scac
     @@name = 'Roadrunner Transportation Services'
-    @@scac = 'RRDS'
+    @@scac = 'RDFS'
 
     class << self
       def find_tracking_info_implemented?
