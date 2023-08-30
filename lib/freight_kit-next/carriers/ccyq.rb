@@ -239,7 +239,7 @@ module FreightKit
         body: {
           Orig: shipment.origin.postal_code,
           Dest: shipment.destination.postal_code,
-          Accesorials: build_accessorials(shipment:),
+          Accessorials: build_accessorials(shipment:),
           Details: shipment.packages.map do |package|
             {
               Height: package.inches(:height).ceil.to_f,
