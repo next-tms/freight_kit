@@ -452,7 +452,7 @@ module FreightKit
           address2: shipment.origin.address2,
           city: shipment.origin.city,
           state: shipment.origin.province,
-          ReadyDate: Time.zone.today.strftime('%m/%d/%Y'),
+          ReadyDate: pickup_from.strftime('%m/%d/%Y'),
           ReadyTime: pickup_from.strftime('%H%M').to_i,
           CloseTime: pickup_to.strftime('%H%M').to_i,
           zip: shipment.origin.postal_code,
