@@ -102,13 +102,13 @@ module FreightKit
                       browser,
                       {
                         options: {
-                          prefs: {
-                            download: {
-                              directory_upgrade: true,
-                              prompt_for_download: false
-                            }
-                          }
-                        },
+                                   prefs: {
+                                            download: {
+                                                        directory_upgrade: true,
+                                                        prompt_for_download: false
+                                                      }
+                                          }
+                                 },
                         url:
                       },
                     ]
