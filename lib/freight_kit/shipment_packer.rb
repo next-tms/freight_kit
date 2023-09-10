@@ -46,7 +46,7 @@ module FreightKit
             items_to_pack.reject! { |i| i[:quantity].to_i == 0 }
             state = :package_full
           when :package_full
-            packages << FreightKit::Package.new(package_weight, dimensions, value: package_value, currency: currency)
+            packages << FreightKit::Package.new(package_weight, dimensions, value: package_value, currency:)
             state = items_to_pack.any? ? :package_empty : :packing_finished
           end
         end
