@@ -29,16 +29,10 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency('business_time', '~> 0.13.0')
-  spec.add_development_dependency('minitest', '~> 5.15.0')
-  spec.add_development_dependency('minitest-reporters', '~> 1.5.0')
-  spec.add_development_dependency('mocha', '~> 1.13.0')
-  spec.add_development_dependency('pry', '~> 0.13.1')
-  spec.add_development_dependency('pry-byebug', '~> 3.9.0')
+  spec.add_development_dependency('faker', '~> 3.2.1')
   spec.add_development_dependency('rake', '~> 13.0.3')
+  spec.add_development_dependency('rspec', '~> 3.12')
   spec.add_development_dependency('rubocop-next', '~> 1.0.3')
-  spec.add_development_dependency('timecop', '~> 0.9.4')
-  spec.add_development_dependency('vcr', '~> 6.1.0')
-  spec.add_development_dependency('webmock', '~> 3.14.0')
 
   spec.add_development_dependency('redcarpet', '~> 3.5.1') # for yard
   spec.add_development_dependency('yard', '~> 0.9.28')
