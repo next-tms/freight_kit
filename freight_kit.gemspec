@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency('business_time', '~> 0.13.0')
-  spec.add_development_dependency('minitest', '~> 5.15.0')
+  spec.add_development_dependency('minitest', '~> 5.20.0')
   spec.add_development_dependency('minitest-reporters', '~> 1.5.0')
   spec.add_development_dependency('mocha', '~> 1.13.0')
   spec.add_development_dependency('pry', '~> 0.13.1')
