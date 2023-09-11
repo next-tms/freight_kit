@@ -43,7 +43,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('httparty', '~> 0.10')
   spec.add_dependency('measured', '>= 2.0', '< 2.8.3')
   spec.add_dependency('mimemagic', '~> 0.4.3')
-  spec.add_dependency('nokogiri', '>= 1.6', '< 1.14')
+  spec.add_dependency('nokogiri', '>= 1.6', '< 1.16')
   spec.add_dependency('place_kit', '~> 0.0.1')
   spec.add_dependency('savon', '>= 2.0', '< 2.15')
   spec.add_dependency('watir', '>= 7.0', '< 7.2')
