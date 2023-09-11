@@ -16,19 +16,16 @@ require 'place_kit'
 require 'savon'
 require 'watir'
 
-require 'freight_kit/error'
-require 'freight_kit/errors'
+require 'zeitwerk'
+loader = Zeitwerk::Loader.for_gem
+loader.inflector.inflect(
+  'api' => 'API',
+  'http' => 'HTTP',
+  'http_error' => 'HTTPError',
+  'json' => 'JSON',
+  'xml' => 'XML',
+)
+loader.setup
 
-require 'freight_kit/model'
-require 'freight_kit/models'
-
-require 'freight_kit/carrier'
-require 'freight_kit/carriers'
-require 'freight_kit/contact'
-require 'freight_kit/package_item'
-require 'freight_kit/package'
-require 'freight_kit/packaging'
-require 'freight_kit/platform'
-require 'freight_kit/shipment_packer'
-require 'freight_kit/tariff'
-require 'freight_kit/version'
+module FreightKit
+end
