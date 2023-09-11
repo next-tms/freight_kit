@@ -1,0 +1,19 @@
+# frozen_string_literal: true
+
+module FreightKit
+  module Model
+    class Base
+      include ActiveModel::AttributeAssignment
+      include ActiveModel::Validations
+
+      def initialize(attributes = {})
+        assign_attributes(attributes)
+      end
+
+      def attributes
+        instance_values.with_indifferent_access
+      end
+      alias_method :to_hash, :attributes
+    end
+  end
+end

@@ -47,6 +47,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('place_kit', '~> 0.0.1')
   spec.add_dependency('savon', '>= 2.0', '< 2.15')
   spec.add_dependency('watir', '>= 7.0', '< 7.2')
+  spec.add_dependency('zeitwerk', '>= 2.6', '< 6.12')
 
   spec.required_ruby_version = '>= 3.2.0'
 end
