@@ -40,7 +40,7 @@ module FreightKit
         response = commit(:pickup, request) if method(:commit).parameters.count == 2
         response ||= commit(request)
       rescue FreightKit::Error => error
-        response = PickupResponse.new(request: request, response: nil, error: error)
+        response = PickupResponse.new(request:, response: nil, error:)
       end
 
       return response if response.is_a?(PickupResponse)

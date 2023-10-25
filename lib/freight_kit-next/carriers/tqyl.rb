@@ -199,11 +199,11 @@ module FreightKit
       build_request(
         :pickup,
         body: {
-          scac: scac,
+          scac:,
           serviceLevel: service.to_s.capitalize,
           shipmentDate: pickup_from.iso8601,
           commodities: build_commodities(shipment),
-          accessorials: build_accessorials(shipment: shipment),
+          accessorials: build_accessorials(shipment:),
           pickupDetails: {
             address1: origin.address1,
             postalCode: origin.postal_code.to_i,

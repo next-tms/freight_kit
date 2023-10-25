@@ -22,6 +22,8 @@
     :government_pickup: 'LA'
     :grocery_warehouse_delivery: 'GWF'
     :grocery_warehouse_pickup: 'GWF'
+    :hospital_delivery: 'LA'
+    :hospital_pickup: 'LA'
     :hotel_delivery: 'LA'
     :hotel_pickup: 'LA'
     :inside_delivery: 'INSIDE'
@@ -69,8 +71,6 @@
     - :dock_pickup
     - :grocery_store_delivery
     - :grocery_store_pickup
-    - :hospital_delivery
-    - :hospital_pickup
     - :mall_delivery
     - :motel_delivery
     - :motel_pickup
