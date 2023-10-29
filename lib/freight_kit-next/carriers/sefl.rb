@@ -118,7 +118,7 @@ module FreightKit
     def build_rate_request(shipment:)
       accessorials = []
 
-      if shipment.accessorials.present?
+      if shipment.accessorials.any?
         serviceable_accessorials?(shipment.accessorials)
 
         shipment
