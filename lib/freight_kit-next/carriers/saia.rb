@@ -339,6 +339,11 @@ module FreightKit
 
       search_result = response.dig(:get_by_pro_number_response, :get_by_pro_number_result)
 
+      if search_result.blank?
+        tracking_response.error = ShipmentNotFoundError.new
+        return tracking_response
+      end
+
       address1 = [
                    search_result.dig(:shipper, :address1),
                    search_result.dig(:shipper, :address2),
