@@ -73,22 +73,22 @@ module FreightKit
         debug_output: $stdout,
       )
 
-      unless [200, 201].include?(response.code)
-        message = begin
-          parsed_response = JSON.parse(response.body)
-          if parsed_response.is_a?(String)
-            parsed_response
-          else
-            parsed_response.dig('content', 'message') || "HTTP #{response.code}"
-          end
-        rescue JSON::ParserError
-          "HTTP #{response.code}"
-        end
+      parsed_response = JSON.parse(response.body)
+      return parsed_response if [200, 201].include?(response.code)
 
-        raise FreightKit::ResponseError, message
+      message = if parsed_response.is_a?(String)
+                  parsed_response
+                else
+                  parsed_response.dig('content', 'message').presence || "HTTP #{response.code}"
+                end
+
+      raise FreightKit::ResponseError, message
+    rescue JSON::ParserError => e
+      if response.body.include?('Sorry, but we&#39;re having trouble signing you in')
+        raise FreightKit::InvalidCredentialsError
       end
 
-      JSON.parse(response.body)
+      raise FreightKit::ResponseError, e.message
     end
 
     def build_access_token
