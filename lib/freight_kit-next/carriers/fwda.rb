@@ -103,7 +103,7 @@ module FreightKit
       begin
         doc_id = get_doc_id(documents:, tracking_number:, type: :pod)
       rescue StandardError => e
-        return DocumentResponse.new(e:)
+        return DocumentResponse.new(error: e)
       end
 
       request = build_document_request(doc_id:, tracking_number:)
@@ -300,12 +300,12 @@ module FreightKit
         link = document['link']
       end
 
-      raise FreightKit::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless link
+      raise FreightKit::DocumentNotFoundError, "API Error: #{@@name}: Document not found" unless link
 
       query = URI.parse(link).query
       doc_id = CGI.parse(query)['docId']&.first
 
-      raise FreightKit::DocumentNotFoundError.new, "API Error: #{@@name}: Document not found" unless doc_id
+      raise FreightKit::DocumentNotFoundError, "API Error: #{@@name}: Document not found" unless doc_id
 
       doc_id
     end
