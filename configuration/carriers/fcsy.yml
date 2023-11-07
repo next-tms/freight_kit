@@ -72,7 +72,7 @@
     :university_pickup: NONCMPU
     :utility_site_delivery: NONCOMM
     :utility_site_pickup: NONCMPU
-  :unquotable:
+  :unquotable: []
   :unserviceable:
     - :airport_delivery
     - :airport_pickup
