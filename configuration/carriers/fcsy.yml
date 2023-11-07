@@ -1,81 +1,81 @@
 :accessorials:
   :mappable:
-    :appointment_delivery: 'NOT'
-    :liftgate_delivery: 'LIFTGATE'
-    :liftgate_pickup: 'LIFTPU'
-    :residential_delivery: 'RESIDENT'
-    :residential_pickup: 'NONCMPU'
-  # May be inaccurate
+    :amusement_park_delivery: NONCOMM
+    :amusement_park_pickup: NONCMPU
+    :appointment_delivery: NOT
+    :athletic_facility_delivery: NONCOMM
+    :athletic_facility_delivery: NONCOMM
+    :athletic_facility_pickup: NONCMPU
+    :cemetery_delivery: NONCOMM
+    :cemetery_pickup: NONCMPU
+    :church_delivery: NONCOMM
+    :church_pickup: NONCMPU
+    :construction_delivery: NONCOMM
+    :construction_pickup: NONCMPU
+    :dock_dropoff: NONCOMM
+    :dock_pickup: NONCMPU
+    :farm_delivery: NONCOMM
+    :farm_pickup: NONCMPU
+    :fitness_center_delivery: NONCOMM
+    :fitness_center_pickup: NONCMPU
+    :golf_course_delivery: NONCOMM
+    :golf_course_pickup: NONCMPU
+    :government_delivery: NONCOMM
+    :government_pickup: NONCMPU
+    :grocery_store_delivery: NONCMPU
+    :grocery_store_pickup: NONCMPU
+    :grocery_warehouse_delivery: GROC
+    :grocery_warehouse_pickup: NONCMPU
+    :hospital_delivery: NONCOMM
+    :hospital_pickup: NONCMPU
+    :hotel_delivery: NONCOMM
+    :hotel_pickup: NONCMPU
+    :inspection_site_delivery: NONCOMM
+    :inspection_site_pickup: NONCMPU
+    :jobsite_delivery: NONCOMM
+    :jobsite_pickup: NONCMPU
+    :liftgate_delivery: LIFTGATE
+    :liftgate_pickup: LIFTPU
+    :mall_delivery: NONCOMM
+    :mall_pickup: NONCMPU
+    :marina_delivery: NONCOMM
+    :marina_pickup: NONCMPU
+    :military_site_delivery: NONCOMM
+    :military_site_pickup: NONCMPU
+    :mine_site_delivery: NONCOMM
+    :mine_site_pickup: NONCMPU
+    :motel_delivery: NONCOMM
+    :motel_pickup: NONCMPU
+    :nursing_home_delivery: NONCOMM
+    :nursing_home_pickup: NONCMPU
+    :park_delivery: NONCOMM
+    :park_pickup: NONCMPU
+    :prison_delivery: NONCOMM
+    :prison_pickup: NONCMPU
+    :ranch_delivery: NONCOMM
+    :ranch_pickup: NONCMPU
+    :reservation_delivery: NONCOMM
+    :reservation_pickup: NONCMPU
+    :residential_delivery: RESIDENT
+    :residential_pickup: NONCMPU
+    :resort_delivery: NONCOMM
+    :resort_pickup: NONCMPU
+    :restaurant_delivery: NONCOMM
+    :restaurant_pickup: NONCMPU
+    :school_delivery: NONCOMM
+    :school_pickup: NONCMPU
+    :steel_mill_delivery: NONCOMM
+    :steel_mill_pickup: NONCMPU
+    :storage_facility_delivery: NONCOMM
+    :storage_facility_pickup: NONCMPU
+    :university_delivery: NONCOMM
+    :university_pickup: NONCMPU
+    :utility_site_delivery: NONCOMM
+    :utility_site_pickup: NONCMPU
   :unquotable:
+  :unserviceable:
     - :airport_delivery
     - :airport_pickup
-    - :amusement_park_delivery
-    - :amusement_park_pickup
-    - :athletic_facility_delivery
-    - :athletic_facility_delivery
-    - :athletic_facility_pickup
-    - :cemetery_delivery
-    - :cemetery_pickup
-    - :church_delivery
-    - :church_pickup
-    - :construction_delivery
-    - :construction_pickup
-    - :dock_dropoff
-    - :dock_pickup
-    - :farm_delivery
-    - :farm_pickup
-    - :fitness_center_delivery
-    - :fitness_center_pickup
-    - :golf_course_delivery
-    - :golf_course_pickup
-    - :government_delivery
-    - :government_pickup
-    - :grocery_store_delivery
-    - :grocery_store_pickup
-    - :hospital_delivery
-    - :hospital_pickup
-    - :hotel_delivery
-    - :hotel_pickup
-    - :inspection_site_delivery
-    - :inspection_site_pickup
-    - :jobsite_delivery
-    - :jobsite_pickup
-    - :mall_delivery
-    - :mall_pickup
-    - :marina_delivery
-    - :marina_pickup
-    - :military_site_delivery
-    - :military_site_pickup
-    - :mine_site_delivery
-    - :mine_site_pickup
-    - :motel_delivery
-    - :motel_pickup
-    - :nursing_home_delivery
-    - :nursing_home_pickup
-    - :park_delivery
-    - :park_pickup
-    - :prison_delivery
-    - :prison_pickup
-    - :ranch_delivery
-    - :ranch_pickup
-    - :reservation_delivery
-    - :reservation_pickup
-    - :resort_delivery
-    - :resort_pickup
-    - :restaurant_delivery
-    - :restaurant_pickup
-    - :school_delivery
-    - :school_pickup
-    - :steel_mill_delivery
-    - :steel_mill_pickup
-    - :storage_facility_delivery
-    - :storage_facility_pickup
-    - :university_delivery
-    - :university_pickup
-    - :utility_site_delivery
-    - :utility_site_pickup
-  # May be inaccurate
-  :unserviceable:
     - :appointment_pickup
     - :brewery_delivery
     - :brewery_pickup
@@ -88,8 +88,6 @@
     - :fair_pickup
     - :flatbed_delivery
     - :flatbed_pickup
-    - :grocery_warehouse_delivery
-    - :grocery_warehouse_pickup
     - :guaranteed_delivery
     - :guaranteed_delivery_am
     - :guaranteed_delivery_pm
