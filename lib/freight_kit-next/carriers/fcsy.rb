@@ -31,6 +31,18 @@ module FreightKit
     # Rates
     def build_calculated_accessorials(*); end
 
+    def validate_packages(packages, tariff = nil)
+      packages.each do |package|
+        if package.declared_freight_class.blank? || package.declared_freight_class == package.calculated_freight_class
+          next
+        end
+
+        raise UnserviceableError, 'Declared freight classes unsupported'
+      end
+
+      super
+    end
+
     # Tracking
 
     # protected
