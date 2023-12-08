@@ -39,6 +39,8 @@ module FreightKit
         accessorials << 'OL1'
       end
 
+      accessorials << 'LIFT' if shipment.packages.any? { |package| package.pounds(:each).ceil >= 70 }
+
       accessorials
     end
 
