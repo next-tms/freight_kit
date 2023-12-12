@@ -14,7 +14,7 @@ module FreightKit
     def initialize(carrier:, action:, client_args:, call_args:, soap_operation:)
       @carrier = carrier
       @action = action
-      @client_args = client_args
+      @client_args = client_args || {}
       @call_args = call_args
       @soap_operation = soap_operation
     end
@@ -24,34 +24,31 @@ module FreightKit
       # raise Savon::HTTPError, http
 
       api_exceptions = API_EXCEPTIONS
-      api_exceptions += [Savon::SOAPFault] if handle_soap_fault_error
 
       # For testing and debugging
-      # client_args = client_args.merge(
-      #   logger: Rails.logger,
-      #   log: true,
-      #   pretty_print_xml: true
-      # )
+      # client_args.merge!(log: true, pretty_print_xml: true)
 
-      Savon.client(
-        **client_args,
-      ).call(
-        soap_operation,
-        **call_args,
-      ).body
+      Savon.client(**client_args).call(soap_operation, **call_args).body
     rescue *api_exceptions => e
       response = build_response_class(action:)
-      response.error = ResponseError.new("HTTP Error: #{e}")
+      response.error = ResponseError.new("Network Error: #{e}")
 
       response
     rescue Savon::InvalidResponseError
       response = build_response_class(action:)
-      response.error = ResponseError.new('Invalid Response Error')
+      response.error = ResponseError.new('API Error: Invalid response')
+
+      response
+    rescue Savon::SOAPFault => e
+      raise unless handle_soap_fault_error
+
+      response = build_response_class(action:)
+      response.error = ResponseError.new("API Error: #{e}")
 
       response
     rescue StandardError => e
       response = build_response_class(action:)
-      response.error = ResponseError.new("Unknown API Error #{e}")
+      response.error = ResponseError.new("API Error: #{e}")
 
       response
     end

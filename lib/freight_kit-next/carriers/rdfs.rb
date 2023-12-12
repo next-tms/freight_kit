@@ -108,18 +108,34 @@ module FreightKit
         message: request
       }
 
-      ::FreightKit::SoapClient.new(
-        carrier: self,
-        action:,
-        client_args:,
-        call_args:,
-        soap_operation: @conf.dig(:api, :actions, action),
-      ).call(handle_soap_fault_error: false)
+      soap_operation = @conf.dig(:api, :actions, action)
+
+      response = ::FreightKit::SoapClient
+                 .new(carrier: self, action:, client_args:, call_args:, soap_operation:)
+                 .call(handle_soap_fault_error: false)
+
+      response
     rescue Savon::SOAPFault => e
       raise InvalidCredentialsError, 'Invalid credentials' if e.message.include?('RRTS.Common.BLL.InvalidUserException')
 
-      error = e.respond_to?(:to_hash) ? e.to_hash.dig(:fault, :detail, :error, :error_message) : e
-      error = 'Unknown error' if error.blank?
+      error = if e.respond_to?(:to_hash)
+                error_hash = e.to_hash
+
+                {
+                  message: error_hash.dig(:fault, :detail, :error, :error_message),
+                  number: error_hash.dig(:fault, :detail, :error, :error_number)
+                }
+              else
+                {}
+              end
+
+      if error[:message].blank?
+        erorr[:message] = if error[:number].present?
+                            "Error #{error[:number]}"
+                          else
+                            'Unknown error'
+                          end
+      end
 
       { error: }
     end
@@ -289,20 +305,31 @@ module FreightKit
     def parse_rate_response(shipment:, response:)
       rate_response = RateResponse.new(request: last_request, response:)
 
-      if response.blank?
-        rate_response.error = ResponseError.new('Unknown response')
+      error_number = response.dig(:error, :number)&.to_i
+      error_message = response.dig(:error, :message)
+
+      if error_number.present?
+        case error_number
+        when 99991
+          rate_response.error = UnserviceableError
+          return rate_response
+        end
+      end
+
+      # @todo Don't rely on error_message
+
+      if error_message.present? && error_message.downcase.include?('not in the standard pickup area')
+        rate_response.error = UnserviceableError
         return rate_response
       end
 
-      if response[:error].present?
-        ['no standard service', 'not in the standard pickup area'].each do |message|
-          if response[:error].downcase.include?(message)
-            rate_response.error = UnserviceableError.new(response[:error])
-            return rate_response
-          end
-        end
+      if error_message.present? || error_number.present?
+        parts = [error_message]
+        parts << "(#{error_number})" if error_number.present?
 
-        rate_response.error = ResponseError.new(response[:error])
+        message = parts.compact_blank.join(' ')
+
+        rate_response.error = ResponseError.new(message)
         return rate_response
       end
 
