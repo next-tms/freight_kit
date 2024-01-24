@@ -12,7 +12,7 @@ module FreightKit
       end
 
       def minimum_length_for_overlength_fees
-        Measured::Length.new(8, :feet)
+        Measured::Length.new(4, :ft)
       end
     end
 
@@ -23,6 +23,14 @@ module FreightKit
     cattr_reader :name, :scac
     @@name = 'Numark Transportation'
     @@scac = 'NUMT'
+
+    def build_calculated_accessorials(packages)
+      longest_dimension = packages.map { |package| [package.length(:in), package.width(:in)].max }.max.ceil
+
+      return ['OVER'] if longest_dimension > 48
+
+      []
+    end
 
     def build_soap_header
       soap_header = super

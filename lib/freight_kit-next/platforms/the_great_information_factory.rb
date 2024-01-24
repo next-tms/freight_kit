@@ -87,23 +87,29 @@ module FreightKit
 
     # Rates
 
+    def build_calculated_accessorials(packages)
+      []
+    end
+
     def build_rate_request(shipment:)
       accessorials = []
 
       if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
-        shipment.accessorials.each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
-            accessorials << { code: @conf.dig(:accessorials, :mappable)[a] }
-          end
-        end
+
+        accessorials = shipment
+                       .accessorials
+                       .select { |accessorial| @conf.dig(:accessorials, :unserviceable).exclude?(accessorial) }
+                       .map do |accessorial|
+                         { code: @conf.dig(:accessorials, :mappable)[accessorial] }
+                       end
       end
 
-      accessorials = accessorials.uniq.to_a
+      accessorials += build_calculated_accessorials(shipment.packages)
+      accessorials.uniq!
 
-      items = []
-      shipment.packages.each do |package|
-        items << {
+      item = shipment.packages.map do |package|
+        {
           _class: package.freight_class,
           description: (package.description || 'Freight')[..8].upcase,
           haz: (package.hazmat? ? 'Y' : ''),
@@ -127,11 +133,11 @@ module FreightKit
             state: shipment.destination.province.upcase,
             zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase
           },
-          accessorialcount: shipment.accessorials.size,
-          accessorial: shipment.accessorials.blank? ? [] : accessorials,
+          accessorialcount: accessorials.count,
+          accessorial: accessorials.map { |code| { code: } },
           ppdcol: 'P', # Prepaid
-          itemcount: shipment.packages.size,
-          item: items
+          itemcount: shipment.packages.sum(&:quantity),
+          item:
         }
       }
 
