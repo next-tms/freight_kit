@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency('business_time', '~> 0.13.0')
   spec.add_development_dependency('faker', '~> 3.2.1')
-  spec.add_development_dependency('rake', '~> 13.0.3')
+  spec.add_development_dependency('rake', '~> 13.1.0')
   spec.add_development_dependency('rspec', '~> 3.12')
   spec.add_development_dependency('rubocop-next', '~> 1.0.3')
 
