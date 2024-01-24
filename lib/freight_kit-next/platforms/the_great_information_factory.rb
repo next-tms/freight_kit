@@ -206,15 +206,17 @@ module FreightKit
                  ] + prices
       end
 
-      shipment.packages.each do |package|
-        cents = overlength_fee(tariff, package)
-        next unless cents.positive?
+      if self.class.overlength_fees_require_tariff?
+        shipment.packages.each do |package|
+          cents = overlength_fee(tariff, package)
+          next unless cents.positive?
 
-        prices << Price.new(
-          blame: :tariff,
-          cents:,
-          description: 'Overlength fee',
-        )
+          prices << Price.new(
+            blame: :tariff,
+            cents:,
+            description: 'Overlength fee',
+          )
+        end
       end
 
       transit_days = response.dig(

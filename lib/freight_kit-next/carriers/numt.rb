@@ -14,6 +14,14 @@ module FreightKit
       def minimum_length_for_overlength_fees
         Measured::Length.new(4, :ft)
       end
+
+      def overlength_fees_require_tariff?
+        false
+      end
+
+      def requirements
+        %i[credentials]
+      end
     end
 
     include FreightKit::Documentable
