@@ -16,27 +16,9 @@ module FreightKit
   #   @see #save_request
   class Carrier
     class << self
-      # Whether looking up available services is implemented.
-      # @return [Boolean]
-      def available_services_implemented?
-        false
-      end
-
       # Whether bill of lading (BOL) requires tracking number at time of pickup.
       # @return [Boolean]
       def bol_requires_tracking_number?
-        false
-      end
-
-      # Whether canceling a shipment is implemented.
-      # @return [Boolean]
-      def cancel_shipment_implemented?
-        false
-      end
-
-      # Whether creating a pickup is implemented.
-      # @return [Boolean]
-      def create_pickup_implemented?
         false
       end
 
@@ -55,33 +37,17 @@ module FreightKit
         )
       end
 
-      # Whether retrieving an existing rate is implemented.
-      # @return [Boolean]
-      def find_estimate_implemented?
-        false
-      end
-
-      # Whether finding rates is implemented.
-      # @return [Boolean]
-      def find_rates_implemented?
-        false
-      end
-
       # Whether finding rates with declared value (thus insurance) is implemented.
       # @return [Boolean]
       def find_rates_with_declared_value?
         false
       end
 
-      # Whether retrieving tracking information is implemented.
+      # Whether instance method is supported
       # @return [Boolean]
-      def find_tracking_info_implemented?
-        false
-      end
-
-      # Whether retrieving tracking number from pickup number is implemented.
-      # @return [Boolean]
-      def find_tracking_number_from_pickup_number_implemented?
+      def implemented?(instance_method)
+        instance_method(instance_method).owner != FreightKit::Carrier
+      rescue NameError
         false
       end
 
@@ -121,12 +87,6 @@ module FreightKit
         false
       end
 
-      # Whether proof of delivery (POD) retrieval is implemented.
-      # @return [Boolean]
-      def pod_implemented?
-        false
-      end
-
       # Returns the keywords passed to `#initialize` that cannot be blank.
       # @return [Array<Symbol>]
       def requirements
@@ -137,12 +97,6 @@ module FreightKit
       # @return [Array<Symbol>]
       def required_credential_types
         %i[api]
-      end
-
-      # Whether scanned bill of lading (BOL) retrieval is implemented.
-      # @return [Boolean]
-      def scanned_bol_implemented?
-        false
       end
     end
 
