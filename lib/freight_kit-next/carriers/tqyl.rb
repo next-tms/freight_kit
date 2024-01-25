@@ -18,14 +18,6 @@ module FreightKit
       def requirements
         %i[credentials]
       end
-
-      def pod_implemented?
-        false
-      end
-
-      def scanned_bol_implemented?
-        false
-      end
     end
 
     REACTIVE_FREIGHT_CARRIER = true

@@ -3,14 +3,6 @@
 module FreightKit
   class OTCL < FreightKit::Carrier
     class << self
-      def create_pickup_implemented?
-        true
-      end
-
-      def find_rates_implemented?
-        true
-      end
-
       def find_rates_with_declared_value?
         true
       end

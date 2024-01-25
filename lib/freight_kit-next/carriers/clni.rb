@@ -25,20 +25,12 @@ module FreightKit
         false
       end
 
-      def pod_implemented?
-        true
-      end
-
       def required_credential_types
         %i[api website]
       end
 
       def requirements
         %i[credentials]
-      end
-
-      def scanned_bol_implemented?
-        true
       end
     end
 

@@ -11,14 +11,6 @@ module FreightKit
     @@scac = 'RDFS'
 
     class << self
-      def find_tracking_info_implemented?
-        true
-      end
-
-      def find_tracking_number_from_pickup_number_implemented?
-        true
-      end
-
       def maximum_height
         Measured::Length.new(105, :inches)
       end
@@ -35,20 +27,12 @@ module FreightKit
         false
       end
 
-      def pod_implemented?
-        true
-      end
-
       def required_credential_types
         %i[website]
       end
 
       def requirements
         %i[credentials]
-      end
-
-      def scanned_bol_implemented?
-        true
       end
     end
 

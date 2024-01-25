@@ -3,27 +3,11 @@
 module FreightKit
   class DRRQ < FreightKit::Carrier
     class << self
-      def bol_implemented?
-        true
-      end
-
-      def create_pickup_implemented?
-        true
-      end
-
-      def find_rates_implemented?
-        true
-      end
-
       def overlength_fees_require_tariff?
         false
       end
 
       def pickup_number_is_tracking_number?
-        true
-      end
-
-      def pod_implemented?
         true
       end
 

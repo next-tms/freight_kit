@@ -3,10 +3,6 @@
 module FreightKit
   class SEFL < FreightKit::Carrier
     class << self
-      def find_rates_implemented?
-        true
-      end
-
       def find_rates_with_declared_value?
         true
       end

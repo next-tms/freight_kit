@@ -14,14 +14,6 @@ module FreightKit
       def minimum_length_for_overlength_fees
         Measured::Length.new(8, :feet)
       end
-
-      def pod_implemented?
-        false
-      end
-
-      def scanned_bol_implemented?
-        false
-      end
     end
 
     REACTIVE_FREIGHT_CARRIER = true

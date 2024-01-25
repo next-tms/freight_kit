@@ -3,14 +3,6 @@
 module FreightKit
   class WRDS < FreightKit::Carrier
     class << self
-      def find_tracking_info_implemented?
-        true
-      end
-
-      def pod_implemented?
-        true
-      end
-
       def required_credential_types
         %i[selenoid website]
       end

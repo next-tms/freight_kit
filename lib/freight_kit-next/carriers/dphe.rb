@@ -3,14 +3,6 @@
 module FreightKit
   class DPHE < FreightKit::Carrier
     class << self
-      def pod_implemented?
-        true
-      end
-
-      def scanned_bol_implemented?
-        true
-      end
-
       def maximum_height
         Measured::Length.new(105, :inches)
       end

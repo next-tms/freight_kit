@@ -3,10 +3,6 @@
 module FreightKit
   class PENS < FreightKit::Carrier
     class << self
-      def find_rates_implemented?
-        true
-      end
-
       def maximum_height
         Measured::Length.new(105, :inches)
       end
