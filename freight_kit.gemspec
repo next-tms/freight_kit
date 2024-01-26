@@ -47,7 +47,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('savon', '>= 2.0', '< 2.15')
   spec.add_dependency('tzinfo-data', '~> 1.2023', '>= 1.2023.3')
   spec.add_dependency('watir', '>= 7.0', '< 7.2')
-  spec.add_dependency('zeitwerk', '>= 2.6.0', '< 2.6.12')
+  spec.add_dependency('zeitwerk', '>= 2.6.0', '< 2.6.13')
 
   spec.required_ruby_version = '>= 3.2.0'
 end
