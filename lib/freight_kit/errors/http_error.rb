@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module FreightKit
-  class HTTPError < FreightKit::Error
+  class HTTPError < Error
     attr_reader :body, :code
 
     def initialize(body:, code:)

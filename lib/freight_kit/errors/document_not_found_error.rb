@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module FreightKit
-  class DocumentNotFoundError < FreightKit::Error; end
+  class DocumentNotFoundError < Error; end
 end
