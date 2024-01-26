@@ -31,10 +31,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('business_time', '~> 0.13.0')
   spec.add_development_dependency('faker', '~> 3.2.1')
   spec.add_development_dependency('rake', '~> 13.1.0')
+  spec.add_development_dependency('redcarpet', '~> 3.6.0') # for yard
   spec.add_development_dependency('rspec', '~> 3.12')
   spec.add_development_dependency('rubocop-next', '~> 1.0.3')
-
-  spec.add_development_dependency('redcarpet', '~> 3.6.0') # for yard
   spec.add_development_dependency('yard', '~> 0.9.28')
 
   spec.add_dependency('activemodel', '>= 4.2', '< 7.1.4')
@@ -48,6 +47,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('savon', '>= 2.0', '< 2.15')
   spec.add_dependency('tzinfo-data', '~> 1.2023', '>= 1.2023.3')
   spec.add_dependency('watir', '>= 7.0', '< 7.2')
+  spec.add_dependency('zeitwerk', '>= 2.6.0', '< 2.6.12')
 
   spec.required_ruby_version = '>= 3.2.0'
 end

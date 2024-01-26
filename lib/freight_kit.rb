@@ -3,10 +3,7 @@
 require 'active_model'
 require 'active_support/all'
 require 'active_utils'
-
 require 'cgi'
-require 'yaml'
-
 require 'httparty'
 require 'measured'
 require 'mimemagic'
@@ -15,20 +12,28 @@ require 'open-uri'
 require 'place_kit'
 require 'savon'
 require 'watir'
+require 'yaml'
+require 'zeitwerk'
 
-require 'freight_kit/error'
-require 'freight_kit/errors'
+module FreightKit
+  VERSION = File.read(File.expand_path('../VERSION', __dir__)).strip.freeze
 
-require 'freight_kit/model'
-require 'freight_kit/models'
+  class Inflector < Zeitwerk::Inflector
+    def camelize(basename, abspath)
+      if basename =~ /\Ahttp_(.*)/
+        return "HTTP#{super(::Regexp.last_match(1), abspath)}"
+      end
 
-require 'freight_kit/carrier'
-require 'freight_kit/carriers'
-require 'freight_kit/contact'
-require 'freight_kit/package_item'
-require 'freight_kit/package'
-require 'freight_kit/packaging'
-require 'freight_kit/platform'
-require 'freight_kit/shipment_packer'
-require 'freight_kit/tariff'
-require 'freight_kit/version'
+      super
+    end
+  end
+end
+
+loader = Zeitwerk::Loader.for_gem
+
+loader.collapse("#{__dir__}/freight_kit/errors")
+loader.collapse("#{__dir__}/freight_kit/models")
+
+loader.inflector = FreightKit::Inflector.new
+
+loader.setup

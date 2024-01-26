@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module FreightKit
-  class UnserviceableAccessorialsError < FreightKit::UnserviceableError
+  class UnserviceableAccessorialsError < UnserviceableError
     attr_reader :accessorials
 
     def initialize(accessorials:)
@@ -11,7 +11,9 @@ module FreightKit
     end
 
     def message
-      @message ||= "Unable to service #{@accessorials.map { |accessorial| accessorial.to_s.gsub("_", " ") }.join(", ")}"
+      @message ||= "Unable to service #{@accessorials.map do |accessorial|
+                                          accessorial.to_s.gsub("_", " ")
+                                        end.join(", ")}"
     end
   end
 end
