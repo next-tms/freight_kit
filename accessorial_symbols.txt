@@ -32,6 +32,8 @@
 :fitness_center_pickup
 :flatbed_delivery
 :flatbed_pickup
+:gated_community_delivery
+:gated_community_pickup
 :golf_course_delivery
 :golf_course_pickup
 :government_delivery
