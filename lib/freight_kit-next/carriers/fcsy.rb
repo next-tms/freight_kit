@@ -29,7 +29,6 @@ module FreightKit
     # Documents
 
     # Rates
-    def build_calculated_accessorials(*); end
 
     # Tracking
 

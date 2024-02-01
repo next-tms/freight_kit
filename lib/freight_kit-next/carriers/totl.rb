@@ -44,8 +44,6 @@ module FreightKit
 
     # Rates
 
-    def build_calculated_accessorials(*); end
-
     # Tracking
 
     # protected

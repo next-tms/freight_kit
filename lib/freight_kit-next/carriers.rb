@@ -42,6 +42,7 @@ FreightKit::Carriers.register(:WRDS, 'freight_kit-next/carriers/wrds')
 
 # Based on Platform
 FreightKit::Carriers.register(:CTBV, 'freight_kit-next/carriers/ctbv')
+FreightKit::Carriers.register(:DCHA, 'freight_kit-next/carriers/dcha')
 FreightKit::Carriers.register(:JFJTransportation, 'freight_kit-next/carriers/jfj_transportation')
 FreightKit::Carriers.register(:FCSY, 'freight_kit-next/carriers/fcsy')
 FreightKit::Carriers.register(:TOTL, 'freight_kit-next/carriers/totl')

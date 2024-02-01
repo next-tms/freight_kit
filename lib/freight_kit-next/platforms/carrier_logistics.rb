@@ -286,6 +286,10 @@ module FreightKit
 
     # Rates
 
+    def build_calculated_accessorials(shipment)
+      []
+    end
+
     def parse_amount(amount)
       negative = amount.include?('-')
 
@@ -351,8 +355,7 @@ module FreightKit
         end
       end
 
-      calculated_accessorials = build_calculated_accessorials(shipment.packages, shipment.origin, shipment.destination)
-      accessorials += calculated_accessorials if calculated_accessorials.present?
+      accessorials += build_calculated_accessorials(shipment)
 
       accessorials.uniq.compact.each { |accessorial| query[accessorial] = 'Yes' } if accessorials.any?
 

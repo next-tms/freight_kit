@@ -29,17 +29,15 @@ module FreightKit
     # Documents
 
     # Rates
-    def build_calculated_accessorials(packages, *)
-      accessorials = []
+    def build_calculated_accessorials(shipment)
+      [].tap do |builder|
+        longest_dimension = shipment.packages.map { |package| [package.length(:in), package.width(:in)].max }.max.ceil
 
-      longest_dimension = packages.inject([]) { |_arr, p| [p.length(:in), p.width(:in)] }.max.ceil
-      if longest_dimension > 144
-        accessorials << 'OL'
-      elsif longest_dimension >= 96 && longest_dimension <= 144
-        accessorials << 'OL1'
+        case longest_dimension
+        when (96..143) then builder << 'OL1'
+        when (144..) then builder << 'OL'
+        end
       end
-
-      accessorials
     end
 
     # Tracking
