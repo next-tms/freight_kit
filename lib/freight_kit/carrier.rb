@@ -87,6 +87,13 @@ module FreightKit
         false
       end
 
+      # Publicly accessible URI for tracking based on tracking number.
+      # @param [String] tracking_number Tracking number.
+      # @return [URI, nil]
+      def public_tracking_uri(tracking_number)
+        nil
+      end
+
       # Returns the keywords passed to `#initialize` that cannot be blank.
       # @return [Array<Symbol>]
       def requirements
