@@ -99,32 +99,37 @@ module FreightKit
         %i[api]
       end
 
-      # The template URL for tracking publicly. A template URL is a URL containing the token "%s" that can be replaced
-      # to generate a valid URL.
-      #
-      # For example, `tracking_url_template(:tracking_number)` might return:
-      # "https://example.com/tracking/pro/%s"
+      # The template URL for tracking one of carrier's `NUMBERS` publicly. A template URL is a URL containing the token
+      # "%s" that can be replaced to generate a valid URL.
       #
       # This method is designed to provide a template URL for a specific tracking-related key, allowing applications to
-      # generate valid tracking URLs without involving FreightKit each time. The `key` parameter specifies the type of
-      # tracking information, and it must be one of the following symbols:
+      # generate valid tracking URLs without involving FreightKit each time. The `key` parameter must be one of the
+      # predefined carrier number types specified in the `NUMBERS` constant.
       #
-      # - `:bol_number`: Bill of Lading number
-      # - `:order_number`: Order number
-      # - `:pickup_number`: Pickup number
-      # - `:po_number`: Purchase order number
-      # - `:tracking_number`: tracking number ("PRO number")
-      #
+      # @see `NUMBERS`
       # @param [Symbol] key The symbol representing the type of tracking information for which the template URL is
       # needed.
-      # @raise [ArgumentError] Raised if the provided key is not one of the specified tracking-related symbols.
+      # @raise [ArgumentError]
       # @return [String, nil] The template URL or nil if no template is available for the given key.
       def tracking_url_template(key)
-        keys = %i[bol_number order_number pickup_number po_number tracking_number]
-
-        raise ArgumentError, "key must be one of: #{keys.join(", ")}" if keys.exclude?(key)
+        raise ArgumentError, "key must be one of: #{NUMBERS.join(", ")}" if NUMBERS.exclude?(key)
 
         "#{self}::#{key.to_s.upcase}_TRACKING_URL_TEMPLATE".constantize
+      end
+
+      # Regular expression to use for validating carrier's `NUMBERS`.
+      #
+      # Returns the regular expression used for validating the carrier's number based on the provided `key`.
+      # The `key` parameter must be one of the predefined carrier number types specified in the `NUMBERS` constant.
+      #
+      # @see `NUMBERS`
+      # @param [Symbol] key The symbol representing the carrier number type for which the regular expression is needed.
+      # @raise [ArgumentError] Raised if the provided key is not one of the specified carrier number types.
+      # @return [Regexp] The regular expression for validating the specified carrier number type.
+      def valid_number_regex(key)
+        raise ArgumentError, "key must be one of: #{NUMBERS.join(", ")}" if NUMBERS.exclude?(key)
+
+        "#{self}::VALID_#{key.to_s.upcase}_REGEX".constantize
       end
     end
 
@@ -133,6 +138,13 @@ module FreightKit
     PICKUP_NUMBER_TRACKING_URL_TEMPLATE = nil
     PO_NUMBER_TRACKING_URL_TEMPLATE = nil
     TRACKING_NUMBER_TRACKING_URL_TEMPLATE = nil
+    VALID_BOL_NUMBER_REGEX = nil
+    VALID_ORDER_NUMBER_REGEX = nil
+    VALID_PICKUP_NUMBER_REGEX = nil
+    VALID_PO_NUMBER_REGEX = nil
+    VALID_TRACKING_NUMBER_REGEX = nil
+
+    NUMBERS = %i[bol_number order_number pickup_number po_number tracking_number]
 
     attr_accessor :conf, :rates_with_excessive_length_fees, :tmpdir
     attr_reader :credentials, :customer_location, :last_request, :tariff
