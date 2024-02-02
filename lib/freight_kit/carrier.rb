@@ -123,7 +123,7 @@ module FreightKit
         keys = %i[bol_number order_number pickup_number po_number tracking_number]
 
         raise ArgumentError, "key must be one of: #{keys.join(", ")}" if keys.exclude?(key)
-        
+
         "#{self}::#{key.to_s.upcase}_TRACKING_URL_TEMPLATE".constantize
       end
     end
