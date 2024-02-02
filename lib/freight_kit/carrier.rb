@@ -87,6 +87,32 @@ module FreightKit
         false
       end
 
+      # The template URL for tracking publicly. A template URL is a URL containing the token "%s" that can be replaced
+      # to generate a valid URL.
+      #
+      # For example, `tracking_url_template(:tracking_number)` might return:
+      # "https://example.com/tracking/pro/%s"
+      #
+      # This method is designed to provide a template URL for a specific tracking-related key, allowing applications to
+      # generate valid tracking URLs without involving FreightKit each time. The `key` parameter specifies the type of
+      # tracking information, and it must be one of the following symbols:
+      #
+      # - `:bol_number`: Bill of Lading number
+      # - `:order_number`: Order number
+      # - `:pickup_number`: Pickup number
+      # - `:po_number`: Purchase order number
+      # - `:tracking_number`: tracking number ("PRO number")
+      #
+      # @param [Symbol] key The symbol representing the type of tracking information for which the template URL is
+      # needed.
+      # @raise [ArgumentError] Raised if the provided key is not one of the specified tracking-related symbols.
+      # @return [String, nil] The template URL or nil if no template is available for the given key.
+      def tracking_url_template(key)
+        keys = %i[bol_number order_number pickup_number po_number tracking_number]
+
+        raise ArgumentError, "key must be one of: #{keys.join(", ")}" if keys.exclude?(key)
+      end
+
       # Returns the keywords passed to `#initialize` that cannot be blank.
       # @return [Array<Symbol>]
       def requirements
