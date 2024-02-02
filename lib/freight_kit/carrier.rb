@@ -87,6 +87,18 @@ module FreightKit
         false
       end
 
+      # Returns the keywords passed to `#initialize` that cannot be blank.
+      # @return [Array<Symbol>]
+      def requirements
+        []
+      end
+
+      # Returns the `Credential` methods (passed to `#initialize`) that cannot respond with blank values.
+      # @return [Array<Symbol>]
+      def required_credential_types
+        %i[api]
+      end
+
       # The template URL for tracking publicly. A template URL is a URL containing the token "%s" that can be replaced
       # to generate a valid URL.
       #
@@ -111,20 +123,16 @@ module FreightKit
         keys = %i[bol_number order_number pickup_number po_number tracking_number]
 
         raise ArgumentError, "key must be one of: #{keys.join(", ")}" if keys.exclude?(key)
-      end
 
-      # Returns the keywords passed to `#initialize` that cannot be blank.
-      # @return [Array<Symbol>]
-      def requirements
-        []
-      end
-
-      # Returns the `Credential` methods (passed to `#initialize`) that cannot respond with blank values.
-      # @return [Array<Symbol>]
-      def required_credential_types
-        %i[api]
+        "#{self}::#{key.to_s.upcase}_TRACKING_URL_TEMPLATE".constantize
       end
     end
+
+    BOL_NUMBER_TRACKING_URL_TEMPLATE = nil
+    ORDER_NUMBER_TRACKING_URL_TEMPLATE = nil
+    PICKUP_NUMBER_TRACKING_URL_TEMPLATE = nil
+    PO_NUMBER_TRACKING_URL_TEMPLATE = nil
+    TRACKING_NUMBER_TRACKING_URL_TEMPLATE = nil
 
     attr_accessor :conf, :rates_with_excessive_length_fees, :tmpdir
     attr_reader :credentials, :customer_location, :last_request, :tariff
