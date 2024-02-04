@@ -14,6 +14,7 @@ This library is a [`FreightKit`](https://github.com/next-tms/freight_kit) plug-i
 |-----------------------------------|-----------|---|-------|-----|--------|
 |Best Overnite Express              |✓          |✓  |✓      |✓    |✓       |
 |Clear Lane Freight Systems         |           |   |       |✓    |        |
+|DC Logistics                       |✓          |✓  |✓      |✓    |✓       |
 |The Custom Companies               |           |   |       |✓    |✓       |
 |Dependable Highway Express         |✓          |✓  |       |✓    |✓       |
 |Forward Air                        |✓          |✓  |✓      |✓    |✓       |
