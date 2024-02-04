@@ -66,13 +66,11 @@ module FreightKit
       serviceable_accessorials = @conf.dig(:accessorials, :mappable, :delivery).keys +
                                  @conf.dig(:accessorials, :mappable, :pickup).keys +
                                  @conf.dig(:accessorials, :unquotable)
-      serviceable_count = (serviceable_accessorials & accessorials).size
 
-      unserviceable_accessorials = @conf.dig(:accessorials, :unserviceable)
-      unserviceable_count = (unserviceable_accessorials & accessorials).size
+      unsupported_accessorials = accessorials - serviceable_accessorials
 
-      if serviceable_count != accessorials.size || !unserviceable_count.zero?
-        raise FreightKit::UnserviceableError, "#{self.class.name}: Some accessorials unserviceable"
+      if unsupported_accessorials.any?
+        raise FreightKit::UnserviceableError, "#{self.class.name}: #{unsupported_accessorials.join(", ")} not supported"
       end
 
       true
@@ -135,6 +133,49 @@ module FreightKit
 
       request = build_locations_request
       parse_locations_response(country:, response: commit(request))
+    end
+
+    # Rates
+
+    def find_rates(shipment:)
+      if shipment.packages.map { |package| package.height(:in) }.any?(&:blank?) ||
+         shipment.packages.map { |package| package.length(:in) }.any?(&:blank?) ||
+         shipment.packages.map { |package| package.width(:in) }.any?(&:blank?)
+
+        raise UnserviceableError, 'Dimensions required for quoting'
+      end
+
+      packages = shipment.packages.select { |package| package.height(:in) > 89 }
+      if packages.any?
+        message = <<~MESSAGE.squish
+          #{"Height".pluralize(packages)}
+          #{packages.map { |package| "#{package.height(:in)} inches" }.join(", ")}
+          greater than maximum allowed of 89 inches.
+        MESSAGE
+        raise UnserviceableError, message
+      end
+
+      packages = shipment.packages.select { |package| package.length(:in) > 240 }
+      if packages.any?
+        message = <<~MESSAGE.squish
+          #{"Length".pluralize(packages)}
+          #{packages.map { |package| "#{package.length(:in)} inches" }.join(", ")}
+          greater than maximum allowed of 240 inches.
+        MESSAGE
+        raise UnserviceableError, message
+      end
+
+      packages = shipment.packages.select { |package| package.width(:in) > 82 }
+      if packages.any?
+        message = <<~MESSAGE.squish
+          #{"Width".pluralize(packages)}
+          #{packages.map { |package| "#{package.width(:in)} inches" }.join(", ")}
+          greater than maximum allowed of 82 inches.
+        MESSAGE
+        raise UnserviceableError, message
+      end
+
+      super
     end
 
     protected
