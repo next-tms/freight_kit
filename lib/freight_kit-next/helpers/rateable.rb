@@ -18,6 +18,11 @@ module FreightKit
       return response if response.is_a?(RateResponse)
 
       parse_rate_response(shipment:, response:)
+    rescue FreightKit::InvalidCredentialsError => e
+      rate_response = RateResponse.new(request:, response:)
+      rate_response.error = e
+
+      rate_response
     end
   end
 end

@@ -83,6 +83,10 @@ module FreightKit
           "HTTP #{response.code}"
         end
 
+        if message == 'API key is inactive'
+          raise FreightKit::InvalidCredentialsError, message
+        end
+
         raise FreightKit::ResponseError, message
       end
 

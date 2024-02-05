@@ -295,7 +295,7 @@ module FreightKit
       if error_number.present?
         case error_number
         when 99991
-          rate_response.error = UnserviceableError
+          rate_response.error = UnserviceableError.new(error_message)
           return rate_response
         end
       end
