@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module FreightKit
-  class NUMT < TheGreatInformationFactory
+  class NUMK < TheGreatInformationFactory
     class << self
       def maximum_height
         Measured::Length.new(105, :inches)
