@@ -23,6 +23,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency('rmagick', '>= 4.2.5', '< 5.4.0')
 
   spec.add_development_dependency('faker', '~> 3.2.1')
-  spec.add_development_dependency('rspec', '~> 3.12.0')
+  spec.add_development_dependency('rspec', '~> 3.13.0')
   spec.add_development_dependency('rubocop-next', '~> 1.0.6')
 end
