@@ -11,4 +11,4 @@
     :track: 10010
 :attributes:
   :rates:
-    :with_excessive_length_fees: false
+    :with_excessive_length_fees: true
