@@ -30,7 +30,7 @@ module FreightKit
 
     cattr_reader :name, :scac
     @@name = 'Numark Transportation'
-    @@scac = 'NUMT'
+    @@scac = 'NUMK'
 
     def build_calculated_accessorials(packages)
       longest_dimension = packages.map { |package| [package.length(:in), package.width(:in)].max }.max.ceil
