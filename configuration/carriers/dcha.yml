@@ -97,6 +97,9 @@
     - :winery_pickup
 :api:
   :carrier_code: dcha
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
 :services:
   :types:
     - :standard
