@@ -335,6 +335,8 @@ module FreightKit
       api_events = response.dig(:tracktrace_response, :return, :history)
       api_events = [api_events] if api_events.is_a?(Hash)
 
+      last_location = nil
+
       api_events.each_with_index do |api_event, index|
         next if api_event[:description].blank?
 
@@ -349,10 +351,9 @@ module FreightKit
 
         location = if api_event[:location].blank?
                      case event
-                     when :picked_up, :pickup_information_sent_to_carrier
-                       shipper_location
-                     when :delivered, :out_for_delivery
-                       receiver_location
+                     when :departed then last_location
+                     when :picked_up, :pickup_information_sent_to_carrier then shipper_location
+                     when :delivered, :out_for_delivery then receiver_location
                      end
                    else
                      parse_location(api_event[:location])
@@ -381,6 +382,8 @@ module FreightKit
           # Pickup event appears after carrier information sent, let's fix that
           picked_up_event.date_time = date_time.dup
         end
+
+        last_location = location
 
         shipment_events << ShipmentEvent.new(date_time:, location:, type_code: event)
       end

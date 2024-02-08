@@ -46,6 +46,10 @@
       :city: Denver
       :province: CO
       :state: CO
+    :'71':
+      :city: Salt Lake City
+      :province: UT
+      :state: UT
     :BEN:
       :city: Benicia
       :province: CA
