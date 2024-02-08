@@ -28,6 +28,11 @@ module FreightKit
       end
     end
 
+    CITY_STATES = {
+      ca: ['Los Angeles', 'Mammoth Lakes', 'Sacramento', 'Redding', 'West Sacramento'],
+      nv: ['Reno', 'Sparks']
+    }
+
     REACTIVE_FREIGHT_CARRIER = true
 
     include FreightKit::Rateable
@@ -332,17 +337,15 @@ module FreightKit
       return if str.blank?
 
       city = str.squish.strip.titleize
-      province = case city
-                 when 'Los Angeles'
-                   'CA'
-                 when 'Sacramento'
-                   'CA'
-                 when 'Redding'
-                   'CA'
-                 when 'West Sacramento'
-                   'CA'
-                 end
+      province = nil
       country = ActiveUtils::Country.find('USA')
+
+      CITY_STATES.each do |state, cities|
+        if cities.include?(city)
+          province = state.to_s.upcase
+          break
+        end
+      end
 
       Location.new(city:, province:, country:)
     end
@@ -418,12 +421,7 @@ module FreightKit
           if comment.downcase.include?(val)
             event_key = key
           else
-            ['signed by', 'partner delivery'].each do |val|
-              if comment.downcase.include?(val)
-                event_key = :delivered
-                break
-              end
-            end
+            ['signed by', 'partner delivery'].each { |val| event_key = :delivered if comment.downcase.include?(val) }
           end
 
           break if event_key
