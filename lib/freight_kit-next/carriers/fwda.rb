@@ -296,7 +296,7 @@ module FreightKit
                    HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
-      unless response.code == 200
+      unless (200..299).include?(response.code)
         message = begin
           JSON.parse(response.body)['errorMessage'] || "HTTP #{response.code}"
         rescue JSON::ParserError
@@ -306,7 +306,7 @@ module FreightKit
         raise FreightKit::ResponseError, message
       end
 
-      return response unless response.headers.content_type == 'application/json'
+      return response if response.headers.content_type != 'application/json'
 
       json = JSON.parse(response.body)
       error = json.is_a?(Array) ? nil : json['errorMessage']
