@@ -456,27 +456,26 @@ module FreightKit
         return rate_response
       end
 
-      error = response.dig('OnTracRateResponse', 'Error')
-      error = response.dig('OnTracRateResponse', 'Shipments', 'Error') if error.blank?
+      error = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Error') ||
+              response.dig('OnTracRateResponse', 'Shipments', 'Error') ||
+              response.dig('OnTracRateResponse', 'Error')
 
       if error.blank? && response.dig('OnTracRateResponse', 'Shipments', 'Shipment').is_a?(Hash)
         error = response.dig('OnTracRateResponse', 'Shipments', 'Shipment', 'Rates', 'Rate', 'Error')
       end
 
       if error.present?
-        error = error.capitalize
-
-        if error.downcase.include?('invalid username')
+        case error.downcase
+        when ->(value) { value.include?('not serviced') }
+          rate_response.error = UnserviceableError.new(error)
+          return rate_response
+        when ->(value) { value.include?('invalid username') }
           rate_response.error = InvalidCredentialsError.new(error)
           return rate_response
-        end
-
-        if error.downcase.include?('no valid service')
+        when ->(value) { value.include?('no valid service') }
           rate_response.error = UnserviceableError.new(error)
           return rate_response
         end
-
-        rate_response.error = UnserviceableError.new(error) if error.downcase.include?('not serviced')
 
         rate_response.error = ResponseError.new(error)
         return rate_response
