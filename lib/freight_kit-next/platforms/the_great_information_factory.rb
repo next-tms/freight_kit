@@ -100,9 +100,7 @@ module FreightKit
         accessorials = shipment
                        .accessorials
                        .select { |accessorial| @conf.dig(:accessorials, :unserviceable).exclude?(accessorial) }
-                       .map do |accessorial|
-                         { code: @conf.dig(:accessorials, :mappable)[accessorial] }
-                       end
+                       .map { |accessorial| @conf.dig(:accessorials, :mappable, accessorial) }
       end
 
       accessorials += build_calculated_accessorials(shipment.packages)
