@@ -1,16 +1,3 @@
-Portions of this project are © 2016 Shopify from project
-ActiveShipping.
-
-Portions of this project are © 2018 Sub Pop Records from project
-RectiveShipping.
-
-Portions of this project are © 2020 Brody Hoskins from project ReactiveFreight.
-
-Portions of this project are © 2021 Brody Hoskins from project HyperCarrier.
-
-Copyright for all later portions this project are held by Third Party Logistics
-Management Systems LLC.
-
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
 "Software"), to deal in the Software without restriction, including
