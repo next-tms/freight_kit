@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-require_relative 'lib/freight_kit'
-
 Gem::Specification.new do |spec|
   spec.name = 'freight_kit'
-  spec.version = FreightKit::VERSION
+  spec.version = File.read(File.expand_path('VERSION', __dir__)).strip.freeze
   spec.authors = ['Third Party Transportation Systems LLC']
   spec.email = ['hello@next-tms.com']
 
