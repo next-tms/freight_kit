@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency('business_time', '~> 0.13.0')
-  spec.add_development_dependency('faker', '~> 3.2.1')
+  spec.add_development_dependency('faker', '~> 3.3.0')
   spec.add_development_dependency('rake', '~> 13.1.0')
   spec.add_development_dependency('redcarpet', '~> 3.6.0') # for yard
   spec.add_development_dependency('rspec', '~> 3.12')
