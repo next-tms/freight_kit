@@ -3,6 +3,7 @@
 require 'active_model'
 require 'active_support/all'
 require 'active_utils'
+require 'business_time'
 require 'cgi'
 require 'httparty'
 require 'measured'
