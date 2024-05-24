@@ -7,7 +7,7 @@ FactoryBot.define do
       account { Faker::Number.number(digits: 9).to_s }
       username { Faker::Internet.username }
       password { Faker::Internet.password }
-      
+
       initialize_with { new(attributes) }
     end
   end

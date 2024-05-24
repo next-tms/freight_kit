@@ -9,7 +9,7 @@ FactoryBot.define do
     country { ActiveUtils::Country.find('US') }
     postal_code { Faker::Address.postcode }
     province { Faker::Address.state_abbr }
-    
+
     initialize_with { new(attributes) }
   end
 end

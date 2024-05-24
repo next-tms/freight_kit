@@ -8,7 +8,7 @@ FactoryBot.define do
     fax { Faker::PhoneNumber.phone_number_with_country_code }
     name { "#{Faker::Name.first_name} #{Faker::Name.last_name}" }
     phone { Faker::PhoneNumber.phone_number_with_country_code }
-    
+
     initialize_with { new(attributes) }
   end
 end
