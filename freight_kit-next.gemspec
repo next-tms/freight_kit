@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('freight_kit', '~> 0.1.5')
   spec.add_dependency('rmagick', '>= 4.2.5', '< 5.5.0')
 
-  spec.add_development_dependency('faker', '~> 3.2.1')
+  spec.add_development_dependency('faker', '~> 3.3.1')
   spec.add_development_dependency('rspec', '~> 3.13.0')
   spec.add_development_dependency('rubocop-next', '~> 1.0.6')
 end
