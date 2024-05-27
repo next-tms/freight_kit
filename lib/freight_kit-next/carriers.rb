@@ -23,6 +23,7 @@ module FreightKit
   end
 end
 
+FreightKit::Carriers.register(:ABFS, 'freight_kit-next/carriers/abfs')
 FreightKit::Carriers.register(:BTVP, 'freight_kit-next/carriers/btvp')
 FreightKit::Carriers.register(:CCYQ, 'freight_kit-next/carriers/ccyq')
 FreightKit::Carriers.register(:CLNI, 'freight_kit-next/carriers/clni')

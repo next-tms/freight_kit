@@ -12,6 +12,7 @@ This library is a [`FreightKit`](https://github.com/next-tms/freight_kit) plug-i
 
 |Carrier                            |Scanned BOL|POD|Pickups|Rates|Tracking|
 |-----------------------------------|-----------|---|-------|-----|--------|
+|ABF Freight System                 |           |   |       |✓    |        |
 |Best Overnite Express              |✓          |✓  |✓      |✓    |✓       |
 |Clear Lane Freight Systems         |           |   |       |✓    |        |
 |DC Logistics                       |✓          |✓  |✓      |✓    |✓       |
