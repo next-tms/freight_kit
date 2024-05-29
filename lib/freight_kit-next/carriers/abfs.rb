@@ -28,7 +28,7 @@ module FreightKit
       end
 
       def required_credential_types
-        %i[api_key]
+        %i[api api_key]
       end
 
       def requirements
@@ -141,7 +141,7 @@ module FreightKit
       tms_credential = fetch_credential(:api_key)
 
       account = { 'ID' => broker_credential.username }
-      account['APP_ID'] = tms_credential.api_key if tms_credential.present?
+      account['APP_ID'] = tms_credential.api_key
 
       delivery = {}.tap do |builder|
         delivery_limited_access_type = shipment.accessorials.map do |key|
