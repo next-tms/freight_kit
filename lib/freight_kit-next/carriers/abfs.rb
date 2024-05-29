@@ -98,8 +98,6 @@ module FreightKit
     protected
 
     def build_url(action, options = {})
-      broker_credential
-
       uri = URI.parse("https://#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}")
       uri.query = options[:params].to_query if options[:params].present?
 
@@ -139,6 +137,9 @@ module FreightKit
     # Rates
 
     def build_rate_request(shipment:)
+      broker_credential = fetch_credential(:api)
+      tms_credential = fetch_credential(:api_key)
+
       account = { 'ID' => broker_credential.api_key }
       account['APP_ID'] = tms_credential.api_key if tms_credential.present?
 
@@ -400,10 +401,6 @@ restaurant_pickup
 
     private
 
-    def broker_credential
-      credentials.find { |credential| credential.type == :api_key && credential.api_key.length == 8 }
-    end
-
     def guaranteed_ltl_service(hours)
       raise ArgumentError, 'Invalid hours' unless hours.match?(/^\d{4}$/)
 
@@ -417,10 +414,6 @@ restaurant_pickup
       to = ::Time.parse(to).in_time_zone('America/Chicago')
 
       (from.business_time_until(to) / 28_800.0).days
-    end
-
-    def tms_credential
-      credentials.find { |credential| credential.type == :api_key && credential.api_key.length == 32 }
     end
   end
 end
