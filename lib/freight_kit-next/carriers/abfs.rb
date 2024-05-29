@@ -140,7 +140,7 @@ module FreightKit
       broker_credential = fetch_credential(:api)
       tms_credential = fetch_credential(:api_key)
 
-      account = { 'ID' => broker_credential.api_key }
+      account = { 'ID' => broker_credential.username }
       account['APP_ID'] = tms_credential.api_key if tms_credential.present?
 
       delivery = {}.tap do |builder|
