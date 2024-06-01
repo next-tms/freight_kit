@@ -256,7 +256,9 @@ module FreightKit
       if error
         rate_response.error = InvalidCredentialsError.new(error) if error.downcase.include?('not a valid customer code')
 
-        rate_response.error = UnserviceableError.new(error) if error.downcase.include?('not a direct service point')
+        if error.downcase.include?('not a direct service point') || error.downcase.include?('lanes not serviced')
+          rate_response.error = UnserviceableError.new(error)
+        end
 
         rate_response.error = ResponseError.new(error) if rate_response.error.blank?
         return rate_response
