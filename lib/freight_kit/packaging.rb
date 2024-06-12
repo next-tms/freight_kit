@@ -28,7 +28,7 @@ module FreightKit
       options.symbolize_keys!
       @options = options
 
-      unless VALID_TYPES.include?(type)
+      if VALID_TYPES.exclude?(type)
         raise ArgumentError, "Package#new: `type` should be one of #{VALID_TYPES.join(", ")}"
       end
 

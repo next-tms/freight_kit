@@ -192,7 +192,7 @@ module FreightKit
                     ),
                     "#{self.class.to_s.split("::")[1].underscore}.yml",
                   )
-      @conf = YAML.safe_load(File.read(conf_path), permitted_classes: [Symbol])
+      @conf = YAML.safe_load_file(conf_path, permitted_classes: [Symbol])
 
       @rates_with_excessive_length_fees = @conf.dig(:attributes, :rates, :with_excessive_length_fees)
     end
