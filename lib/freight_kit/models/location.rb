@@ -100,7 +100,7 @@ module FreightKit
     def type=(value)
       return @type = nil if value.blank?
 
-      raise ArgumentError, "type must be one of :#{TYPES.join(", :")}" unless TYPES.include?(value)
+      raise ArgumentError, "type must be one of :#{TYPES.join(", :")}" if TYPES.exclude?(value)
 
       @type = value
     end

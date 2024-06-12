@@ -18,7 +18,7 @@ module FreightKit
                     ),
                     "#{parent_class_name}.yml",
                   )
-      @conf = YAML.safe_load(File.read(conf_path), permitted_classes: [Symbol])
+      @conf = YAML.safe_load_file(conf_path, permitted_classes: [Symbol])
 
       conf_path = File
                   .join(
@@ -28,7 +28,7 @@ module FreightKit
                     ),
                     "#{self.class.to_s.demodulize.underscore}.yml",
                   )
-      @conf = @conf.deep_merge(YAML.safe_load(File.read(conf_path), permitted_classes: [Symbol]))
+      @conf = @conf.deep_merge(YAML.safe_load_file(conf_path, permitted_classes: [Symbol]))
 
       @rates_with_excessive_length_fees = @conf.dig(:attributes, :rates, :with_excessive_length_fees)
     end

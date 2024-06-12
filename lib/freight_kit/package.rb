@@ -137,7 +137,7 @@ module FreightKit # :nodoc:
     end
 
     def freight_class
-      (declared_freight_class.presence || calculated_freight_class)
+      declared_freight_class.presence || calculated_freight_class
     end
 
     def length(unit)
