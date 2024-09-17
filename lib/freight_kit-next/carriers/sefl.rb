@@ -84,7 +84,7 @@ module FreightKit
       body = URI.encode_www_form(options[:body]) if options[:body].present?
 
       request = {
-        url: (options[:url].presence || build_url(action)),
+        url: options[:url].presence || build_url(action),
         headers:,
         method: @conf.dig(:api, :methods, action),
         body:

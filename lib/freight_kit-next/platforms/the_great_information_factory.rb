@@ -340,7 +340,7 @@ module FreightKit
 
         event = nil
         @conf.dig(:events, :types).each do |key, val|
-          next unless api_event[:description].downcase.include?(val)
+          next if api_event[:description].downcase.exclude?(val)
 
           event = key
           break

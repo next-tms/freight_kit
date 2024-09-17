@@ -49,7 +49,7 @@ module FreightKit
       uri = URI.parse("#{scheme}#{@conf.dig(:api, :domain)}#{@conf.dig(:api, :endpoints, action)}")
       uri.query = query.to_query
       url = uri.to_s
-      return url unless url.include?('@CARRIER_CODE@')
+      return url if url.exclude?('@CARRIER_CODE@')
 
       url.sub('@CARRIER_CODE@', @conf.dig(:api, :carrier_code))
     end

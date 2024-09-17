@@ -177,7 +177,7 @@ module FreightKit
 
       invalid_states = []
       states.each do |state|
-        invalid_states << state unless valid_states.include?(state)
+        invalid_states << state if valid_states.exclude?(state)
       end
 
       return true if invalid_states.blank?

@@ -97,7 +97,7 @@ module FreightKit
       parsed_accessorials = []
 
       shipment.accessorials.each do |a|
-        unless @conf.dig(:accessorials, :unserviceable).include?(a)
+        if @conf.dig(:accessorials, :unserviceable).exclude?(a)
           parsed_accessorials << { ServiceCode: @conf.dig(:accessorials, :mappable)[a] }
         end
       end

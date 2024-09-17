@@ -46,5 +46,11 @@ module FreightKit
 
       soap_header
     end
+
+    protected
+
+    def wrap_request(request)
+      { 'args0' => request }
+    end
   end
 end

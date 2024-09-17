@@ -202,7 +202,7 @@ module FreightKit
       if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
-          unless @conf.dig(:accessorials, :unserviceable).include?(a)
+          if @conf.dig(:accessorials, :unserviceable).exclude?(a)
             accessorials << @conf.dig(:accessorials, :mappable)[a]
           end
         end

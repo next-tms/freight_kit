@@ -213,7 +213,7 @@ module FreightKit
       if delivery_appointment_scheduled
         html.css('tr').each do |tr|
           next if tr.text.include?('DateNotes')
-          next unless tr.css('td')[1].text.include?('Estimated Delivery Date')
+          next if tr.css('td')[1].text.exclude?('Estimated Delivery Date')
 
           api_date = tr.css('td')[0].text.split&.first
           scheduled_delivery_date = parse_api_date(api_date, shipment_events.last.location)

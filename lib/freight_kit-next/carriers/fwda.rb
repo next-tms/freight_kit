@@ -296,7 +296,7 @@ module FreightKit
                    HTTParty.get(url, headers:, debug_output: $stdout)
                  end
 
-      unless (200..299).include?(response.code)
+      if (200..299).exclude?(response.code)
         message = begin
           JSON.parse(response.body)['errorMessage'] || "HTTP #{response.code}"
         rescue JSON::ParserError
