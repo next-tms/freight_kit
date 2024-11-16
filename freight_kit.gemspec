@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('rubocop-next', '~> 1.0.7')
   spec.add_development_dependency('yard', '~> 0.9.28')
 
-  spec.add_dependency('activemodel', '>= 4.2', '< 7.2.2')
+  spec.add_dependency('activemodel', '>= 4.2', '< 8.0.1')
   spec.add_dependency('activesupport', '>= 4.2', '< 7.2.3')
   spec.add_dependency('active_utils', '>= 3.3.1', '< 3.5.0')
   spec.add_dependency('business_time', '~> 0.13.0')
