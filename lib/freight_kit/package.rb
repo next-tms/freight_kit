@@ -39,17 +39,14 @@ module FreightKit # :nodoc:
       raise ArgumentError, 'Package#new: packaging_type is required' unless packaging_type
       raise ArgumentError, 'Package#new: quantity is required' unless options[:quantity]
 
-      @dimensions = case dimensions
-                    when Array
-                      dimensions.map(&:presence)
-                    when Hash
+      @dimensions = if dimensions.is_a?(Hash)
                       [
                         dimensions[:height].presence,
                         dimensions[:width].presence,
                         dimensions[:length].presence,
                       ]
                     else
-                      [nil, nil, nil]
+                      dimensions
                     end
 
       @description = options[:description]
