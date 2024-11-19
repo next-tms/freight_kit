@@ -5,7 +5,7 @@ require 'spec_helper'
 describe FreightKit::ABFS do
   let(:broker_credential) do
     FreightKit::Credential.new(
-      type: :api_key,
+      type: :api,
       account: Faker::Number.number.to_s,
       api_key: Faker::Number.number(digits: 8).to_s,
     )
