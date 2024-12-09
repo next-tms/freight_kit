@@ -35,7 +35,7 @@ module FreightKit
         longest_dimension = shipment.packages.map { |package| [package.length(:in), package.width(:in)].max }.max.ceil
 
         case longest_dimension
-        when (96..143) then builder << 'XTRM18'
+        when (96..143) then builder << 'XTRM8'
         when (144..191) then builder << 'XTRM12'
         when (192..239) then builder << 'XTRM16'
         when (240..311) then builder << 'XTRM20'
