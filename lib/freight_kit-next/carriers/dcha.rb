@@ -58,7 +58,7 @@ residential_pickup
         when (288..299) then builder << 'XL24'
         when (300..311) then builder << 'XL25'
         when (312..323) then builder << 'XL26'
-        when (324..) then builder << ['XL27']
+        when (324..) then builder << 'XL27'
         end
       end
     end
