@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
                Dir['test/**/*']
   spec.require_paths = ['lib']
 
-  spec.add_dependency('freight_kit', '~> 0.1.10')
+  spec.add_dependency('freight_kit', '~> 0.1.11')
   spec.add_dependency('rmagick', '>= 4.2.5', '< 5.5.0')
 
   spec.add_development_dependency('faker', '~> 3.5.1')
