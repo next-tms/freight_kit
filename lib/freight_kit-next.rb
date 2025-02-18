@@ -2,10 +2,10 @@
 
 require 'freight_kit'
 
-require 'freight_kit-next/api_clients'
+require 'freight_kit/api_clients'
+require 'freight_kit/helpers'
 
-require 'freight_kit-next/helpers'
-require 'freight_kit-next/platforms'
-require 'freight_kit-next/carriers'
+require 'freight_kit/platforms'
+require 'freight_kit/carriers'
 
 require 'rmagick'
