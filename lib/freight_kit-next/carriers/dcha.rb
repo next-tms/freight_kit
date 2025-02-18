@@ -23,7 +23,7 @@ module FreightKit
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
-    @@name = 'DC Logistics'
+    @@name = 'Mountain Valley Express'
     @@scac = 'DCHA'
 
     # Documents
