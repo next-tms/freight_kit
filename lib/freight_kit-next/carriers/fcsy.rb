@@ -23,7 +23,7 @@ module FreightKit
     REACTIVE_FREIGHT_CARRIER = true
 
     cattr_reader :name, :scac
-    @@name = 'Frontline Freight'
+    @@name = 'STG'
     @@scac = 'FCSY'
 
     # Documents
