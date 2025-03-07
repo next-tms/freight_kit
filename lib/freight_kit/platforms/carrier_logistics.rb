@@ -332,9 +332,12 @@ module FreightKit
         i += 1 # API starts at 1 (not 0)
 
         query["vclass[#{i}]"] = package.freight_class
+        query["wheight[#{i}]"] = package.height(:in).ceil
+        query["wlength[#{i}]"] = package.length(:in).ceil
         query["wpallets[#{i}]"] = package.quantity
         query["wpieces[#{i}]"] = package.quantity
         query["wweight[#{i}]"] = package.pounds(:total).ceil
+        query["wwidth[#{i}]"] = package.width(:in).ceil
       end
 
       accessorials = []
