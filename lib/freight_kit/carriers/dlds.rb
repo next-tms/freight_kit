@@ -16,7 +16,7 @@ module FreightKit
       end
 
       def overlength_fees_require_tariff?
-        true
+        false
       end
     end
 

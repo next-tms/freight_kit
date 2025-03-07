@@ -105,7 +105,7 @@
     :rates: true
 :attributes:
   :rates:
-    :with_excessive_length_fees: false
+    :with_excessive_length_fees: true
 :services:
   :types:
     - :standard
