@@ -165,7 +165,7 @@ module FreightKit
 
         # Raises vague input exception from API if we don't handle ourselves
         next if api_credential.account.gsub(/\D/, '') == api_credential.account &&
-                api_credential.account.length == 7
+                api_credential.account.length >= 6
 
         raise InvalidCredentialsError, 'Invalid account'
       end
