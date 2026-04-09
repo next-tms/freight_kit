@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency('freight_kit', '~> 0.1.13')
-  spec.add_dependency('rmagick', '>= 4.2.5', '< 5.5.0')
+  spec.add_dependency('rmagick', '>= 4.2.5', '< 6.4.0')
 
   spec.add_development_dependency('faker', '~> 3.6.1')
   spec.add_development_dependency('rspec', '~> 3.13.0')
