@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
                Dir['test/**/*']
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency('faker', '~> 3.6.1')
+  spec.add_development_dependency('faker', '~> 3.8.0')
   spec.add_development_dependency('rake', '~> 13.3.1')
   spec.add_development_dependency('redcarpet', '~> 3.6.0') # for yard
   spec.add_development_dependency('rspec', '~> 3.12')
