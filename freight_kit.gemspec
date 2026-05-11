@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency('faker', '~> 3.6.1')
-  spec.add_development_dependency('rake', '~> 13.3.1')
+  spec.add_development_dependency('rake', '~> 13.4.2')
   spec.add_development_dependency('redcarpet', '~> 3.6.0') # for yard
   spec.add_development_dependency('rspec', '~> 3.12')
   spec.add_development_dependency('rubocop-next', '~> 1.0.7')
