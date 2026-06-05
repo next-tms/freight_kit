@@ -1,12 +1,14 @@
 name: Checks
-on: [push]
+on:
+  push:
+  pull_request:
 jobs:
   syntax:
     name: Syntax
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
         with:
           ruby-version: 3.2.2
       - run: sudo apt-get update && sudo apt-get install -y libmagickwand-dev
@@ -14,3 +16,16 @@ jobs:
           gem install bundler
           bundle install --jobs 4 --retry 3
       - run: bundle exec rubocop
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
+        with:
+          ruby-version: 3.2.2
+      - run: sudo apt-get update && sudo apt-get install -y libmagickwand-dev
+      - run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+      - run: bundle exec rspec
