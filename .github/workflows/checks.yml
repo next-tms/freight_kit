@@ -10,20 +10,25 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
         with:
-          ruby-version: 3.2.2
+          ruby-version: '3.2'
       - run: sudo apt-get update && sudo apt-get install -y libmagickwand-dev
       - run: |
           gem install bundler
           bundle install --jobs 4 --retry 3
       - run: bundle exec rubocop
   test:
-    name: Test
+    name: Test (Ruby ${{ matrix.ruby }})
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.ruby == 'head' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['3.2', '3.3', '3.4', 'head']
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
         with:
-          ruby-version: 3.2.2
+          ruby-version: ${{ matrix.ruby }}
       - run: sudo apt-get update && sudo apt-get install -y libmagickwand-dev
       - run: |
           gem install bundler

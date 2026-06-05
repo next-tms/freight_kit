@@ -338,7 +338,7 @@ module FreightKit
       raise FreightKit::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found" unless link
 
       query = URI.parse(link).query
-      doc_id = CGI.parse(query)['docId']&.first
+      doc_id = URI.decode_www_form(query).assoc('docId')&.last
 
       raise FreightKit::DocumentNotFoundError, "API Error: #{self.class.name}: Document not found" unless doc_id
 
