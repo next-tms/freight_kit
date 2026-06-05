@@ -1,0 +1,28 @@
+:api:
+  :domain: public.api.tql.com
+  :endpoints:
+    :rates: /ltl/quotes
+    :track: /tracking/%TRACKING_NUMBER%
+    :pickup: /ltl/loads/tender
+    :auth: /identity/token
+  :methods:
+    :rates: :post
+    :track: :get
+    :pickup: :post
+    :auth: :post
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
+# Per carrier at 2023-02-13
+:accessorials:
+  :mappable:
+    :appointment_delivery: APPTDEL
+    :inside_delivery: INPU
+    :inside_pickup: INDEL
+    :liftgate_delivery: LGDEL
+    :liftgate_pickup: LGPU
+:events:
+  :types:
+    :picked_up: Tendered
+    :delivered: Delivered
+    :out_for_delivery: In Transit

@@ -1,0 +1,117 @@
+:accessorials:
+  # See https://api.customco.com/scripts/cgiip.exe/keywordlist.xml
+  :mappable:
+    :airport_delivery: 'LA'
+    :airport_pickup: 'LA'
+    :amusement_park_delivery: 'LA'
+    :amusement_park_pickup: 'LA'
+    :appointment_delivery: 'APPT'
+    :cemetery_delivery: 'LA'
+    :cemetery_pickup: 'LA'
+    :church_delivery: 'LA'
+    :church_pickup: 'LA'
+    :construction_delivery: 'CS'
+    :construction_pickup: 'CS'
+    :farm_delivery: 'LA'
+    :farm_pickup: 'LA'
+    :fitness_center_delivery: 'LA'
+    :fitness_center_pickup: 'LA'
+    :golf_course_delivery: 'LA'
+    :golf_course_pickup: 'LA'
+    :government_delivery: 'LA'
+    :government_pickup: 'LA'
+    :grocery_warehouse_delivery: 'GWF'
+    :grocery_warehouse_pickup: 'GWF'
+    :hospital_delivery: 'LA'
+    :hospital_pickup: 'LA'
+    :hotel_delivery: 'LA'
+    :hotel_pickup: 'LA'
+    :inside_delivery: 'INSIDE'
+    :inside_pickup: 'INSIDE'
+    :inspection_site_delivery: 'LA'
+    :inspection_site_pickup: 'LA'
+    :jobsite_delivery: 'CS'
+    :jobsite_pickup: 'CS'
+    :liftgate_delivery: 'LIFT'
+    :liftgate_pickup: 'LIFTP'
+    :mall_pickup: 'LA'
+    :marina_delivery: 'LA'
+    :marina_pickup: 'LA'
+    :military_site_delivery: 'LA'
+    :military_site_pickup: 'LA'
+    :mine_site_delivery: 'LA'
+    :mine_site_pickup: 'LA'
+    :nursing_home_delivery: 'LA'
+    :nursing_home_pickup: 'LA'
+    :park_delivery: 'LA'
+    :park_pickup: 'LA'
+    :prison_delivery: 'LA'
+    :prison_pickup: 'LA'
+    :ranch_delivery: 'LA'
+    :ranch_pickup: 'LA'
+    :reservation_delivery: 'LA'
+    :reservation_pickup: 'LA'
+    :residential_delivery: 'RESDEL'
+    :residential_pickup: 'RESPI'
+    :resort_delivery: 'LA'
+    :resort_pickup: 'LA'
+    :school_delivery: 'LA'
+    :school_pickup: 'LA'
+    :storage_facility_delivery: 'LA'
+    :storage_facility_pickup: 'LA'
+    :university_delivery: 'LA'
+    :university_pickup: 'LA'
+    :utility_site_delivery: 'LA'
+    :utility_site_pickup: 'LA'
+  # May be inaccurate
+  :unquotable:
+    - :athletic_facility_delivery
+    - :athletic_facility_pickup
+    - :dock_dropoff
+    - :dock_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
+    - :mall_delivery
+    - :motel_delivery
+    - :motel_pickup
+    - :restaurant_delivery
+    - :restaurant_pickup
+    - :steel_mill_delivery
+    - :steel_mill_pickup
+  # May be inaccurate
+  :unserviceable:
+    - :appointment_pickup
+    - :brewery_delivery
+    - :brewery_pickup
+    - :convention_delivery
+    - :convention_pickup
+    - :customs_brokerage
+    - :driver_assist
+    - :early_morning_delivery
+    - :fair_delivery
+    - :fair_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm
+    - :guaranteed_delivery
+    - :winery_delivery
+    - :winery_pickup
+:api:
+  :domain: api.customco.com
+  :endpoints:
+    :bol: /scripts/cgiip.exe/web-login.htm?
+    :pod: /scripts/cgiip.exe/web-login.htm?
+    :rates: /scripts/cgiip.exe/ratequote.xml?
+    :track: /scripts/cgiip.exe/protracexml.htm?
+  :use_ssl:
+    :bol: false
+    :pod: false
+    :rates: false
+    :track: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
+:services:
+  :types:
+    - :standard

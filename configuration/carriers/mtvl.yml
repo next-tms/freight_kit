@@ -1,0 +1,12 @@
+:api:
+  :domain: edifreight.gls-us.com
+  :endpoints:
+    :rates: /web/services/TQUOTEAPIService/TQUOTEAPI?wsdl
+    :track: /web/services/TTRACKAPIService/TTRACKAPI?wsdl
+    :pickup: /web/services/TPICKUPAPIService/TPICKUPAPI?wsdl
+  :ports:
+    :rates: 10010
+    :track: 10010
+:attributes:
+  :rates:
+    :with_excessive_length_fees: false

@@ -23,8 +23,9 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/next-tms/freight_kit'
   spec.summary = spec.description
 
-  spec.files = Dir['lib/**/*'] +
-               Dir['[A-Z]*'] +
+  spec.files = Dir['[A-Z]*'] +
+               Dir['configuration/*/*.yml'] +
+               Dir['lib/**/*'] +
                Dir['test/**/*']
   spec.require_paths = ['lib']
 
@@ -45,6 +46,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('mimemagic', '~> 0.4.3')
   spec.add_dependency('nokogiri', '>= 1.6', '< 1.20')
   spec.add_dependency('place_kit', '~> 0.0.2')
+  spec.add_dependency('rmagick', '>= 4.2.5', '< 7.1.0')
   spec.add_dependency('savon', '>= 2.0', '< 2.18')
   spec.add_dependency('tzinfo-data', '~> 1.2023', '>= 1.2023.3')
   spec.add_dependency('watir', '>= 7.0', '< 7.4')

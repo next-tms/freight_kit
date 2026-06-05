@@ -9,6 +9,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.2.2
+      - run: sudo apt-get update && sudo apt-get install -y libmagickwand-dev
       - run: |
           gem install bundler
           bundle install --jobs 4 --retry 3

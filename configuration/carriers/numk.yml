@@ -1,0 +1,14 @@
+:api:
+  :domain: tracking.numarktransportation.net
+  :endpoints:
+    :bol: /cgibin/timageapi?doctype=BOL
+    :pod: /cgibin/timageapi?doctype=POD
+    :rates: /web/services/TQUOTEAPI?wsdl
+    :track: /web/services/TTRACKAPI?wsdl
+    :pickup: /web/services/TPICKUPAPI?wsdl
+  :ports:
+    :rates: 10010
+    :track: 10010
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
