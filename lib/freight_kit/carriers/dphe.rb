@@ -167,7 +167,7 @@ module FreightKit
       download_url = "#{selenoid_credential.selenoid_options[:download_url]}/#{browser.driver.session_id}"
       response = HTTParty.get("#{download_url}/?json")
 
-      filename = CGI.escape(JSON.parse(response.body)&.last)
+      filename = URI.encode_www_form_component(JSON.parse(response.body)&.last)
       url = "#{download_url}/#{filename}"
 
       document_response.request = URI.parse(url)

@@ -66,7 +66,7 @@ describe FreightKit::SEFL do
     let(:shipment) { FreightKit::Shipment.new(accessorials:, destination:, origin:, packages:) }
 
     let(:result) { carrier.send(:build_rate_request, shipment:) }
-    let(:body) { CGI.parse(result[:body]).transform_values!(&:first) }
+    let(:body) { URI.decode_www_form(result[:body]).to_h }
 
     it { expect(body['allowSpot']).to(eq('N')) }
     it { expect(body['CustomerAccount']).to(eq(credentials.account)) }

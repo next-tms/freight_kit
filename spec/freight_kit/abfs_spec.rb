@@ -7,7 +7,8 @@ describe FreightKit::ABFS do
     FreightKit::Credential.new(
       type: :api,
       account: Faker::Number.number.to_s,
-      api_key: Faker::Number.number(digits: 8).to_s,
+      username: Faker::Alphanumeric.alphanumeric(number: 8).upcase,
+      password: Faker::Internet.password,
     )
   end
   let(:tms_credential) do
@@ -97,7 +98,7 @@ describe FreightKit::ABFS do
     it { expect(params['FrtLWHType']).to(eq('IN')) }
     it { expect(params['FrtWdth1']).to(eq(shipment.packages[0].inches(:width).to_s)) }
     it { expect(params['FrtWdth2']).to(eq(shipment.packages[1].inches(:width).to_s)) }
-    it { expect(params['ID']).to(eq(broker_credential.api_key)) }
+    it { expect(params['ID']).to(eq(broker_credential.username)) }
     it { expect(params['ODLongestSide']).to(be_present) }
     it { expect(params['ShipCity']).to(eq(origin.city)) }
     it { expect(params['ShipCountry']).to(eq(origin.country.code(:alpha2).value)) }
