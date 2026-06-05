@@ -1,0 +1,84 @@
+:api:
+  :actions:
+    :rates: :getquote
+    :track: :tracktrace
+    :pickup: :requestpickup
+  :domain: tgif1.bestovernite.com
+  :domains:
+    :pod: tgif.bestovernite.com
+    :bol: tgif.bestovernite.com
+  :endpoints:
+    :bol: /cgi-bin/timageapi?doctype=BOL
+    :pod: /cgi-bin/timageapi?doctype=POD
+    :rates: /web/services/TQUOTEAPIService/TQUOTEAPI?wsdl
+    :track: /web/services/TTRACKAPIService/TTRACKAPI?wsdl
+    :pickup: /web/services/TPICKUPAPIService/TPICKUPAPI?wsdl
+  :ports:
+    :rates: 10032
+    :track: 10032
+    :pickup: 10032
+  :use_ssl:
+    :pickup: false
+    :bol: true
+    :pod: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: false
+:documents:
+  :types:
+    :bol: Bill of Lading
+    :pod: Proof of Delivery
+:events:
+  :locations:
+    :'31':
+      :city: Las Vegas
+      :province: NV
+      :state: NV
+    :'32':
+      :city: Reno
+      :province: NV
+      :state: NV
+    :'50':
+      :city: Phoenix
+      :province: AZ
+      :state: AZ  
+    :'62':
+      :city: Denver
+      :province: CO
+      :state: CO
+    :'71':
+      :city: Salt Lake City
+      :province: UT
+      :state: UT
+    :BEN:
+      :city: Benicia
+      :province: CA
+      :state: CA
+    :DAL:
+      :city: Dallas
+      :province: TX
+      :state: TX
+    :FRES:
+      :city: Fresno
+      :province: CA
+      :state: CA
+    :KENT:
+      :city: Kent
+      :province: WA
+      :state: WA
+    :LA:
+      :city: Los Angeles
+      :province: CA
+      :state: CA
+    :PDX:
+      :city: Portland
+      :province: OR
+      :state: OR
+    :SAC:
+      :city: Sacramento
+      :province: CA
+      :state: CA
+    :SJ:
+      :city: San Jose
+      :province: CA
+      :state: CA

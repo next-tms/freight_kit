@@ -1,0 +1,113 @@
+:accessorials:
+  :mappable:
+    :afterhours_delivery: DAH
+    :airport_delivery: DMS
+    :appointment_delivery: APT
+    :construction_delivery: CSD
+    :construction_pickup: OCS
+    :convention_delivery: PED
+    :convention_pickup: PEO
+    :fair_delivery: PED
+    :fair_pickup: PEO
+    :government_delivery: DMS
+    :guaranteed_delivery_am: G12
+    :guaranteed_delivery: GUR
+    :inside_delivery: DID
+    :inside_pickup: OIP
+    :jobsite_delivery: CSD
+    :jobsite_pickup: OCS
+    :liftgate_delivery: DLG
+    :liftgate_pickup: OLG
+    :marina_delivery: DPW
+    :mine_site_delivery: DMS
+    :residential_delivery: RSD
+    :residential_pickup: RSO
+  # May be inaccurate
+  :unquotable:
+  # May be inaccurate
+  :unserviceable:
+    - :afterhours_pickup
+    - :airport_pickup
+    - :amusement_park_delivery
+    - :amusement_park_pickup
+    - :appointment_pickup
+    - :athletic_facility_delivery
+    - :athletic_facility_pickup
+    - :brewery_delivery
+    - :brewery_pickup
+    - :cemetery_delivery
+    - :cemetery_pickup
+    - :church_delivery
+    - :church_pickup
+    - :customs_brokerage
+    - :dock_dropoff
+    - :dock_pickup
+    - :driver_assist
+    - :early_morning_delivery
+    - :early_morning_pickup
+    - :farm_delivery
+    - :farm_pickup
+    - :fitness_center_delivery
+    - :fitness_center_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :golf_course_delivery
+    - :golf_course_pickup
+    - :government_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
+    - :grocery_warehouse_delivery
+    - :grocery_warehouse_pickup
+    - :guaranteed_delivery_pm
+    - :hospital_delivery
+    - :hospital_pickup
+    - :hotel_delivery
+    - :hotel_pickup
+    - :inspection_site_delivery
+    - :inspection_site_pickup
+    - :mall_delivery
+    - :mall_pickup
+    - :marina_pickup
+    - :military_site_delivery
+    - :military_site_pickup
+    - :mine_site_pickup
+    - :motel_delivery
+    - :motel_pickup
+    - :nursing_home_delivery
+    - :nursing_home_pickup
+    - :park_delivery
+    - :park_pickup
+    - :prison_delivery
+    - :prison_pickup
+    - :ranch_delivery
+    - :ranch_pickup
+    - :reservation_delivery
+    - :reservation_pickup
+    - :resort_delivery
+    - :resort_pickup
+    - :restaurant_delivery
+    - :restaurant_pickup
+    - :school_delivery
+    - :school_pickup
+    - :steel_mill_delivery
+    - :steel_mill_pickup
+    - :storage_facility_delivery
+    - :storage_facility_pickup
+    - :university_delivery
+    - :university_pickup
+    - :utility_site_delivery
+    - :utility_site_pickup
+    - :winery_delivery
+    - :winery_pickup
+:api:
+  :domain: api.ltl.xpo.com
+  :endpoints:
+    :rates: /rating/1.0/ratequotes
+    :token: /token
+  :use_ssl: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
+:services:
+  :types:
+    - :standard

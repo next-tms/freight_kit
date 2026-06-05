@@ -23,9 +23,33 @@ Platform: Provides web-accessible services for many carriers at once.
 
 __Note:__ `Carrier`s may extend `Platform`s and override them when their behavior differs from the `Platform`.
 
-## Plug-in System
+## Supported Platforms
 
-FreightKit relies on plug-ins (gems) to define how it connects to individual `Carrier`s and `Platform`s.
+* [Carrier Logistics](https://carrierlogistics.com)
+* [Next TMS](https://next-tms.com)
+* [The Great Information Factory](https://www.tgifsoftware.com)
+
+## Supported Carriers
+
+|Carrier                            |Scanned BOL|POD|Pickups|Rates|Tracking|
+|-----------------------------------|-----------|---|-------|-----|--------|
+|ABF Freight System                 |           |   |       |✓    |        |
+|Best Overnite Express              |✓          |✓  |✓      |✓    |✓       |
+|Clear Lane Freight Systems         |           |   |       |✓    |        |
+|DC Logistics                       |✓          |✓  |✓      |✓    |✓       |
+|The Custom Companies               |           |   |       |✓    |✓       |
+|Dependable Highway Express         |✓          |✓  |       |✓    |✓       |
+|Forward Air                        |✓          |✓  |✓      |✓    |✓       |
+|Frontline Freight                  |✓          |✓  |       |✓    |✓       |
+|Numark Transportation              |✓          |✓  |✓      |✓    |✓       |
+|OnTrac                             |           |   |       |✓    |        |
+|Peninsula Truck Lines              |           |   |       |✓    |        |
+|Roadrunner Transportation Services |✓          |✓  |       |✓    |✓       |
+|Saia                               |           |   |✓      |✓    |✓       |
+|Southeastern Freight Lines         |           |   |       |✓    |        |
+|Tforce Worldwide                   |✓          |✓  |✓      |✓    |        |
+|Total Transportation & Distribution|✓          |✓  |       |✓    |✓       |
+|Western Regional Delivery Service  |           |✓  |       |     |✓       |
 
 ## Installation
 
@@ -41,11 +65,9 @@ Or standalone:
 $ gem install freight_kit
 ```
 
-__Note__: Plug-ins are required to connect to `Carrier`s and `Platforms` (see above).
-
 ## Standard Usage
 
-Start off by initializing the `Carrier` provided by a `Carrier` plug-in:
+Start off by initializing a `Carrier`:
 
 ```ruby
 require 'freight_kit'

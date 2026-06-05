@@ -1,0 +1,20 @@
+:api:
+  :domain: tracking.wrds.com
+  :endpoints:
+    :pod: /zLogin.aspx
+    :track: /zTrack2.aspx
+  :methods:
+    :track: :post
+  :use_ssl:
+    :bol: false
+    :pod: false
+    :track: true
+:events:
+  :types:
+    :arrived_at_terminal: arrived
+    :delivered: delivered
+    :delivery_appointment_scheduled: delivery appt made
+    :departed: departed
+:services:
+  :types:
+    - :standard

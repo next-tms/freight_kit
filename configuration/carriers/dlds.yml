@@ -1,0 +1,111 @@
+:accessorials:
+  # See https://tracking.carrierlogistics.com/scripts/dlds.pol/keywordlist.xml
+  # May be inaccurate
+  :mappable:
+    :airport_delivery: 'AIRDEL'
+    :airport_pickup: 'AIRPIC'
+    :amusement_park_delivery: 'LIMDEL'
+    :amusement_park_pickup: 'LIMPIC'
+    :appointment_pickup: 'NOTIFY'
+    :athletic_facility_delivery: 'LIMDEL'
+    :athletic_facility_pickup: 'LIMPIC'
+    :cemetery_delivery: 'LIMDEL'
+    :cemetery_pickup: 'LIMPIC'
+    :church_delivery: 'LIMDEL'
+    :church_pickup: 'LIMPIC'
+    :construction_delivery: 'LIMDEL'
+    :construction_pickup: 'LIMPIC'
+    :convention_delivery: 'TRADEDEL'
+    :convention_pickup: 'TRADEPIC'
+    :farm_delivery: 'LIMDEL'
+    :farm_pickup: 'LIMPIC'
+    :fitness_center_delivery: 'LIMDEL'
+    :fitness_center_pickup: 'LIMPIC'
+    :golf_course_delivery: 'LIMDEL'
+    :golf_course_pickup: 'LIMPIC'
+    :government_delivery: 'LIMDEL'
+    :government_pickup: 'LIMPIC'
+    :grocery_store_delivery: 'LIMDEL'
+    :grocery_store_pickup: 'LIMPIC'
+    :grocery_warehouse_delivery: 'GROCERYD'
+    :hospital_delivery: 'LIMDEL'
+    :hospital_pickup: 'LIMPIC'
+    :hotel_delivery: 'LIMDEL'
+    :hotel_pickup: 'LIMPIC'
+    :inside_delivery: 'INSDEL'
+    :inside_pickup: 'INSPIC'
+    :inspection_site_delivery: 'LIMDEL'
+    :inspection_site_pickup: 'LIMPIC'
+    :jobsite_delivery: 'LIMDEL'
+    :jobsite_pickup: 'LIMPIC'
+    :liftgate_delivery: 'LIFDEL'
+    :liftgate_pickup: 'LIFPIC'
+    :mall_delivery: 'LIMDEL'
+    :mall_pickup: 'LIMPIC'
+    :marina_delivery: 'LIMDEL'
+    :marina_pickup: 'LIMPIC'
+    :military_site_delivery: 'LIMDEL'
+    :military_site_pickup: 'LIMPIC'
+    :mine_site_delivery: 'LIMDEL'
+    :mine_site_pickup: 'LIMPIC'
+    :mote_delivery: 'LIMDEL'
+    :motel_pickup: 'LIMPIC'
+    :nursing_home_delivery: 'LIMDEL'
+    :nursing_home_pickup: 'LIMPIC'
+    :park_delivery: 'LIMDEL'
+    :park_pickup: 'LIMPIC'
+    :prison_delivery: 'LIMDEL'
+    :prison_pickup: 'LIMPIC'
+    :ranch_delivery: 'LIMDEL'
+    :ranch_pickup: 'LIMPIC'
+    :reservation_delivery: 'LIMDEL'
+    :reservation_pickup: 'LIMPIC'
+    :residential_delivery: 'RESDEL'
+    :residential_pickup: 'RESPIC'
+    :resort_delivery: 'LIMDEL'
+    :resort_pickup: 'LIMPIC'
+    :restaurant_delivery: 'LIMDEL'
+    :restaurant_pickup: 'LIMPIC'
+    :school_delivery: 'LIMDEL'
+    :school_pickup: 'LIMPIC'
+    :steel_mill_delivery: 'LIMDEL'
+    :steel_mill_pickup: 'LIMPIC'
+    :storage_facility_delivery: 'LIMDEL'
+    :storage_facility_pickup: 'LIMPIC'
+    :university_delivery: 'LIMDEL'
+    :university_pickup: 'LIMPIC'
+    :utility_site_delivery: 'LIMDEL'
+    :utility_site_pickup: 'LIMPIC'
+  # May be inaccurate
+  :unquotable:
+    - :dock_dropoff
+    - :dock_pickup
+  # May be inaccurate
+  :unserviceable:
+    - :brewery_delivery
+    - :brewery_pickup
+    - :customs_brokerage
+    - :driver_assist
+    - :early_morning_delivery
+    - :fair_delivery
+    - :fair_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :grocery_warehouse_pickup
+    - :guaranteed_delivery
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm
+    - :winery_delivery
+    - :winery_pickup
+:api:
+  :domain: tracking.carrierlogistics.com
+  :endpoints:
+    :rates: /scripts/dlds.pol/ratequote.xml?
+  :use_ssl:
+    :rates: true
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
+:services:
+  :types:
+    - :standard

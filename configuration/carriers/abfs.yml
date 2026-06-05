@@ -1,0 +1,124 @@
+:accessorials:
+  :delivery_limited_access_types: # Acc_LAD
+    :airport_delivery: O
+    :amusement_park_delivery: O
+    :cemetery_delivery: O
+    :church_delivery: C
+    :construction_site_delivery: O
+    :convention_delivery: O
+    :fair_delivery: O
+    :farm_delivery: O
+    :golf_course_delivery: O
+    :government_delivery: O
+    :hospital_delivery: O
+    :liftgate_delivery: O
+    :military_site_delivery: M
+    :mine_site_delivery: O
+    :nursing_home_delivery: O
+    :park_delivery: O
+    :prison_delivery: O
+    :ranch_delivery: O
+    :reservation_delivery: O
+    :restaurant_delivery: O
+    :school_delivery: S
+    :storage_facility_delivery: U
+    :university_delivery: O
+    :utility_site_delivery: O
+  :pickup_limited_access_types: # Acc_LAP
+    :airport_pickup: O
+    :amusement_park_pickup: O
+    :cemetery_pickup: O
+    :church_pickup: C
+    :convention_pickup: O
+    :fair_pickup: O
+    :farm_pickup: O
+    :golf_course_pickup: O
+    :government_pickup: O
+    :hospital_pickup: O
+    :liftgate_pickup: Acc_GRD_PU
+    :military_site_pickup: M
+    :mine_site_pickup: O
+    :nursing_home_pickup: O
+    :park_pickup: O
+    :prison_pickup: O
+    :ranch_pickup: O
+    :reservation_pickup: O
+    :restaurant_pickup: O
+    :school_pickup: S
+    :storage_facility_pickup: U
+    :university_pickup: O
+    :utility_site_pickup: O
+  :unquotable:
+  :unserviceable:
+    - :afterhours_delivery
+    - :afterhours_pickup
+    - :appointment_delivery
+    - :appointment_pickup
+    - :athletic_facility_delivery
+    - :athletic_facility_pickup
+    - :brewery_delivery
+    - :brewery_pickup
+    - :construction_site_pickup
+    - :customs_brokerage
+    - :dock_dropoff
+    - :dock_pickup
+    - :driver_assist
+    - :early_morning_delivery
+    - :early_morning_pickup
+    - :fitness_center_delivery
+    - :fitness_center_pickup
+    - :flatbed_delivery
+    - :flatbed_pickup
+    - :gated_community_delivery
+    - :gated_community_pickup
+    - :grocery_store_delivery
+    - :grocery_store_pickup
+    - :grocery_warehouse_delivery
+    - :grocery_warehouse_pickup
+    - :guaranteed_delivery
+    - :guaranteed_delivery_am
+    - :guaranteed_delivery_pm
+    - :hotel_delivery
+    - :hotel_pickup
+    - :inspection_site_delivery
+    - :inspection_site_pickup
+    - :jobsite_delivery
+    - :jobsite_pickup
+    - :mall_delivery
+    - :mall_pickup
+    - :marina_delivery
+    - :marina_pickup
+    - :motel_delivery
+    - :motel_pickup
+    - :residential_delivery
+    - :residential_pickup
+    - :resort_delivery
+    - :resort_pickup
+    - :steel_mill_delivery
+    - :steel_mill_pickup
+    - :winery_delivery
+    - :winery_pickup
+:api:
+  :domain: www.abfs.com
+  :endpoints:
+    :rates: /xml/aquotexml.asp
+  :methods:
+    :rates: GET
+:attributes:
+  :rates:
+    :with_excessive_length_fees: true
+:package_types:
+  :box: BX
+  :bundle: BDL
+  :crate: CRT
+  :cylinder: CYL
+  :drum: DR
+  :luggage: PC
+  :pail: PL
+  :pallet: PLT
+  :piece: PC
+  :roll: RL
+  :tote: TOTE
+:services:
+  :types:
+    - :standard
