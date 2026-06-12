@@ -5,30 +5,41 @@
     :airport_pickup: AIP
     :amusement_park_delivery: AMD
     :amusement_park_pickup: AMP
-    :appointment_delivery: NC
+    :appointment_delivery: APT
     :church_delivery: CHD
     :church_pickup: CHP
-    :construction_delivery: USD
-    :construction_pickup: USP
+    :construction_delivery: CSD
+    :construction_pickup: CSP
     :farm_delivery: FAD
     :farm_pickup: FAP
     :golf_course_delivery: CCD
     :golf_course_pickup: CCP
     :government_delivery: GSD
-    :inspection_site_delivery: ID
-    :inspection_site_pickup: IP
-    :jobsite_delivery: USD
-    :jobsite_pickup: USP
+    :grocery_warehouse_delivery: GWD
+    :grocery_warehouse_pickup: GWP
+    :hotel_delivery: HHD
+    :hotel_pickup: HHP
+    :inside_delivery: ID
+    :inside_pickup: IP
+    :jobsite_delivery: CSD
+    :jobsite_pickup: CSP
     :liftgate_delivery: LGD
     :liftgate_pickup: LGP
     :military_site_delivery: GSD
     :mine_site_delivery: MSD
     :nursing_home_delivery: NHD
     :nursing_home_pickup: NHP
+    :park_delivery: CPD
+    :park_pickup: CPP
     :prison_delivery: PSD
+    :ranch_delivery: FAD
+    :ranch_pickup: FAP
     :reservation_delivery: IRD
+    :reservation_pickup: IRP
     :residential_delivery: RSD
     :residential_pickup: RSP
+    :resort_delivery: CPD
+    :resort_pickup: CPP
     :school_delivery: SHD
     :school_pickup: SHP
     :university_delivery: SHD
@@ -52,8 +63,8 @@
     - :grocery_store_pickup
     - :hospital_delivery
     - :hospital_pickup
-    - :hotel_delivery
-    - :hotel_pickup
+    - :inspection_site_delivery
+    - :inspection_site_pickup
     - :mall_delivery
     - :mall_pickup
     - :marina_delivery
@@ -62,14 +73,7 @@
     - :mine_site_pickup
     - :motel_delivery
     - :motel_pickup
-    - :park_delivery
-    - :park_pickup
     - :prison_pickup
-    - :ranch_delivery
-    - :ranch_pickup
-    - :reservation_pickup
-    - :resort_delivery
-    - :resort_pickup
     - :restaurant_delivery
     - :restaurant_pickup
     - :steel_mill_delivery
@@ -88,13 +92,9 @@
     - :fair_pickup
     - :flatbed_delivery
     - :flatbed_pickup
-    - :grocery_warehouse_delivery
-    - :grocery_warehouse_pickup
     - :guaranteed_delivery_am
     - :guaranteed_delivery_pm
     - :guaranteed_delivery
-    - :inside_delivery
-    - :inside_pickup
     - :winery_delivery
     - :winery_pickup
 :api:
