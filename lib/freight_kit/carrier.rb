@@ -353,21 +353,44 @@ module FreightKit
       raise NotImplementedError, "#valid_pro is not supported by #{self.class.name}."
     end
 
-    def overlength_fee(tarrif, package)
-      max_dimension_inches = [package.length(:inches), package.width(:inches)].max
+    # The package's longest horizontal dimension (length or width), as a
+    # Measured::Length so comparisons stay unit-agnostic.
+    #
+    # @param package [FreightKit::Package]
+    # @return [Measured::Length]
+    def longest_dimension(package)
+      [
+        Measured::Length.new(package.length(:inches), :inches),
+        Measured::Length.new(package.width(:inches), :inches),
+      ].max
+    end
 
-      return 0 if max_dimension_inches < self.class.minimum_length_for_overlength_fees.convert_to(:inches).value
+    # @param package [FreightKit::Package]
+    # @return [Boolean] whether the package is long enough to incur overlength fees.
+    def overlength?(package) = longest_dimension(package) >= self.class.minimum_length_for_overlength_fees
 
-      tarrif.overlength_rules.each do |overlength_rule|
-        next if max_dimension_inches < overlength_rule[:min_length].convert_to(:inches).value
+    def overlength_fee(tariff, package)
+      overlength_rule = overlength_rule_for(tariff, package)
+      return 0 if overlength_rule.nil?
 
-        if overlength_rule[:max_length].blank? ||
-           max_dimension_inches <= overlength_rule[:max_length].convert_to(:inches).value
-          return (package.quantity * overlength_rule[:fee_cents])
-        end
-      end
+      package.quantity * overlength_rule.fee_cents
+    end
 
-      0
+    # Returns the overlength rule from +tariff+ that applies to +package+, or
+    # +nil+ when the package is not overlength, or no configured rule covers it.
+    #
+    # This is the single source of truth for "does a rule cover this package?"
+    # shared by {#overlength_fee} and {#validate_packages} so the two can never
+    # disagree (e.g. a package quoting $0 overlength while also being treated as
+    # serviceable).
+    #
+    # @param tariff [FreightKit::Tariff, nil]
+    # @param package [FreightKit::Package]
+    # @return [FreightKit::Tariff::OverlengthRule, nil]
+    def overlength_rule_for(tariff, package)
+      return unless tariff.is_a?(FreightKit::Tariff) && overlength?(package)
+
+      tariff.overlength_rules.find { |overlength_rule| overlength_rule.cover?(longest_dimension(package)) }
     end
 
     # Determine whether the carrier will accept the packages based on credentials and/or tariff.
@@ -389,19 +412,30 @@ module FreightKit
         message << "items must weigh #{max_weight_pounds.to_f} lbs or less"
       end
 
-      if self.class.overlength_fees_require_tariff? && (tariff.blank? || !tariff.is_a?(FreightKit::Tariff))
-        missing_dimensions = packages.map do |p|
-          [p.height(:inches), p.length(:inches), p.width(:inches)].any?(&:zero?)
-        end.any?(true)
+      # Carriers that don't quote overlength fees via their API rely on the
+      # tariff to price them. Fail closed rather than silently under-quoting: a
+      # missing, empty, or non-covering tariff for an overlength package must
+      # make the carrier unserviceable. We key off rule *coverage* (via
+      # #overlength_rule_for) rather than the tariff object's mere presence,
+      # because a present-but-empty FreightKit::Tariff is not `blank?` and would
+      # otherwise slip past this check.
+      if self.class.overlength_fees_require_tariff?
+        missing_dimensions = packages.any? do |package|
+          [
+            package.height(:inches),
+            package.length(:inches),
+            package.width(:inches),
+          ].any?(&:zero?)
+        end
+
+        uncovered_overlength = packages.any? do |package|
+          overlength?(package) && overlength_rule_for(tariff, package).nil?
+        end
 
         if missing_dimensions
           message << 'item dimensions are required'
-        else
-          max_length_inches = self.class.minimum_length_for_overlength_fees.convert_to(:inches).value
-
-          if packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max >= max_length_inches
-            message << 'tariff must be defined to calculate overlength fees'
-          end
+        elsif uncovered_overlength
+          message << 'tariff must be defined to calculate overlength fees'
         end
       end
 

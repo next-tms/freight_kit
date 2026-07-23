@@ -8,22 +8,12 @@ module FreightKit
       options.symbolize_keys!
       @options = options
 
-      @options[:overlength_rules] = (@options[:overlength_rules].presence || [])
-      raise ArgumentError, 'overlength_rules must be an Array' unless @options[:overlength_rules].is_a?(Array)
+      overlength_rules = options[:overlength_rules].presence || []
+      raise ArgumentError, 'overlength_rules must be an Array' unless overlength_rules.is_a?(Array)
 
-      @options[:overlength_rules].each do |overlength_rule|
-        if !overlength_rule[:min_length].is_a?(Measured::Length)
-          raise ArgumentError, 'overlength_rule[:min_length] must be a Measured::Length'
-        elsif ![Measured::Length, NilClass].include?(overlength_rule[:max_length].class)
-          raise ArgumentError, 'overlength_rule[:max_length] must be one of Measured::Length, NilClass'
-        end
-
-        unless overlength_rule[:fee_cents].is_a?(Integer)
-          raise ArgumentError, 'overlength_rule[:fee_cents] must be an Integer'
-        end
+      @overlength_rules = overlength_rules.map do |overlength_rule|
+        overlength_rule.is_a?(OverlengthRule) ? overlength_rule : OverlengthRule.new(**overlength_rule)
       end
-
-      @overlength_rules = @options[:overlength_rules]
     end
   end
 end
