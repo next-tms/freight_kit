@@ -222,7 +222,8 @@ module FreightKit
       rescue Selenium::WebDriver::Error::UnexpectedAlertOpenError => e
         browser.close
 
-        message = e.message[/{(.*?)}/m, 1]&.split(':')&.last&.squish
+        message = e.message[/{(.*?)}/m, 1]&.split(':')&.last
+        message = message&.squish
 
         document_response.error = InvalidCredentialsError.new(message)
         return document_response
@@ -472,20 +473,19 @@ module FreightKit
     def build_rate_request(shipment:)
       accessorials = build_accessorials(shipment:)
 
-      items = []
-      shipment.packages.each do |package|
-        items << {
-                   Name: package.description,
-                   FreightClass: package.freight_class.to_s,
-                   Weight: package.pounds(:total).ceil.to_s,
-                   WeightUnits: 'lb',
-                   Width: package.width(:in).ceil,
-                   Length: package.length(:in).ceil,
-                   Height: package.height(:in).ceil,
-                   DimensionUnits: 'in',
-                   Quantity: package.quantity,
-                   QuantityUnits: 'PLT' # Check this
-                 }
+      items = shipment.packages.map do |package|
+        {
+          Name: package.description,
+          FreightClass: package.freight_class.to_s,
+          Weight: package.pounds(:total).ceil.to_s,
+          WeightUnits: 'lb',
+          Width: package.width(:in).ceil,
+          Length: package.length(:in).ceil,
+          Height: package.height(:in).ceil,
+          DimensionUnits: 'in',
+          Quantity: package.quantity,
+          QuantityUnits: 'PLT' # Check this
+        }
       end
 
       pickup_event_date = shipment.pickup_at.date_time_with_zone

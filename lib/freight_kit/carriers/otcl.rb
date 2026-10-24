@@ -201,7 +201,6 @@ module FreightKit
       service:,
       shipment:
     )
-
       dispatcher_phone = dispatcher.phone.sub('+1', '').delete('^0-9')
 
       raise UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
@@ -242,7 +241,6 @@ module FreightKit
       service:,
       shipment:
     )
-
       dispatcher_phone = dispatcher.phone.sub('+1', '').delete('^0-9')
       receiver_phone = shipment.destination.contact.phone.sub('+1', '').delete('^0-9')
 
@@ -379,13 +377,7 @@ module FreightKit
       base64_labels = api_shipments&.map { |s| s['Label'] }
       raise FreightKit::ResponseError, 'API Error: Blank label' if base64_labels.blank?
 
-      labels = []
-
-      base64_labels.each do |base64_label|
-        labels << Label.new(data: base64_label)
-      end
-
-      labels
+      base64_labels.map { |base64_label| Label.new(data: base64_label) }
     end
 
     # Rates
@@ -431,7 +423,7 @@ module FreightKit
           parts << "ID#{i}"
           parts << shipment.origin.postal_code
           parts << shipment.destination.postal_code
-          parts << shipment.accessorials.include?(:residential_delivery) ? 'true' : 'false'
+          parts << shipment.accessorials.include?(:residential_delivery).to_s
           parts << '0'
           parts << 'false' # Staurday delivery
           parts << declared_value

@@ -223,11 +223,9 @@ module FreightKit
 
       accessorials = accessorials.uniq.join(',')
 
-      shipment_detail = []
-      shipment.packages.each do |package|
-        shipment_detail << [package.quantity, package.freight_class, package.pounds(:total)].join('|')
-      end
-      shipment_detail = shipment_detail.join('|')
+      shipment_detail = shipment.packages.map do |package|
+        [package.quantity, package.freight_class, package.pounds(:total)].join('|')
+      end.join('|')
 
       api_credentials = fetch_credential(:api)
 
@@ -386,7 +384,7 @@ module FreightKit
       country = ActiveUtils::Country.find('USA')
 
       shipper_location = Location.new(
-        address1: search_result[:shipperaddress]&.squish&.strip&.titleize,
+        address1: search_result[:shipperaddress]&.squish&.titleize,
         city: search_result[:shipper_city].squish.strip.titleize,
         province: search_result[:shipper_state].strip.upcase,
         postal_code: search_result[:shipper_zip].strip,
@@ -394,7 +392,7 @@ module FreightKit
       )
 
       receiver_location = Location.new(
-        address1: search_result[:consaddress]&.squish&.strip&.titleize,
+        address1: search_result[:consaddress]&.squish&.titleize,
         city: search_result[:cons_city].squish.strip.titleize,
         province: search_result[:cons_state].strip.upcase,
         postal_code: search_result[:cons_zip].strip,

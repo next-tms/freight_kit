@@ -229,10 +229,8 @@ module FreightKit
       rate_accessorial_items = result.dig(:rate_accessorials, :rate_accessorial_item)
       rate_accessorial_items = [rate_accessorial_items] if rate_accessorial_items.is_a?(Hash)
 
-      prices = []
-
-      rate_accessorial_items.each do |rate_accessorial_item|
-        prices << Price.new(
+      prices = rate_accessorial_items.map do |rate_accessorial_item|
+        Price.new(
           blame: :api,
           cents: (rate_accessorial_item[:amount].to_f * 100).to_i,
           description: rate_accessorial_item[:description]&.titleize&.squish,
@@ -352,7 +350,7 @@ module FreightKit
 
       shipper_location = Location.new(
         address1:,
-        city: search_result.dig(:shipper, :city)&.squish&.strip&.titleize,
+        city: search_result.dig(:shipper, :city)&.squish&.titleize,
         province: search_result.dig(:shipper, :state)&.strip&.upcase,
         postal_code: search_result.dig(:shipper, :zipcode)&.strip,
         country: ActiveUtils::Country.find('USA'),
@@ -368,7 +366,7 @@ module FreightKit
 
       receiver_location = Location.new(
         address1:,
-        city: search_result.dig(:consignee, :city)&.squish&.strip&.titleize,
+        city: search_result.dig(:consignee, :city)&.squish&.titleize,
         province: search_result.dig(:consignee, :state)&.strip&.upcase,
         postal_code: search_result.dig(:consignee, :zipcode)&.strip,
         country: ActiveUtils::Country.find('USA'),

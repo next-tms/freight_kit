@@ -184,7 +184,6 @@ module FreightKit
       service:,
       shipment:
     )
-
       origin = shipment.origin
       destination = shipment.destination
       shipper_phone = shipment.origin.contact.phone.delete('^0-9')

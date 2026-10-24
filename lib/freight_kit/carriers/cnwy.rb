@@ -292,7 +292,7 @@ module FreightKit
       days = if comment.blank?
                nil
              else
-               comment.match(/\d+ days/)&.to_s&.split(' days')&.first&.to_i
+               comment[/(\d+) days/, 1]&.to_i
              end
 
       expires_at = if days.is_a?(Integer) && days.positive?

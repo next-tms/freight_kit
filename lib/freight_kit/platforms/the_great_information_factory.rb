@@ -447,7 +447,6 @@ module FreightKit
       service:,
       shipment:
     )
-
       shipper_phone = shipment.origin.contact.phone.gsub(/\s+/, '').gsub(/[()-+.]/, '')
       shipper_phone = shipper_phone[1..] if shipper_phone.length == 11
 

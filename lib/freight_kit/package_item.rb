@@ -31,7 +31,7 @@ module FreightKit # :nodoc:
         @weight
       when :volumetric, :dimensional
         @volumetric_weight ||= begin
-          m = Measured::Weight.new((centimetres(:box_volume) / 6.0), :grams)
+          m = Measured::Weight.new(centimetres(:box_volume) / 6.0, :grams)
           @unit_system == :imperial ? m.in_ounces : m
         end
       when :billable
