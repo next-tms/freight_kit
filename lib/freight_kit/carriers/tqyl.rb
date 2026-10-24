@@ -58,13 +58,12 @@ module FreightKit
     end
 
     def commit(request)
-      response = HTTParty.send(
+      response = HTTPClient.request(
         request[:method],
         request[:url],
         headers: request[:headers].merge(subscription_key_headers),
         query: request[:query],
         body: request[:body],
-        debug_output: $stdout,
       )
 
       parsed_response = JSON.parse(response.body)

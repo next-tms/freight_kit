@@ -199,7 +199,7 @@ module FreightKit
       sleep(50) # so Chrome can finish downloading, Selenoid default timeout is 60s
 
       download_url = "#{selenoid_credential.selenoid_options[:download_url]}/#{browser.driver.session_id}"
-      response = HTTParty.get("#{download_url}/?json")
+      response = HTTPClient.get("#{download_url}/?json")
 
       filename = URI.encode_www_form_component(JSON.parse(response.body)&.last)
       url = "#{download_url}/#{filename}"
@@ -207,7 +207,7 @@ module FreightKit
       document_response.request = URI.parse(url)
 
       begin
-        response = HTTParty.get(url)
+        response = HTTPClient.get(url)
       rescue StandardError => e
         document_response.error = e
         return document_response

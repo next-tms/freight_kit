@@ -104,9 +104,9 @@ module FreightKit
 
       case method
       when :post
-        HTTParty.post(url, headers:, body:)
+        HTTPClient.post(url, headers:, body:)
       else
-        HTTParty.get(url, headers:)
+        HTTPClient.get(url, headers:)
       end
     end
 

@@ -498,7 +498,7 @@ module FreightKit
 
       url = [base_url, query_parameter].join
 
-      response = HTTParty.get(url)
+      response = HTTPClient.get(url)
 
       image = response.deep_symbolize_keys.dig(:ImageRequest, :Image)
       image = image.last if image.is_a?(Array)
