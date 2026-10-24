@@ -34,6 +34,8 @@ module FreightKit
 
     def build_calculated_accessorials(shipment)
       [].tap do |builder|
+        builder << 'AMAZON' if AmazonWarehouse.include?(shipment.destination)
+
         longest_dimension = shipment.packages.map { |package| [package.length(:in), package.width(:in)].max }.max.ceil
 
         case longest_dimension

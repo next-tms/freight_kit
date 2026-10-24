@@ -50,6 +50,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('nokogiri', '>= 1.6', '< 1.20')
   spec.add_dependency('place_kit', '~> 0.0.6')
   spec.add_dependency('savon', '>= 2.17', '< 2.18')
+  spec.add_dependency('StreetAddress', '~> 2.0')
   spec.add_dependency('tzinfo-data', '~> 1.2023', '>= 1.2023.3')
   spec.add_dependency('watir', '>= 7.0', '< 7.4')
   spec.add_dependency('zeitwerk', '>= 2.6.0', '< 2.8.4')
