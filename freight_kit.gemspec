@@ -42,6 +42,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('benchmark', '~> 0.5.0')
   spec.add_dependency('brotli', '>= 0.9.2', '< 1') # CVE-2026-111497
   spec.add_dependency('business_time', '~> 0.13.0')
+  spec.add_dependency('countries', '~> 8.1')
   spec.add_dependency('httpx', '>= 1.9.0', '< 2')
   spec.add_dependency('json', '< 3') # measured
   spec.add_dependency('measured', '>= 2.0', '< 3.2.2')
