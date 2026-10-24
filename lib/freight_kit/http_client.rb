@@ -9,6 +9,8 @@ module FreightKit
   #   FreightKit::HTTPClient.cache = Rails.cache
   #   FreightKit::HTTPClient.logger = Rails.logger
   class HTTPClient
+    USER_AGENT = "freight_kit/#{VERSION} #{HTTPX::Options::USER_AGENT}".freeze
+
     @sessions = Concurrent::Map.new
 
     class << self
@@ -67,7 +69,7 @@ module FreightKit
                     .plugin(:response_cache, response_cache_store: CacheStore.new(cache))
                     .plugin(Revalidation)
                     .plugin(SafeRetries)
-                    .with(close_on_fork: true)
+                    .with(close_on_fork: true, headers: { 'user-agent' => USER_AGENT })
 
           logger = self.logger
           session = session.with(debug: LogDevice.new(logger), debug_level: 2) if logger.level <= ::Logger::DEBUG

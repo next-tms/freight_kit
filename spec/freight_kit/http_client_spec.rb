@@ -76,6 +76,12 @@ describe FreightKit::HTTPClient do
     it { expect(requests.pop['accept-encoding'].split(/, */)).to(include('br', 'gzip', 'zstd')) }
   end
 
+  describe 'User-Agent' do
+    before { described_class.get("#{url}/br") }
+
+    it { expect(requests.pop['user-agent']).to(eq("freight_kit/#{FreightKit::VERSION} httpx.rb/#{HTTPX::VERSION}")) }
+  end
+
   describe 'decoding' do
     it { expect(described_class.get("#{url}/br").parsed_response).to(eq('ok' => true)) }
     it { expect(described_class.get("#{url}/zstd").parsed_response).to(eq('ok' => true)) }

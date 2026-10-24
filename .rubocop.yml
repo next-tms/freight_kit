@@ -8,3 +8,7 @@ Naming/PredicateMethod:
   AllowedMethods:
     - call
     - validate_packages
+
+Rails/RakeEnvironment:
+  Exclude:
+    - Rakefile
