@@ -51,8 +51,6 @@ loader.inflector = FreightKit::Inflector.new
 
 loader.setup
 
-require 'rmagick'
-
 require 'freight_kit/api_clients'
 require 'freight_kit/helpers'
 require 'freight_kit/platforms'
