@@ -124,9 +124,9 @@ module FreightKit
       url = request[:url]
 
       response = if method == :post
-                   HTTParty.post(url, headers:, body:, debug_output: $stdout)
+                   HTTPClient.post(url, headers:, body:)
                  else
-                   HTTParty.get(url, headers:, debug_output: $stdout)
+                   HTTPClient.get(url, headers:)
                  end
 
       response.deep_transform_keys! { |key| key.downcase.to_sym }[:abf] if response&.parsed_response

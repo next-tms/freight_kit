@@ -166,9 +166,9 @@ module FreightKit
 
       response = case method
                  when :post
-                   HTTParty.post(url, headers:, body:, debug_output: $stdout)
+                   HTTPClient.post(url, headers:, body:)
                  else
-                   HTTParty.get(url, headers:, debug_output: $stdout)
+                   HTTPClient.get(url, headers:)
                  end
 
       response.parsed_response if response&.parsed_response

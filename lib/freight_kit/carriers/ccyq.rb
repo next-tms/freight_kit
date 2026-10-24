@@ -63,19 +63,13 @@ module FreightKit
     end
 
     def commit(_action, request)
-      proxy_uri = URI.parse(request[:proxy_url])
-
-      response = HTTParty.send(
+      response = HTTPClient.request(
         request[:method],
         request[:url],
         headers: request[:headers].merge(JSON_HEADERS),
         body: request[:body],
         query: request[:query],
-        http_proxyaddr: proxy_uri.host,
-        http_proxyport: proxy_uri.port.to_s,
-        http_proxyuser: proxy_uri.user,
-        http_proxypass: proxy_uri.password,
-        debug_output: $stdout,
+        proxy: request[:proxy_url],
       )
 
       unless response.code == 200

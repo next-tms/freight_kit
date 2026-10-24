@@ -126,9 +126,9 @@ module FreightKit
 
       case method
       when :post
-        HTTParty.post(url, headers:, body:)
+        HTTPClient.post(url, headers:, body:)
       else
-        HTTParty.get(url, headers:)
+        HTTPClient.get(url, headers:)
       end
     end
 
@@ -300,7 +300,7 @@ module FreightKit
       end
 
       begin
-        response = HTTParty.get(url)
+        response = HTTPClient.get(url)
       rescue StandardError => e
         document_response.error = e
         return document_response

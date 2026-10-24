@@ -58,13 +58,13 @@ module FreightKit
       url = build_url(action, query:)
       save_request(url)
 
-      HTTParty.get(url, logger: Logger.new($stdout))
+      HTTPClient.get(url)
     end
 
     def map_response_errors(response, not_found_error: DocumentNotFoundError)
       return ResponseError.new('Unknown response') if response.blank?
 
-      webspeed_error = (response.is_a?(String) || response.is_a?(HTTParty::Response)) &&
+      webspeed_error = (response.is_a?(String) || response.is_a?(HTTPClient::Response)) &&
                        response.include?('WebSpeed error')
       return ResponseError.new('Temporary error (WebSpeed error)') if webspeed_error
 
@@ -99,7 +99,7 @@ module FreightKit
       end
 
       begin
-        response = HTTParty.get(url)
+        response = HTTPClient.get(url)
       rescue StandardError => e
         document_response.error = e
         return document_response

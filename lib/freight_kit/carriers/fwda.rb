@@ -293,9 +293,9 @@ module FreightKit
 
       response = case method
                  when :post
-                   HTTParty.post(url, headers:, body:, debug_output: $stdout)
+                   HTTPClient.post(url, headers:, body:)
                  else
-                   HTTParty.get(url, headers:, debug_output: $stdout)
+                   HTTPClient.get(url, headers:)
                  end
 
       if (200..299).exclude?(response.code)
@@ -308,7 +308,7 @@ module FreightKit
         raise FreightKit::ResponseError, message
       end
 
-      return response if response.headers.content_type != 'application/json'
+      return response if response.content_type != 'application/json'
 
       json = JSON.parse(response.body)
       error = json.is_a?(Array) ? nil : json['errorMessage']
