@@ -2,4 +2,4 @@ inherit_gem:
   rubocop-next: rubocop.yml
 
 AllCops:
-  TargetRubyVersion: 3.2.0
+  TargetRubyVersion: 3.3.0

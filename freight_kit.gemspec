@@ -52,5 +52,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency('watir', '>= 7.0', '< 7.4')
   spec.add_dependency('zeitwerk', '>= 2.6.0', '< 2.8.4')
 
-  spec.required_ruby_version = '>= 3.2.0'
+  spec.required_ruby_version = '>= 3.3.0'
 end
