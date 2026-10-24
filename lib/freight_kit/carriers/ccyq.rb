@@ -154,7 +154,6 @@ module FreightKit
       service:,
       shipment:
     )
-
       dispatcher_phone = dispatcher.phone.delete('^0-9')
       receiver_phone = shipment.destination.contact.phone.delete('^0-9')
 

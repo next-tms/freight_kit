@@ -9,7 +9,7 @@ module FreightKit
         super(response.message)
         @response = response
       else
-        super(response)
+        super
       end
     end
   end
