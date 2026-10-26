@@ -54,39 +54,6 @@ module FreightKit
 
       private
 
-      def validate_total_weight(items, maximum_weight)
-        total_weight = 0
-        items.each do |item|
-          total_weight += item[:quantity].to_i * item[:grams].to_i
-
-          if overweight_item?(item[:grams], maximum_weight)
-            message = <<~MESSAGE.squish
-              The item with weight of #{item[:grams]}g is heavier than the allowable package weight of
-              #{maximum_weight}g
-            MESSAGE
-            raise OverweightItem, message
-          end
-
-          raise_excess_quantity_error if maybe_excess_package_quantity?(total_weight, maximum_weight)
-        end
-      end
-
-      def validate_package_quantity(number_of_packages)
-        raise_excess_quantity_error if number_of_packages >= EXCESS_PACKAGE_QUANTITY_THRESHOLD
-      end
-
-      def raise_excess_quantity_error
-        raise ExcessPackageQuantity, "Unable to pack more than #{EXCESS_PACKAGE_QUANTITY_THRESHOLD} packages"
-      end
-
-      def overweight_item?(grams, maximum_weight)
-        grams.to_i > maximum_weight
-      end
-
-      def maybe_excess_package_quantity?(total_weight, maximum_weight)
-        total_weight > (maximum_weight * EXCESS_PACKAGE_QUANTITY_THRESHOLD)
-      end
-
       def determine_fillable_quantity_for_package(item, maximum_weight, package_weight)
         item_grams = item[:grams].to_i
         item_quantity = item[:quantity].to_i
@@ -102,12 +69,45 @@ module FreightKit
         end
       end
 
+      def item_value(quantity, price)
+        quantity * Package.cents_from(price)
+      end
+
       def item_weight(quantity, grams)
         quantity * grams.to_i
       end
 
-      def item_value(quantity, price)
-        quantity * Package.cents_from(price)
+      def maybe_excess_package_quantity?(total_weight, maximum_weight)
+        total_weight > (maximum_weight * EXCESS_PACKAGE_QUANTITY_THRESHOLD)
+      end
+
+      def overweight_item?(grams, maximum_weight)
+        grams.to_i > maximum_weight
+      end
+
+      def raise_excess_quantity_error
+        raise ExcessPackageQuantity, "Unable to pack more than #{EXCESS_PACKAGE_QUANTITY_THRESHOLD} packages"
+      end
+
+      def validate_package_quantity(number_of_packages)
+        raise_excess_quantity_error if number_of_packages >= EXCESS_PACKAGE_QUANTITY_THRESHOLD
+      end
+
+      def validate_total_weight(items, maximum_weight)
+        total_weight = 0
+        items.each do |item|
+          total_weight += item[:quantity].to_i * item[:grams].to_i
+
+          if overweight_item?(item[:grams], maximum_weight)
+            message = <<~MESSAGE.squish
+              The item with weight of #{item[:grams]}g is heavier than the allowable package weight of
+              #{maximum_weight}g
+            MESSAGE
+            raise OverweightItem, message
+          end
+
+          raise_excess_quantity_error if maybe_excess_package_quantity?(total_weight, maximum_weight)
+        end
       end
     end
   end

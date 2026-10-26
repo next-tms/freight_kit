@@ -13,8 +13,6 @@ module FreightKit
       end
 
       class << self
-        def load_dependencies(*) = require('zstd-ruby')
-
         def extra_options(options)
           supported_compression_formats = (['zstd'] + options.supported_compression_formats).freeze
 
@@ -22,6 +20,8 @@ module FreightKit
 
           options.merge(headers: options.headers_class.new(headers), supported_compression_formats:)
         end
+
+        def load_dependencies(*) = require('zstd-ruby')
       end
     end
   end

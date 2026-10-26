@@ -20,9 +20,89 @@ module FreightKit
   VERSION = File.read(File.expand_path('../VERSION', __dir__)).strip.freeze
 
   class Inflector < Zeitwerk::Inflector
+    CARRIER_ACRONYMS = [
+      'AAA',
+      'AB',
+      'ABF',
+      'BA',
+      'CDC',
+      'CDO',
+      'CMS',
+      'CND',
+      'CPL',
+      'CSA',
+      'CSX',
+      'DAK',
+      'DBR',
+      'DHL',
+      'DRT',
+      'ERA',
+      'EW',
+      'GLS',
+      'GPS',
+      'GSA',
+      'GSP',
+      'GSV',
+      'GTA',
+      'HER',
+      'HN',
+      'JB',
+      'JFJ',
+      'JKB',
+      'JLM',
+      'JP',
+      'KLC',
+      'KM',
+      'KMA',
+      'KRC',
+      'KTX',
+      'LD',
+      'LJ',
+      'LKP',
+      'LTL',
+      'MC',
+      'MS',
+      'MVG',
+      'NT',
+      'NVK',
+      'NY',
+      'PG',
+      'PGS',
+      'PKI',
+      'PWC',
+      'RAC',
+      'RE',
+      'RIST',
+      'RP',
+      'RPM',
+      'SB',
+      'SNA',
+      'SSI',
+      'STG',
+      'THK',
+      'TILI',
+      'TMA',
+      'TMS',
+      'TMT',
+      'TSI',
+      'UP',
+      'UPS',
+      'US',
+      'USA',
+      'USF',
+      'VC',
+      'VMG',
+      'WDWB',
+      'WLB',
+      'XPO',
+      'YRC'
+    ].index_by(&:downcase).freeze
+
     def camelize(basename, abspath)
-      # Carriers are named after their four-letter SCAC (e.g. abfs.rb => ABFS)
-      return basename.upcase if File.basename(File.dirname(abspath)) == 'carriers' && basename.match?(/\A[a-z]{4}\z/)
+      if ['carriers', 'platforms'].include?(File.basename(File.dirname(abspath)))
+        # Carriers and platforms are named after the business (e.g. nt_usa.rb => NTUSA, next_tms.rb => NextTMS)
+        return basename.split('_').map { |word| CARRIER_ACRONYMS[word] || word.capitalize }.join
+      end
 
       return "HTTP#{super(::Regexp.last_match(1), abspath)}" if basename =~ /\Ahttp_(.*)/
 
@@ -34,13 +114,10 @@ end
 loader = Zeitwerk::Loader.for_gem
 
 loader.collapse("#{__dir__}/freight_kit/api_clients")
-loader.collapse("#{__dir__}/freight_kit/carriers")
 loader.collapse("#{__dir__}/freight_kit/errors")
 loader.collapse("#{__dir__}/freight_kit/helpers")
 loader.collapse("#{__dir__}/freight_kit/models")
-loader.collapse("#{__dir__}/freight_kit/platforms")
 
 loader.inflector = FreightKit::Inflector.new
-loader.inflector.inflect('jfj_transportation' => 'JFJTransportation')
 
 loader.setup

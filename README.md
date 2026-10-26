@@ -26,7 +26,6 @@ __Note:__ `Carrier`s may extend `Platform`s and override them when their behavio
 ## Supported Platforms
 
 * [Carrier Logistics](https://carrierlogistics.com)
-* [Next TMS](https://next-tms.com)
 * [The Great Information Factory](https://www.tgifsoftware.com)
 
 ## Supported Carriers
@@ -135,7 +134,7 @@ credentials = [
   )
 ]
 
-carrier = FreightKit::SCAC.new(credentials)
+carrier = FreightKit::Carriers::Saia.new(credentials)
 ```
 
 ### Documents

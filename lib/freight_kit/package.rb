@@ -105,6 +105,10 @@ module FreightKit # :nodoc:
       @packaging = Packaging.new(packaging_type)
     end
 
+    def calculated_freight_class
+      sanitized_freight_class(density_to_freight_class(density))
+    end
+
     def cubic_ft(each_or_total)
       q = case each_or_total
           when :each then 1
@@ -121,6 +125,14 @@ module FreightKit # :nodoc:
       format('%0.2f', cubic_ft).to_f
     end
 
+    def cylinder?
+      @cylinder
+    end
+
+    def declared_freight_class
+      @declared_freight_class || @options[:declared_freight_class]
+    end
+
     def density
       return unless inches[..2].all?(&:present?) && pounds(:each)
 
@@ -128,32 +140,16 @@ module FreightKit # :nodoc:
       format('%0.2f', density).to_f
     end
 
-    def calculated_freight_class
-      sanitized_freight_class(density_to_freight_class(density))
-    end
-
-    def declared_freight_class
-      @declared_freight_class || @options[:declared_freight_class]
-    end
-
     def freight_class
       declared_freight_class.presence || calculated_freight_class
-    end
-
-    def length(unit)
-      @dimensions[2].convert_to(unit).value.to_f
-    end
-
-    def width(unit)
-      @dimensions[1].convert_to(unit).value.to_f
     end
 
     def height(unit)
       @dimensions[0].convert_to(unit).value.to_f
     end
 
-    def cylinder?
-      @cylinder
+    def length(unit)
+      @dimensions[2].convert_to(unit).value.to_f
     end
 
     def oversized?
@@ -162,6 +158,10 @@ module FreightKit # :nodoc:
 
     def unpackaged?
       @unpackaged
+    end
+
+    def width(unit)
+      @dimensions[1].convert_to(unit).value.to_f
     end
 
     alias tube? cylinder?
@@ -254,16 +254,6 @@ module FreightKit # :nodoc:
       end
     end
 
-    def sanitized_freight_class(freight_class)
-      return if freight_class.blank?
-
-      if VALID_FREIGHT_CLASSES.include?(freight_class)
-        return freight_class.to_i == freight_class ? freight_class.to_i : freight_class
-      end
-
-      nil
-    end
-
     def measure(measurement, ary)
       case measurement
       when Integer then ary[measurement]
@@ -287,6 +277,16 @@ module FreightKit # :nodoc:
       2.downto(@dimensions.length) do |_n|
         @dimensions.unshift(@dimensions[0])
       end
+    end
+
+    def sanitized_freight_class(freight_class)
+      return if freight_class.blank?
+
+      if VALID_FREIGHT_CLASSES.include?(freight_class)
+        return freight_class.to_i == freight_class ? freight_class.to_i : freight_class
+      end
+
+      nil
     end
 
     def weight(which_weight, options = {})

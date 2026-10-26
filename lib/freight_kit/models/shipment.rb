@@ -21,14 +21,14 @@ module FreightKit
                   :pro
     attr_reader :pickup_at
 
+    def hazmat?
+      packages.map(&:hazmat?).any?(true)
+    end
+
     def loose?
       return false if @packages.blank?
 
       packages.map(&:packaging).map(&:pallet?).none?(true)
-    end
-
-    def hazmat?
-      packages.map(&:hazmat?).any?(true)
     end
 
     def loose_and_palletized?
