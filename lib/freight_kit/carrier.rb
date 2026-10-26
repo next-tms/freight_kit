@@ -162,6 +162,10 @@ module FreightKit
         true
       end
 
+      # Where the carrier picks up and delivers, so applications need not enter it for each customer.
+      # @return [Array<FreightKit::ServiceArea>]
+      def service_areas = []
+
       # The services {#find_rates} quotes (e.g. `:standard`, `:guaranteed_delivery`).
       # @return [Array<Symbol>]
       def services = []

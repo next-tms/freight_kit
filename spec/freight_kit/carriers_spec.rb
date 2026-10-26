@@ -7,7 +7,7 @@ describe FreightKit::Carriers do
     let(:ids) do
       carriers.flat_map do |carrier|
         addresses = [carrier.headquarters, *carrier.check_mailing_addresses, *carrier.terminals.map(&:address)].compact
-        [carrier.id, *(addresses + carrier.contacts + carrier.terminals).map(&:id)]
+        [carrier.id, *(addresses + carrier.contacts + carrier.service_areas + carrier.terminals).map(&:id)]
       end
     end
 
@@ -34,6 +34,7 @@ describe FreightKit::Carriers do
       it { expect(check_ids.first(released_check_ids.size)).to(eq(released_check_ids)) }
       it { expect(released['contacts'] - carrier.contacts.map(&:id)).to(be_empty) }
       it { expect(carrier.headquarters&.id).to(eq(released['headquarters'])) }
+      it { expect(released['service_areas'] - carrier.service_areas.map(&:id)).to(be_empty) }
       it { expect(released['terminals'] - carrier.terminals.map(&:id)).to(be_empty) }
     end
   end

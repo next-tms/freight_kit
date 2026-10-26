@@ -100,6 +100,20 @@ shared_examples 'a carrier' do
     it { is_expected.to(eq(scac&.upcase)) }
   end
 
+  describe '.service_areas' do
+    subject(:service_areas) { described_class.service_areas }
+
+    it { is_expected.to(all(be_a(FreightKit::ServiceArea).and(have_attributes(country: be_a(FreightKit::Country))))) }
+    it { is_expected.to(all(have_attributes(id: match(uuid)))) }
+    it { is_expected.to(all(have_attributes(postal_codes: all(be_a(String))))) }
+
+    it do
+      expect(service_areas).to(all(satisfy { |area| area.regions.all? { |region| region.country == area.country } }))
+    end
+
+    it { expect(service_areas).to(all(satisfy { |area| (area.regions + area.postal_codes).any? })) }
+  end
+
   describe '.services' do
     subject(:services) { described_class.services }
 

@@ -101,7 +101,7 @@ namespace :carriers do
     puts "Added FreightKit::Carriers::#{class_name} (#{name}, #{legal_name}, DOT #{us_dot_number}) in #{path}"
   end
 
-  desc 'Record released carrier, address, contact and terminal ids in spec/fixtures/carrier_ids.yml'
+  desc 'Record released carrier, address, contact, service area and terminal ids in spec/fixtures/carrier_ids.yml'
   task(snapshot_ids: :environment) do
     path = File.expand_path('../spec/fixtures/carrier_ids.yml', __dir__)
     released = File.exist?(path) ? YAML.load_file(path) : {}
@@ -113,6 +113,7 @@ namespace :carriers do
           'check_mailing_addresses' => carrier.check_mailing_addresses.map(&:id),
           'contacts' => carrier.contacts.map(&:id),
           'headquarters' => carrier.headquarters&.id,
+          'service_areas' => carrier.service_areas.map(&:id),
           'terminals' => carrier.terminals.map(&:id)
         }.compact
       ]
