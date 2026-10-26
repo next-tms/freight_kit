@@ -1,7 +1,9 @@
 module FreightKit
   # Class representing a real, deliverable mailing address.
+  #
+  # @!attribute id [String, nil] Permanent UUID of a carrier's address. Applications store it, so never change it.
   class Address < Model
-    attr_accessor :city, :postal_code, :region_abbreviation, :street, :street2
+    attr_accessor :city, :id, :postal_code, :region_abbreviation, :street, :street2
     attr_reader :country
 
     def country=(country)

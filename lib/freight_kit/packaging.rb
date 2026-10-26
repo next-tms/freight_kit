@@ -1,5 +1,6 @@
 module FreightKit
   class Packaging
+    PALLET_TYPES = %i[crate drum pallet tote].freeze
     VALID_TYPES = %i[
       box
       bundle
@@ -17,8 +18,6 @@ module FreightKit
       tote
     ].freeze
 
-    PALLET_TYPES = %i[crate drum pallet tote].freeze
-
     attr_accessor :type
 
     # Packaging.new(:pallet)
@@ -35,14 +34,14 @@ module FreightKit
       @box ||= BOX_TYPES.include?(@type)
     end
 
-    def pallet?
-      @pallet ||= PALLET_TYPES.include?(@type)
-    end
-
     def box_or_pallet_type
       return :pallet if pallet?
 
       box? ? :box : nil
+    end
+
+    def pallet?
+      @pallet ||= PALLET_TYPES.include?(@type)
     end
   end
 end

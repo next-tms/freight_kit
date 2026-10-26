@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe FreightKit::Carrier do
-  subject(:carrier) { FreightKit::BTVP.allocate }
+  subject(:carrier) { FreightKit::Carriers::BestOverniteExpress.allocate }
 
   def build_package(length:, width: 40, height: 40, quantity: 1)
     FreightKit::Package.new(
@@ -18,13 +18,7 @@ describe FreightKit::Carrier do
 
   let(:covering_tariff) do
     FreightKit::Tariff.new(
-      overlength_rules: [
-        {
-          min_length: Measured::Length.new(96, :inches),
-          max_length: nil,
-          fee_cents: 15_000
-        }
-      ]
+      overlength_rules: [{ min_length: Measured::Length.new(96, :inches), max_length: nil, fee_cents: 15_000 }]
     )
   end
 

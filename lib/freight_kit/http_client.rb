@@ -19,14 +19,13 @@ module FreightKit
         @sessions.clear
       end
 
+      def get(url, **) = request(:get, url, **)
       def logger = @logger || framework_logger || ::Logger.new($stdout, level: ENV.fetch('LOG_LEVEL', 'info'))
 
       def logger=(logger)
         @logger = logger
         @sessions.clear
       end
-
-      def get(url, **) = request(:get, url, **)
 
       def post(url, **) = request(:post, url, **)
 
@@ -60,14 +59,11 @@ module FreightKit
       # Sessions own their connection pool, so they are built once (per proxy) and reused
       def session(proxy)
         @sessions.compute_if_absent(proxy) do
-          session = HTTPX
-                    .plugin(:brotli)
-                    .plugin(Zstd)
-                    .plugin(:follow_redirects)
-                    .plugin(:response_cache, response_cache_store: CacheStore.new(cache))
-                    .plugin(Revalidation)
-                    .plugin(SafeRetries)
-                    .with(close_on_fork: true, headers: { 'user-agent' => USER_AGENT })
+          session = HTTPX.plugin(:brotli).plugin(Zstd).plugin(:follow_redirects)
+                         .plugin(:response_cache, response_cache_store: CacheStore.new(cache))
+                         .plugin(Revalidation)
+                         .plugin(SafeRetries)
+                         .with(close_on_fork: true, headers: { 'user-agent' => USER_AGENT })
 
           logger = self.logger
           session = session.with(debug: LogDevice.new(logger), debug_level: 2) if logger.level <= ::Logger::DEBUG
