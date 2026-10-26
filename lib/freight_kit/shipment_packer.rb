@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class ShipmentPacker
     class OverweightItem < StandardError
@@ -43,7 +41,7 @@ module FreightKit
               item[:quantity] = item[:quantity].to_i - quantity
             end
 
-            items_to_pack.reject! { |i| i[:quantity].to_i == 0 }
+            items_to_pack.reject! { |i| i[:quantity].to_i.zero? }
             state = :package_full
           when :package_full
             packages << FreightKit::Package.new(package_weight, dimensions, value: package_value, currency:)

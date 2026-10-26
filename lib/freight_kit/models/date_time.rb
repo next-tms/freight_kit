@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Represent dates and times in varous formats.
   #

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Thin wrapper around HTTPX that negotiates Brotli/Zstandard compression, keeps connections
   # open between requests and revalidates cached responses with conditional requests (ETag/Last-Modified).

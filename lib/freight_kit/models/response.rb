@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Basic Response class for requests against a carrier's API.
   #

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Amazon warehouses in the United States, from OpenStreetMap.
   #
@@ -10,7 +8,7 @@ module FreightKit
     def all
       @all ||= YAML.safe_load_file(
         File.expand_path('../../configuration/locations/amazon_warehouses.yml', __dir__),
-        permitted_classes: [Symbol],
+        permitted_classes: [Symbol]
       )
     end
 

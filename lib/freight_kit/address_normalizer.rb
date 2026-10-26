@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Normalizes US street addresses for comparison, using the StreetAddress gem's
   # direction and street type tables.

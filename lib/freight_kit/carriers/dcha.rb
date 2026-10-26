@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class DCHA < CarrierLogistics
     class << self
@@ -36,9 +34,9 @@ module FreightKit
         builder << 'HAZM' if shipment.packages.any?(&:hazmat?)
 
         if shipment.accessorials.present? && %i[
-                                               residential_delivery
-                                               residential_pickup
-                                             ].intersect?(shipment.accessorials)
+          residential_delivery
+          residential_pickup
+        ].intersect?(shipment.accessorials)
           builder << 'RES'
         end
 

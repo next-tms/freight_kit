@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'json'
 
 namespace :amazon_warehouses do
@@ -40,7 +38,7 @@ namespace :amazon_warehouses do
     warehouses = JSON.parse(response.body.to_s)['elements'].filter_map do |element|
       tags = element['tags'] || {}
       next unless tags.values_at('building', 'industrial', 'landuse').intersect?(warehouse_types)
-      next if tags['telecom'].present? || "#{tags["name"]} #{tags["operator"]}".match?(/\b(aws|web services)\b/i)
+      next if tags['telecom'].present? || "#{tags['name']} #{tags['operator']}".match?(/\b(aws|web services)\b/i)
 
       ref = tags['ref'].presence || tags['name']&.[](/\b[A-Z]{3}\d{1,2}\b/)
       next if tags['name'].present? && ref.blank? && !tags['name'].match?(/amazon/i)
@@ -49,7 +47,7 @@ namespace :amazon_warehouses do
       center = element['center'] || element
 
       {
-        osm_id: "#{element["type"]}/#{element["id"]}",
+        osm_id: "#{element['type']}/#{element['id']}",
         ref:,
         name: tags['name'],
         address1:,

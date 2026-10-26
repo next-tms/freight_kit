@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'spec_helper'
 
 describe FreightKit::FCSY do
@@ -20,7 +18,7 @@ describe FreightKit::FCSY do
           city: 'Aurora',
           country: ActiveUtils::Country.find('US'),
           postal_code: '80019',
-          province: 'CO',
+          province: 'CO'
         )
       end
 
@@ -34,7 +32,7 @@ describe FreightKit::FCSY do
           city: 'Los Angeles',
           country: ActiveUtils::Country.find('US'),
           postal_code: '90046',
-          province: 'CA',
+          province: 'CA'
         )
       end
 

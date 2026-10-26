@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class Tariff
     class OverlengthRule
@@ -12,9 +10,7 @@ module FreightKit
           raise ArgumentError, 'overlength_rule[:max_length] must be one of Measured::Length, NilClass'
         end
 
-        unless min_length.is_a?(Measured::Length)
-          raise ArgumentError, 'overlength_rule[:min_length] must be a Measured::Length'
-        end
+        raise ArgumentError, 'overlength_rule[:min_length] must be a Measured::Length' unless min_length.is_a?(Measured::Length)
 
         @fee_cents = fee_cents
         @max_length = max_length

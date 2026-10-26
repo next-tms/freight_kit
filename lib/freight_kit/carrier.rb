@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Carrier is the abstract base class for all supported carriers.
   #
@@ -33,7 +31,7 @@ module FreightKit
           fax: '1-310-275-8159',
           phone: '1-310-285-1013',
           state: 'CA',
-          zip: '90210',
+          zip: '90210'
         )
       end
 
@@ -112,7 +110,7 @@ module FreightKit
       # @raise [ArgumentError]
       # @return [String, nil] The template URL or nil if no template is available for the given key.
       def tracking_url_template(key)
-        raise ArgumentError, "key must be one of: #{NUMBERS.join(", ")}" if NUMBERS.exclude?(key)
+        raise ArgumentError, "key must be one of: #{NUMBERS.join(', ')}" if NUMBERS.exclude?(key)
 
         "#{self}::#{key.to_s.upcase}_TRACKING_URL_TEMPLATE".constantize
       end
@@ -127,12 +125,14 @@ module FreightKit
       # @raise [ArgumentError] Raised if the provided key is not one of the specified carrier number types.
       # @return [Regexp] The regular expression for validating the specified carrier number type.
       def valid_number_regex(key)
-        raise ArgumentError, "key must be one of: #{NUMBERS.join(", ")}" if NUMBERS.exclude?(key)
+        raise ArgumentError, "key must be one of: #{NUMBERS.join(', ')}" if NUMBERS.exclude?(key)
 
         "#{self}::VALID_#{key.to_s.upcase}_REGEX".constantize
       end
     end
 
+    include ActiveUtils::RequiresParameters
+    include ActiveUtils::PostsData
     BOL_NUMBER_TRACKING_URL_TEMPLATE = nil
     ORDER_NUMBER_TRACKING_URL_TEMPLATE = nil
     PICKUP_NUMBER_TRACKING_URL_TEMPLATE = nil
@@ -144,7 +144,7 @@ module FreightKit
     VALID_PO_NUMBER_REGEX = nil
     VALID_TRACKING_NUMBER_REGEX = nil
 
-    NUMBERS = %i[bol_number order_number pickup_number po_number tracking_number]
+    NUMBERS = %i[bol_number order_number pickup_number po_number tracking_number].freeze
 
     attr_accessor :conf, :rates_with_excessive_length_fees, :tmpdir
     attr_reader :credentials, :customer_location, :last_request, :tariff
@@ -163,7 +163,7 @@ module FreightKit
       missing_credential_types = self.class.required_credential_types.uniq - credentials.map(&:type).uniq
 
       if missing_credential_types.any?
-        message = "#{self.class.name}#new: `Credential` of type(s) missing: #{missing_credential_types.join(", ")}"
+        message = "#{self.class.name}#new: `Credential` of type(s) missing: #{missing_credential_types.join(', ')}"
         raise ArgumentError, message
       end
 
@@ -188,9 +188,9 @@ module FreightKit
                   .join(
                     File.expand_path(
                       '../../../../configuration/carriers',
-                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first,
+                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first
                     ),
-                    "#{self.class.to_s.split("::")[1].underscore}.yml",
+                    "#{self.class.to_s.split('::')[1].underscore}.yml"
                   )
       @conf = YAML.safe_load_file(conf_path, permitted_classes: [Symbol])
 
@@ -361,7 +361,7 @@ module FreightKit
     def longest_dimension(package)
       [
         Measured::Length.new(package.length(:inches), :inches),
-        Measured::Length.new(package.width(:inches), :inches),
+        Measured::Length.new(package.width(:inches), :inches)
       ].max
     end
 
@@ -408,9 +408,7 @@ module FreightKit
       end
 
       max_weight_pounds = self.class.maximum_weight.convert_to(:pounds).value
-      if packages.sum { |p| p.pounds(:total) } > max_weight_pounds
-        message << "items must weigh #{max_weight_pounds.to_f} lbs or less"
-      end
+      message << "items must weigh #{max_weight_pounds.to_f} lbs or less" if packages.sum { |p| p.pounds(:total) } > max_weight_pounds
 
       # Carriers that don't quote overlength fees via their API rely on the
       # tariff to price them. Fail closed rather than silently under-quoting: a
@@ -424,7 +422,7 @@ module FreightKit
           [
             package.height(:inches),
             package.length(:inches),
-            package.width(:inches),
+            package.width(:inches)
           ].any?(&:zero?)
         end
 
@@ -447,9 +445,7 @@ module FreightKit
     def serviceable_accessorials?(accessorials)
       return true if accessorials.blank?
 
-      unless self.class::REACTIVE_FREIGHT_CARRIER
-        raise NotImplementedError, "#{self.class.name}: #serviceable_accessorials? not supported"
-      end
+      raise NotImplementedError, "#{self.class.name}: #serviceable_accessorials? not supported" unless self.class::REACTIVE_FREIGHT_CARRIER
 
       return false if @conf.dig(:accessorials, :mappable).blank?
 
@@ -471,17 +467,12 @@ module FreightKit
         unserviceable_accessorials << accessorial
       end
 
-      if unserviceable_accessorials.present?
-        raise FreightKit::UnserviceableAccessorialsError.new(accessorials: unserviceable_accessorials)
-      end
+      raise FreightKit::UnserviceableAccessorialsError.new(accessorials: unserviceable_accessorials) if unserviceable_accessorials.present?
 
       true
     end
 
     protected
-
-    include ActiveUtils::RequiresParameters
-    include ActiveUtils::PostsData
 
     # Use after building the request to save for later inspection.
     # @return [void]

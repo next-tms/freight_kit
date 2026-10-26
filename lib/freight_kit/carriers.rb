@@ -1,10 +1,8 @@
-# frozen_string_literal: true
-
 module FreightKit
   module Carriers
-    extend self
+    module_function
 
-    attr_reader :registered
+    def registered = @registered
 
     @registered = []
 

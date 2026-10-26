@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'active_model'
 require 'active_support/all'
 require 'active_utils'
@@ -24,13 +22,9 @@ module FreightKit
   class Inflector < Zeitwerk::Inflector
     def camelize(basename, abspath)
       # Carriers are named after their four-letter SCAC (e.g. abfs.rb => ABFS)
-      if File.basename(File.dirname(abspath)) == 'carriers' && basename.match?(/\A[a-z]{4}\z/)
-        return basename.upcase
-      end
+      return basename.upcase if File.basename(File.dirname(abspath)) == 'carriers' && basename.match?(/\A[a-z]{4}\z/)
 
-      if basename =~ /\Ahttp_(.*)/
-        return "HTTP#{super(::Regexp.last_match(1), abspath)}"
-      end
+      return "HTTP#{super(::Regexp.last_match(1), abspath)}" if basename =~ /\Ahttp_(.*)/
 
       super
     end

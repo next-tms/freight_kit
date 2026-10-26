@@ -1,8 +1,6 @@
-# frozen_string_literal: true
-
 module FreightKit
   module Regions
-    extend self
+    module_function
 
     def all
       locale = I18n.locale
@@ -13,12 +11,12 @@ module FreightKit
                                   country = Countries.find_by(iso31661_alpha2: iso_country.alpha2)
 
                                   iso_country
-                                  .subdivisions.map do |abbreviation, subdivision|
+                                    .subdivisions.map do |abbreviation, subdivision|
                                     Region.new(
                                       abbreviation:,
                                       country:,
                                       iso31662: "#{iso_country.alpha2}-#{abbreviation}",
-                                      name: subdivision.translations[locale] || subdivision.name,
+                                      name: subdivision.translations[locale] || subdivision.name
                                     )
                                   end
                                 end

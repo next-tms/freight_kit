@@ -1,23 +1,21 @@
-# frozen_string_literal: true
-
 module FreightKit
   class Packaging
     VALID_TYPES = %i[
-                    box
-                    bundle
-                    container
-                    crate
-                    cylinder
-                    drum
-                    luggage
-                    pail
-                    pallet
-                    piece
-                    roll
-                    tote
-                    truckload
-                    tote
-                  ].freeze
+      box
+      bundle
+      container
+      crate
+      cylinder
+      drum
+      luggage
+      pail
+      pallet
+      piece
+      roll
+      tote
+      truckload
+      tote
+    ].freeze
 
     PALLET_TYPES = %i[crate drum pallet tote].freeze
 
@@ -28,9 +26,7 @@ module FreightKit
       options.symbolize_keys!
       @options = options
 
-      if VALID_TYPES.exclude?(type)
-        raise ArgumentError, "Package#new: `type` should be one of #{VALID_TYPES.join(", ")}"
-      end
+      raise ArgumentError, "Package#new: `type` should be one of #{VALID_TYPES.join(', ')}" if VALID_TYPES.exclude?(type)
 
       @type = type
     end

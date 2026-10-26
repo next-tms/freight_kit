@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit # :nodoc:
   class Package
     class << self
@@ -43,7 +41,7 @@ module FreightKit # :nodoc:
                       [
                         dimensions[:height].presence,
                         dimensions[:width].presence,
-                        dimensions[:length].presence,
+                        dimensions[:length].presence
                       ]
                     else
                       dimensions
@@ -71,7 +69,7 @@ module FreightKit # :nodoc:
         Measured::Weight,
         @weight_unit_system,
         :grams,
-        :ounces,
+        :ounces
       )
 
       @each_weight = attribute_from_metric_or_imperial(
@@ -79,7 +77,7 @@ module FreightKit # :nodoc:
         Measured::Weight,
         @weight_unit_system,
         :grams,
-        :ounces,
+        :ounces
       )
 
       if @dimensions.blank?
@@ -166,7 +164,7 @@ module FreightKit # :nodoc:
       @unpackaged
     end
 
-    alias_method :tube?, :cylinder?
+    alias tube? cylinder?
 
     def gift?
       @gift
@@ -179,36 +177,36 @@ module FreightKit # :nodoc:
     def ounces(options = {})
       weight(options).convert_to(:oz).value.to_f
     end
-    alias_method :oz, :ounces
+    alias oz ounces
 
     def grams(options = {})
       weight(options).convert_to(:g).value.to_f
     end
-    alias_method :g, :grams
+    alias g grams
 
     def pounds(args)
       weight(*args).convert_to(:lb).value.to_f
     end
-    alias_method :lb, :pounds
-    alias_method :lbs, :pounds
+    alias lb pounds
+    alias lbs pounds
 
     def kilograms(options = {})
       weight(options).convert_to(:kg).value.to_f
     end
-    alias_method :kg, :kilograms
-    alias_method :kgs, :kilograms
+    alias kg kilograms
+    alias kgs kilograms
 
     def inches(measurement = nil)
       @inches ||= @dimensions.map { |m| m.convert_to(:in).value.to_f }
       measurement.nil? ? @inches : measure(measurement, @inches)
     end
-    alias_method :in, :inches
+    alias in inches
 
     def centimetres(measurement = nil)
       @centimetres ||= @dimensions.map { |m| m.convert_to(:cm).value.to_f }
       measurement.nil? ? @centimetres : measure(measurement, @centimetres)
     end
-    alias_method :cm, :centimetres
+    alias cm centimetres
 
     def dim_weight
       return if inches(:length).blank? || inches(:width).blank? || inches(:height).blank? || pounds(:each).blank?
@@ -240,17 +238,17 @@ module FreightKit # :nodoc:
       return 60 if density > 30
 
       density_table = [
-                        [1, 2, 300],
-                        [2, 4, 250],
-                        [4, 6, 175],
-                        [6, 8, 125],
-                        [8, 10, 100],
-                        [10, 12, 92.5],
-                        [12, 15, 85],
-                        [15, 22.5, 70],
-                        [22.5, 30, 65],
-                        [30, 35, 60],
-                      ]
+        [1, 2, 300],
+        [2, 4, 250],
+        [4, 6, 175],
+        [6, 8, 125],
+        [8, 10, 100],
+        [10, 12, 92.5],
+        [12, 15, 85],
+        [15, 22.5, 70],
+        [22.5, 30, 65],
+        [30, 35, 60]
+      ]
       density_table.each do |density_row|
         return density_row[2] if (density >= density_row[0]) && (density < density_row[1])
       end

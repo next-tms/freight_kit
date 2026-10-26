@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class WRDS < FreightKit::Carrier
     class << self
@@ -115,7 +113,7 @@ module FreightKit
         city: str.split(', ')[0].titleize,
         province: str.split(', ')[1].split[0].upcase,
         postal_code: str.split(', ')[1].split[1],
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
     end
 
@@ -125,7 +123,7 @@ module FreightKit
       Location.new(
         city: str[..-3].strip.titleize,
         province: str[-2..].upcase,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
     end
 
@@ -237,7 +235,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:,
+        tracking_number:
       )
 
       tracking_response

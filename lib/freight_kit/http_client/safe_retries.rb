@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class HTTPClient
     # HTTPX plugin keeping connections open (HTTPX's persistent plugin) without risking duplicate

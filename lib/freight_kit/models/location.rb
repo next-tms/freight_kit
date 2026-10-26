@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Class representing a location.
   #
@@ -57,38 +55,27 @@ module FreightKit
     attr_reader :contact, :country, :lat, :lng, :type
 
     def contact=(contact)
-      return @contact = nil if contact.blank?
+      raise ArgumentError, 'contact must be a Contact' unless contact.blank? || contact.is_a?(FreightKit::Contact)
 
-      raise ArgumentError, 'contact must be a Contact' unless contact.is_a?(FreightKit::Contact)
-
-      @contact = contact
+      @contact = contact.presence
     end
 
     def country=(country)
-      return country = nil if country.blank?
+      raise ArgumentError, 'country must be an ActiveUtils::Country' unless country.blank? || country.is_a?(ActiveUtils::Country)
 
-      if country.is_a?(ActiveUtils::Country)
-        @country = country
-        return country
-      end
-
-      raise ArgumentError, 'country must be an ActiveUtils::Country'
+      @country = country.presence
     end
 
     def lat=(num)
-      return @lat = nil if num.blank?
+      raise ArgumentError, 'lat must be a BigNum' unless num.blank? || num.is_a?(BigNum)
 
-      return @lat = num if num.is_a?(BigNum)
-
-      raise ArgumentError, 'lat must be a BigNum'
+      @lat = num.presence
     end
 
     def lng=(num)
-      return @lng = nil if num.blank?
+      raise ArgumentError, 'lng must be a BigNum' unless num.blank? || num.is_a?(BigNum)
 
-      return @lng = num if num.is_a?(BigNum)
-
-      raise ArgumentError, 'lng must be a BigNum'
+      @lng = num.presence
     end
 
     def time_zone
@@ -98,11 +85,9 @@ module FreightKit
     end
 
     def type=(value)
-      return @type = nil if value.blank?
+      raise ArgumentError, "type must be one of :#{TYPES.join(', :')}" unless value.blank? || TYPES.include?(value)
 
-      raise ArgumentError, "type must be one of :#{TYPES.join(", :")}" if TYPES.exclude?(value)
-
-      @type = value
+      @type = value.presence
     end
   end
 end

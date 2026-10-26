@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class Next < Platform
     class << self
@@ -11,10 +9,10 @@ module FreightKit
     REACTIVE_FREIGHT_PLATFORM = true
 
     JSON_HEADERS = {
-                     Accept: 'application/json',
-                     'Content-Type': 'application/json',
-                     charset: 'utf-8'
-                   }.freeze
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      charset: 'utf-8'
+    }.freeze
 
     # Documents
 
@@ -48,11 +46,11 @@ module FreightKit
       end
 
       request = {
-                  url: build_url(action, options),
-                  headers:,
-                  method: @conf.dig(:api, :methods, action),
-                  body:
-                }
+        url: build_url(action, options),
+        headers:,
+        method: @conf.dig(:api, :methods, action),
+        body:
+      }
 
       save_request(request)
       request
@@ -85,7 +83,7 @@ module FreightKit
 
       request = build_request(
         :authenticate,
-        body: { email: api_credentials.username, password: api_credentials.password },
+        body: { email: api_credentials.username, password: api_credentials.password }
       )
 
       response = commit(request)

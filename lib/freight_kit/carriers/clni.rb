@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class CLNI < FreightKit::Carrier
     class << self
@@ -34,9 +32,8 @@ module FreightKit
       end
     end
 
-    REACTIVE_FREIGHT_CARRIER = true
-
     include FreightKit::Rateable
+    REACTIVE_FREIGHT_CARRIER = true
 
     class << self
       attr_reader :name, :scac
@@ -68,11 +65,11 @@ module FreightKit
 
     def commit(action, request)
       client_args = {
-                      wsdl: build_url(:api, action),
-                      convert_request_keys_to: :none,
-                      env_namespace: :soap,
-                      element_form_default: :qualified
-                    }
+        wsdl: build_url(:api, action),
+        convert_request_keys_to: :none,
+        env_namespace: :soap,
+        element_form_default: :qualified
+      }
 
       call_args = { message: request_blueprint.deep_merge(request) }
 
@@ -81,7 +78,7 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action),
+        soap_operation: @conf.dig(:api, :actions, action)
       ).call&.to_hash&.with_indifferent_access
     end
 
@@ -90,12 +87,12 @@ module FreightKit
 
       {
         request: {
-                   Application: 'ThirdParty',
-                   AccountNumber: api_credentials.account,
-                   UserID: api_credentials.username,
-                   Password: api_credentials.password,
-                   TestMode: 'N'
-                 }
+          Application: 'ThirdParty',
+          AccountNumber: api_credentials.account,
+          UserID: api_credentials.username,
+          Password: api_credentials.password,
+          TestMode: 'N'
+        }
       }
     end
 
@@ -146,9 +143,9 @@ module FreightKit
 
       browser.text_field(name: 'txtToDate').click
       browser
-      .element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div')
-      .wait_until(&:present?)
-      .click
+        .element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div')
+        .wait_until(&:present?)
+        .click
 
       browser.button(name: 'btnSubmit').click
 
@@ -166,9 +163,9 @@ module FreightKit
       end
 
       browser
-      .element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a')
-      .wait_until(&:present?)
-      .click
+        .element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a')
+        .wait_until(&:present?)
+        .click
 
       browser.switch_window
 
@@ -234,16 +231,16 @@ module FreightKit
       packages.map do |package|
         {
           CommodityInput: {
-                            CommodityClass: package.freight_class,
-                            CommodityHazmat: package.hazmat? ? 'Y' : 'N',
-                            CommodityHeight: package.height(:in).ceil,
-                            CommodityLength: package.length(:in).ceil,
-                            CommodityPieces: package.quantity,
-                            CommodityPieceType: package.packaging.pallet? ? 'pallet' : 'box',
-                            CommodityWeight: package.pounds(:total).ceil,
-                            CommodityWeightPerPiece: package.pounds(:each).ceil,
-                            CommodityWidth: package.width(:in).ceil
-                          }
+            CommodityClass: package.freight_class,
+            CommodityHazmat: package.hazmat? ? 'Y' : 'N',
+            CommodityHeight: package.height(:in).ceil,
+            CommodityLength: package.length(:in).ceil,
+            CommodityPieces: package.quantity,
+            CommodityPieceType: package.packaging.pallet? ? 'pallet' : 'box',
+            CommodityWeight: package.pounds(:total).ceil,
+            CommodityWeightPerPiece: package.pounds(:each).ceil,
+            CommodityWidth: package.width(:in).ceil
+          }
         }
       end
     end
@@ -272,32 +269,32 @@ module FreightKit
       api_credentials = fetch_credential(:api)
 
       request = {
-                  RatingParam: {
-                                 AccessorialInput: accessorial_input,
-                                 CommodityInput: commodity_input,
-                                 RatingInput: {
-                                                DeclaredValue: 0,
-                                                DestinationCity: shipment.destination.city,
-                                                DestinationCountry: shipment.destination.country.code(:alpha2).value,
-                                                DestinationState: shipment.destination.province,
-                                                DestinationZip: shipment.destination.postal_code,
-                                                LiabilityType: '',
-                                                OriginCity: shipment.origin.city,
-                                                OriginCountry: shipment.origin.country.code(:alpha2).value,
-                                                OriginState: shipment.origin.province,
-                                                OriginZip: shipment.origin.postal_code,
-                                                Palletized: palletized,
-                                                PickupDate: pickup_from.to_date.strftime('%Y-%m-%d'),
-                                                PickupLocationCloseTime: pickup_to.strftime('%H:%M:00'),
-                                                PickupTime: pickup_from.strftime('%H:%M:00'),
-                                                RequestID: rand(0..999_999).to_s,
-                                                ServiceLevelID: '',
-                                                ShipmentTerms: '',
-                                                Stackable: false,
-                                                WebTrakUserID: api_credentials.username
-                                              }
-                               }
-                }
+        RatingParam: {
+          AccessorialInput: accessorial_input,
+          CommodityInput: commodity_input,
+          RatingInput: {
+            DeclaredValue: 0,
+            DestinationCity: shipment.destination.city,
+            DestinationCountry: shipment.destination.country.code(:alpha2).value,
+            DestinationState: shipment.destination.province,
+            DestinationZip: shipment.destination.postal_code,
+            LiabilityType: '',
+            OriginCity: shipment.origin.city,
+            OriginCountry: shipment.origin.country.code(:alpha2).value,
+            OriginState: shipment.origin.province,
+            OriginZip: shipment.origin.postal_code,
+            Palletized: palletized,
+            PickupDate: pickup_from.to_date.strftime('%Y-%m-%d'),
+            PickupLocationCloseTime: pickup_to.strftime('%H:%M:00'),
+            PickupTime: pickup_from.strftime('%H:%M:00'),
+            RequestID: rand(0..999_999).to_s,
+            ServiceLevelID: '',
+            ShipmentTerms: '',
+            Stackable: false,
+            WebTrakUserID: api_credentials.username
+          }
+        }
+      }
 
       save_request(request)
       request
@@ -316,7 +313,7 @@ module FreightKit
       if error.present?
         if error.include?('do not service this lane')
           rate_response.error = UnserviceableError.new(
-            'Incorrect ZIP code or no service available at origin and/or destination',
+            'Incorrect ZIP code or no service available at origin and/or destination'
           )
           return rate_response
         end
@@ -350,7 +347,7 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents: 0,
-          description: accessorial_output_description(accessorial_output),
+          description: accessorial_output_description(accessorial_output)
         )
       end
 
@@ -366,7 +363,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]

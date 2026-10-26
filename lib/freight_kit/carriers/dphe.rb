@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class DPHE < FreightKit::Carrier
     class << self
@@ -28,15 +26,14 @@ module FreightKit
       end
     end
 
-    CITY_STATES = {
-                    ca: ['Los Angeles', 'Mammoth Lakes', 'Sacramento', 'Redding', 'West Sacramento'],
-                    nv: ['Reno', 'Sparks']
-                  }
-
-    REACTIVE_FREIGHT_CARRIER = true
-
     include FreightKit::Rateable
     include FreightKit::Trackable
+    CITY_STATES = {
+      ca: ['Los Angeles', 'Mammoth Lakes', 'Sacramento', 'Redding', 'West Sacramento'],
+      nv: ['Reno', 'Sparks']
+    }.freeze
+
+    REACTIVE_FREIGHT_CARRIER = true
 
     class << self
       attr_reader :name, :scac
@@ -64,11 +61,11 @@ module FreightKit
 
     def commit(action, request)
       client_args = {
-                      wsdl: request_url(action),
-                      convert_request_keys_to: :camelcase,
-                      env_namespace: :soap,
-                      element_form_default: :qualified
-                    }
+        wsdl: request_url(action),
+        convert_request_keys_to: :camelcase,
+        env_namespace: :soap,
+        element_form_default: :qualified
+      }
 
       call_args = { message: request }
 
@@ -77,7 +74,7 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action),
+        soap_operation: @conf.dig(:api, :actions, action)
       ).call
 
       return response if response.is_a?(TrackingResponse) || response.is_a?(RateResponse)
@@ -133,8 +130,8 @@ module FreightKit
 
       begin
         browser
-        .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
-        .click
+          .element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
+          .click
       rescue Watir::Exception::UnknownObjectException
         document_response.error = DocumentNotFoundError.new
         return document_response
@@ -204,9 +201,7 @@ module FreightKit
       if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
         shipment.accessorials.each do |a|
-          if @conf.dig(:accessorials, :unserviceable).exclude?(a)
-            accessorials << @conf.dig(:accessorials, :mappable)[a]
-          end
+          accessorials << @conf.dig(:accessorials, :mappable)[a] if @conf.dig(:accessorials, :unserviceable).exclude?(a)
         end
       end
 
@@ -230,13 +225,13 @@ module FreightKit
       api_credentials = fetch_credential(:api)
 
       request = {
-                  customer_code: api_credentials.account,
-                  origin_zip: shipment.origin.postal_code.to_s.upcase,
-                  destination_zip: shipment.destination.postal_code.to_s.upcase,
-                  shipment_detail:,
-                  rating_type: '', # per API documentation
-                  accessorials:
-                }
+        customer_code: api_credentials.account,
+        origin_zip: shipment.origin.postal_code.to_s.upcase,
+        destination_zip: shipment.destination.postal_code.to_s.upcase,
+        shipment_detail:,
+        rating_type: '', # per API documentation
+        accessorials:
+      }
 
       save_request(request)
       request
@@ -281,7 +276,7 @@ module FreightKit
         :get_rates_response,
         :get_rates_result,
         :shipment_detail_response,
-        :shipment_detail_row,
+        :shipment_detail_row
       )
 
       shipment_details.each do |shipment_detail|
@@ -304,7 +299,7 @@ module FreightKit
         service_name: :standard,
         shipment:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]
@@ -331,7 +326,7 @@ module FreightKit
       Location.new(
         city: str.split(', ')[0].titleize,
         province: str.split(', ')[1].split[0].upcase,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
     end
 
@@ -388,7 +383,7 @@ module FreightKit
         city: search_result[:shipper_city].squish.strip.titleize,
         province: search_result[:shipper_state].strip.upcase,
         postal_code: search_result[:shipper_zip].strip,
-        country:,
+        country:
       )
 
       receiver_location = Location.new(
@@ -396,7 +391,7 @@ module FreightKit
         city: search_result[:cons_city].squish.strip.titleize,
         province: search_result[:cons_state].strip.upcase,
         postal_code: search_result[:cons_zip].strip,
-        country:,
+        country:
       )
 
       api_date_time = search_result.dig('Shipment', 'DeliveredDateTime')
@@ -463,7 +458,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:,
+        tracking_number:
       )
 
       tracking_response

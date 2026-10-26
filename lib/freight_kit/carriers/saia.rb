@@ -1,11 +1,8 @@
-# frozen_string_literal: true
-
 module FreightKit
   class SAIA < FreightKit::Carrier
-    REACTIVE_FREIGHT_CARRIER = true
-
     include FreightKit::Rateable
     include FreightKit::Trackable
+    REACTIVE_FREIGHT_CARRIER = true
 
     class << self
       attr_reader :name, :scac
@@ -57,11 +54,11 @@ module FreightKit
 
     def commit(action, request)
       client_args = {
-                      wsdl: request_url(action),
-                      convert_request_keys_to: :none,
-                      env_namespace: :soap,
-                      element_form_default: :qualified
-                    }
+        wsdl: request_url(action),
+        convert_request_keys_to: :none,
+        env_namespace: :soap,
+        element_form_default: :qualified
+      }
 
       call_args = { message: request_blueprint.deep_merge(request) }
 
@@ -70,7 +67,7 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action),
+        soap_operation: @conf.dig(:api, :actions, action)
       ).call&.to_hash&.with_indifferent_access
     end
 
@@ -79,12 +76,12 @@ module FreightKit
 
       {
         request: {
-                   AccountNumber: api_credentials.account,
-                   Application: 'ThirdParty',
-                   Password: api_credentials.password,
-                   TestMode: 'N',
-                   UserID: api_credentials.username
-                 }
+          AccountNumber: api_credentials.account,
+          Application: 'ThirdParty',
+          Password: api_credentials.password,
+          TestMode: 'N',
+          UserID: api_credentials.username
+        }
       }
     end
 
@@ -117,47 +114,47 @@ module FreightKit
       shipment.packages.each do |package|
         package.quantity.times do
           details << {
-                       DetailItem: {
-                                     Weight: package.pounds(:each).ceil,
-                                     Class: package.freight_class.to_s,
-                                     Length: package.length(:in).ceil,
-                                     Width: package.width(:in).ceil,
-                                     Height: package.height(:in).ceil
-                                   }
-                     }
+            DetailItem: {
+              Weight: package.pounds(:each).ceil,
+              Class: package.freight_class.to_s,
+              Length: package.length(:in).ceil,
+              Width: package.width(:in).ceil,
+              Height: package.height(:in).ceil
+            }
+          }
 
           # Keeping this one at a time to match with "details"
           dimensions << {
-                          DimensionItem: {
-                                           Units: 1,
-                                           Length: package.length(:in).round(2),
-                                           Width: package.width(:in).round(2),
-                                           Height: package.height(:in).round(2),
-                                           Type: 'IN' # inches
-                                         }
-                        }
+            DimensionItem: {
+              Units: 1,
+              Length: package.length(:in).round(2),
+              Width: package.width(:in).round(2),
+              Height: package.height(:in).round(2),
+              Type: 'IN' # inches
+            }
+          }
         end
       end
 
       request = {
-                  request: {
-                             Application: 'ThirdParty',
-                             BillingTerms: 'Prepaid',
-                             OriginCity: shipment.origin.city,
-                             OriginState: shipment.origin.province,
-                             OriginZipcode: shipment.origin.postal_code.to_s.upcase,
-                             DestinationCity: shipment.destination.city,
-                             DestinationState: shipment.destination.province,
-                             DestinationZipcode: shipment.destination.postal_code.to_s.upcase,
-                             WeightUnits: 'LBS',
-                             TotalCube: shipment.packages.sum { |p| p.cubic_ft(:each) }.round(2),
-                             TotalCubeUnits: 'CUFT', # cubic ft
-                             ExcessiveLengthTotalInches: longest_dimension.to_s,
-                             Details: details,
-                             Dimensions: dimensions,
-                             Accessorials: accessorials
-                           }
-                }
+        request: {
+          Application: 'ThirdParty',
+          BillingTerms: 'Prepaid',
+          OriginCity: shipment.origin.city,
+          OriginState: shipment.origin.province,
+          OriginZipcode: shipment.origin.postal_code.to_s.upcase,
+          DestinationCity: shipment.destination.city,
+          DestinationState: shipment.destination.province,
+          DestinationZipcode: shipment.destination.postal_code.to_s.upcase,
+          WeightUnits: 'LBS',
+          TotalCube: shipment.packages.sum { |p| p.cubic_ft(:each) }.round(2),
+          TotalCubeUnits: 'CUFT', # cubic ft
+          ExcessiveLengthTotalInches: longest_dimension.to_s,
+          Details: details,
+          Dimensions: dimensions,
+          Accessorials: accessorials
+        }
+      }
 
       declared_value = if shipment.declared_value_cents.blank?
                          nil
@@ -169,10 +166,10 @@ module FreightKit
         request = request.deep_merge(
           {
             request: {
-                       DeclaredValue: declared_value,
-                       FullValueCoverage: declared_value
-                     }
-          },
+              DeclaredValue: declared_value,
+              FullValueCoverage: declared_value
+            }
+          }
         )
       end
 
@@ -233,7 +230,7 @@ module FreightKit
         Price.new(
           blame: :api,
           cents: (rate_accessorial_item[:amount].to_f * 100).to_i,
-          description: rate_accessorial_item[:description]&.titleize&.squish,
+          description: rate_accessorial_item[:description]&.titleize&.squish
         )
       end
 
@@ -250,20 +247,20 @@ module FreightKit
         service_name: :standard,
         shipment:,
         prices: [
-                  Price.new(
-                    blame: :api,
-                    cents: standard_ltl_cents,
-                    description: 'Freight',
-                  ),
-                ] + prices,
+          Price.new(
+            blame: :api,
+            cents: standard_ltl_cents,
+            description: 'Freight'
+          )
+        ] + prices,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       [
         { guaranteed_ltl: result[:guarantee_amount] },
         { guaranteed_ltl_am: result[:guarantee_amount12pm] },
-        { guaranteed_ltl_pm: result[:guarantee_amount2pm] },
+        { guaranteed_ltl_pm: result[:guarantee_amount2pm] }
       ].each do |service|
         next if service.values[0] == '0' || service.values[0].blank?
 
@@ -278,13 +275,13 @@ module FreightKit
           service_name: service.keys[0],
           shipment:,
           prices: [
-                    Price.new(
-                      blame: :api,
-                      cents: standard_ltl_cents + cents,
-                      description: 'Freight',
-                    ),
-                  ] + prices,
-          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+            Price.new(
+              blame: :api,
+              cents: standard_ltl_cents + cents,
+              description: 'Freight'
+            )
+          ] + prices,
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
         )
       end
 
@@ -296,10 +293,10 @@ module FreightKit
 
     def build_tracking_request(tracking_number)
       request = {
-                  request: {
-                             ProNumber: tracking_number
-                           }
-                }
+        request: {
+          ProNumber: tracking_number
+        }
+      }
       save_request(request)
       request
     end
@@ -315,7 +312,7 @@ module FreightKit
       Location.new(
         city: api_event[:city]&.titleize,
         province: api_event[:state]&.upcase,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
     end
 
@@ -341,9 +338,9 @@ module FreightKit
       end
 
       address1 = [
-                   search_result.dig(:shipper, :address1),
-                   search_result.dig(:shipper, :address2),
-                 ]
+        search_result.dig(:shipper, :address1),
+        search_result.dig(:shipper, :address2)
+      ]
                  .select(&:present?)
                  .map { |line| line.squish.strip.titleize }
                  .join(', ')
@@ -353,13 +350,13 @@ module FreightKit
         city: search_result.dig(:shipper, :city)&.squish&.titleize,
         province: search_result.dig(:shipper, :state)&.strip&.upcase,
         postal_code: search_result.dig(:shipper, :zipcode)&.strip,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
 
       address1 = [
-                   search_result.dig(:consignee, :address1),
-                   search_result.dig(:consignee, :address2),
-                 ]
+        search_result.dig(:consignee, :address1),
+        search_result.dig(:consignee, :address2)
+      ]
                  .select(&:present?)
                  .map { |line| line.squish.strip.titleize }
                  .join(', ')
@@ -369,7 +366,7 @@ module FreightKit
         city: search_result.dig(:consignee, :city)&.squish&.titleize,
         province: search_result.dig(:consignee, :state)&.strip&.upcase,
         postal_code: search_result.dig(:consignee, :zipcode)&.strip,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
 
       api_date_time = search_result[:delivery_date_time_arrive]
@@ -391,7 +388,7 @@ module FreightKit
         shipment_events << ShipmentEvent.new(
           date_time: pickup_date,
           location: shipper_location,
-          type_code: :picked_up,
+          type_code: :picked_up
         )
       else
         api_events = [api_events] if api_events.is_a?(Hash)
@@ -427,7 +424,7 @@ module FreightKit
         ship_time: pickup_date,
         shipment_events:,
         status:,
-        tracking_number:,
+        tracking_number:
       )
 
       tracking_response

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   module Documentable
     def pod(tracking_number)

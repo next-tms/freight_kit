@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Class representing credentials.
   #
@@ -70,7 +68,7 @@ module FreightKit
         end
       end
 
-      hash.each do |k, _v|
+      hash.each_key do |k|
         next if k == :type
 
         singleton_class.class_eval { attr_accessor(k.to_s) } unless singleton_class.respond_to?(k)
@@ -99,19 +97,19 @@ module FreightKit
       url = url.to_s
 
       @watir_args = [
-                      browser,
-                      {
-                        options: {
-                                   prefs: {
-                                            download: {
-                                                        directory_upgrade: true,
-                                                        prompt_for_download: false
-                                                      }
-                                          }
-                                 },
-                        url:
-                      },
-                    ]
+        browser,
+        {
+          options: {
+            prefs: {
+              download: {
+                directory_upgrade: true,
+                prompt_for_download: false
+              }
+            }
+          },
+          url:
+        }
+      ]
     end
   end
 end

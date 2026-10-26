@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # The `RateResponse` object is returned by the {FreightKit::Carrier#find_rates}
   # call. The most important method is {#rates}, which will return a list of possible

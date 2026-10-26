@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 version = File.read(File.expand_path('VERSION', __dir__)).strip.freeze
 
 Gem::Specification.new do |spec|
@@ -7,17 +5,17 @@ Gem::Specification.new do |spec|
   spec.version = version
 
   spec.authors = [
-                   'Third Party Transportation Systems LLC',
-                   'Brody Hoskins',
-                   'Sub Pop Records',
-                   'Shopify',
-                 ]
+    'Third Party Transportation Systems LLC',
+    'Brody Hoskins',
+    'Sub Pop Records',
+    'Shopify'
+  ]
   spec.email = [
-                 'hello@next-tms.com',
-                 'brody@brody.digital',
-                 'webmaster@subpop.com',
-                 'integrations-team@shopify.com',
-               ]
+    'hello@next-tms.com',
+    'brody@brody.digital',
+    'webmaster@subpop.com',
+    'integrations-team@shopify.com'
+  ]
 
   spec.description = 'Freight carrier API and website abstraction library for transportation management systems (TMS)'
   spec.homepage = 'https://github.com/next-tms/freight_kit'
@@ -33,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('rake', '~> 13.4.2')
   spec.add_development_dependency('redcarpet', '~> 3.6.0') # for yard
   spec.add_development_dependency('rspec', '~> 3.12')
-  spec.add_development_dependency('rubocop-next', '~> 1.0.8')
+  spec.add_development_dependency('rubocop-next', '~> 1.0.9')
   spec.add_development_dependency('yard', '~> 0.9.28')
 
   spec.add_dependency('activemodel', '>= 7.1', '< 8.1.5')

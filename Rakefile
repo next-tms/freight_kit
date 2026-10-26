@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 desc 'Load FreightKit'
 task(:environment) do
   require_relative 'lib/freight_kit'

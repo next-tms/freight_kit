@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   module Rateable
     def find_rates(shipment:)

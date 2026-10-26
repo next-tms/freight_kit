@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class CarrierLogistics < Platform
     class << self
@@ -14,18 +12,17 @@ module FreightKit
       end
     end
 
+    include FreightKit::Trackable
+    include FreightKit::Rateable
     REACTIVE_FREIGHT_PLATFORM = true
 
     EXPIRED_CREDENTIALS_MESSAGES = [
-                                     'Your password has expired',
-                                   ].freeze
+      'Your password has expired'
+    ].freeze
     INVALID_CREDENTIALS_MESSAGES = [
-                                     'Unable to log in',
-                                     'Your Username or Password is Incorrect',
-                                   ].freeze
-
-    include FreightKit::Trackable
-    include FreightKit::Rateable
+      'Unable to log in',
+      'Your Username or Password is Incorrect'
+    ].freeze
 
     # Documents
 
@@ -137,7 +134,7 @@ module FreightKit
       Location.new(
         city:,
         province:,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
     end
 
@@ -149,7 +146,7 @@ module FreightKit
       Location.new(
         city: parts.first.titleize,
         province: parts.last.upcase,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
     end
 
@@ -200,7 +197,7 @@ module FreightKit
         address2: response.dig(:protrace, :shipaddr2)&.titleize,
         city: response.dig(:protrace, :origcity)&.titleize,
         province: response.dig(:protrace, :origstate)&.upcase,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
 
       destination = Location.new(
@@ -208,7 +205,7 @@ module FreightKit
         address2: response.dig(:protrace, :consaddr2)&.titleize,
         city: response.dig(:protrace, :destcity)&.titleize,
         province: response.dig(:protrace, :deststate)&.upcase,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
 
       deldateiso = response.dig(:protrace, :deldateiso)
@@ -278,7 +275,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:,
+        tracking_number:
       )
 
       tracking_response
@@ -286,7 +283,7 @@ module FreightKit
 
     # Rates
 
-    def build_calculated_accessorials(shipment)
+    def build_calculated_accessorials(_shipment)
       []
     end
 
@@ -319,13 +316,13 @@ module FreightKit
       api_credentials = fetch_credential(:api)
 
       query = {
-                xmlv: 'yes', # must be first
-                quotenumber: 'YES',
-                vdzip: shipment.destination.postal_code,
-                vozip: shipment.origin.postal_code,
-                xmlpass: api_credentials.password,
-                xmluser: api_credentials.username
-              }
+        xmlv: 'yes', # must be first
+        quotenumber: 'YES',
+        vdzip: shipment.destination.postal_code,
+        vozip: shipment.origin.postal_code,
+        xmlpass: api_credentials.password,
+        xmluser: api_credentials.username
+      }
 
       i = 0
       shipment.packages.each do |package|
@@ -346,16 +343,16 @@ module FreightKit
         serviceable_accessorials?(shipment.accessorials)
 
         shipment
-        .accessorials
-        .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
-        .each do |shipment_accessorial|
-          conf_accessorial = conf.dig(:accessorials, :mappable, shipment_accessorial)
+          .accessorials
+          .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
+          .each do |shipment_accessorial|
+            conf_accessorial = conf.dig(:accessorials, :mappable, shipment_accessorial)
 
-          case conf_accessorial
-          when Array then accessorials += conf_accessorial
-          when String then accessorials << conf_accessorial
+            case conf_accessorial
+            when Array then accessorials += conf_accessorial
+            when String then accessorials << conf_accessorial
+            end
           end
-        end
       end
 
       accessorials += build_calculated_accessorials(shipment)
@@ -408,17 +405,17 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents:,
-          description: ratequote_line_description(ratequote_line),
+          description: ratequote_line_description(ratequote_line)
         )
       end
 
       prices = [
-                 Price.new(
-                   blame: :api,
-                   cents: total_cents - prices.sum(&:cents),
-                   description: 'Freight',
-                 ),
-               ] + prices
+        Price.new(
+          blame: :api,
+          cents: total_cents - prices.sum(&:cents),
+          description: 'Freight'
+        )
+      ] + prices
 
       if self.class.overlength_fees_require_tariff?
         cents = 0
@@ -440,7 +437,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]

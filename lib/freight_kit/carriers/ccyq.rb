@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class CCYQ < FreightKit::Carrier
     class << self
@@ -20,6 +18,10 @@ module FreightKit
       end
     end
 
+    include FreightKit::Rateable
+    include FreightKit::Trackable
+    include FreightKit::Documentable
+    include FreightKit::Pickupable
     REACTIVE_FREIGHT_CARRIER = true
 
     class << self
@@ -29,15 +31,10 @@ module FreightKit
     @scac = 'CCYQ'
 
     JSON_HEADERS = {
-                     Accept: 'application/json',
-                     charset: 'utf-8',
-                     'Content-Type' => 'application/json'
-                   }.freeze
-
-    include FreightKit::Rateable
-    include FreightKit::Trackable
-    include FreightKit::Documentable
-    include FreightKit::Pickupable
+      Accept: 'application/json',
+      charset: 'utf-8',
+      'Content-Type' => 'application/json'
+    }.freeze
 
     protected
 
@@ -50,13 +47,13 @@ module FreightKit
       proxy_url = fetch_credential(:api_proxy).proxy_url
 
       request = {
-                  url: build_url(action),
-                  headers: { APIKEY: api_key },
-                  method: @conf.dig(:api, :methods, action),
-                  body:,
-                  query:,
-                  proxy_url:
-                }.compact
+        url: build_url(action),
+        headers: { APIKEY: api_key },
+        method: @conf.dig(:api, :methods, action),
+        body:,
+        query:,
+        proxy_url:
+      }.compact
 
       save_request(request)
       request
@@ -69,7 +66,7 @@ module FreightKit
         headers: request[:headers].merge(JSON_HEADERS),
         body: request[:body],
         query: request[:query],
-        proxy: request[:proxy_url],
+        proxy: request[:proxy_url]
       )
 
       unless response.code == 200
@@ -79,9 +76,7 @@ module FreightKit
           "HTTP #{response.code}"
         end
 
-        if message == 'API key is inactive'
-          raise FreightKit::InvalidCredentialsError, message
-        end
+        raise FreightKit::InvalidCredentialsError, message if message == 'API key is inactive'
 
         raise FreightKit::ResponseError, message
       end
@@ -154,41 +149,41 @@ module FreightKit
       build_request(
         :pickup,
         body: {
-                PickupAddress: {
-                                 Name: shipment.origin.contact.company_name || shipment.destination.origin.name,
-                                 Address1: shipment.origin.address1,
-                                 Address2: '',
-                                 City: shipment.origin.city,
-                                 State: shipment.origin.province,
-                                 Zip: shipment.origin.postal_code.to_s,
-                                 Phone: dispatcher_phone.presence || '',
-                                 Contact: shipment.origin.contact.name,
-                                 Country: shipment.origin.country.code(:alpha2).value
-                               },
-                DeliveryAddress: {
-                                   Name: shipment.destination.contact.company_name || shipment.destination.contact.name,
-                                   Address1: shipment.destination.address1,
-                                   Address2: '',
-                                   City: shipment.destination.city,
-                                   State: shipment.destination.province,
-                                   Zip: shipment.destination.postal_code.to_s,
-                                   Phone: receiver_phone || '',
-                                   Contact: shipment.destination.contact.name,
-                                   Country: shipment.destination.country.code(:alpha2).value
-                                 },
-                PickupSchedule: {
-                                  After: pickup_from.iso8601,
-                                  Before: pickup_to.iso8601,
-                                  AppointmentRequired: false,
-                                  AppointmentMade: false
-                                },
-                TotalWeight: shipment.packages.sum { |p| p.pounds(:total).ceil },
-                TotalUnits: shipment.packages.sum(&:quantity),
-                TotalBills: 1,
-                # TODO: Update with actual value: TotalBills desc =>
-                # Total number of freight bills that will be picked up
-                TestFlag: false
-              }.to_json,
+          PickupAddress: {
+            Name: shipment.origin.contact.company_name || shipment.destination.origin.name,
+            Address1: shipment.origin.address1,
+            Address2: '',
+            City: shipment.origin.city,
+            State: shipment.origin.province,
+            Zip: shipment.origin.postal_code.to_s,
+            Phone: dispatcher_phone.presence || '',
+            Contact: shipment.origin.contact.name,
+            Country: shipment.origin.country.code(:alpha2).value
+          },
+          DeliveryAddress: {
+            Name: shipment.destination.contact.company_name || shipment.destination.contact.name,
+            Address1: shipment.destination.address1,
+            Address2: '',
+            City: shipment.destination.city,
+            State: shipment.destination.province,
+            Zip: shipment.destination.postal_code.to_s,
+            Phone: receiver_phone || '',
+            Contact: shipment.destination.contact.name,
+            Country: shipment.destination.country.code(:alpha2).value
+          },
+          PickupSchedule: {
+            After: pickup_from.iso8601,
+            Before: pickup_to.iso8601,
+            AppointmentRequired: false,
+            AppointmentMade: false
+          },
+          TotalWeight: shipment.packages.sum { |p| p.pounds(:total).ceil },
+          TotalUnits: shipment.packages.sum(&:quantity),
+          TotalBills: 1,
+          # TODO: Update with actual value: TotalBills desc =>
+          # Total number of freight bills that will be picked up
+          TestFlag: false
+        }.to_json
       )
     end
 
@@ -236,20 +231,20 @@ module FreightKit
       build_request(
         :rates,
         body: {
-                Orig: shipment.origin.postal_code,
-                Dest: shipment.destination.postal_code,
-                Accessorials: build_accessorials(shipment:),
-                Details: shipment.packages.map do |package|
-                           {
-                             Height: package.inches(:height).ceil.to_f,
-                             Length: package.inches(:length).ceil.to_f,
-                             Width: package.inches(:width).ceil.to_f,
-                             Units: package.quantity.to_i,
-                             Class: package.freight_class.to_f,
-                             Weight: package.pounds(:total).ceil.to_f
-                           }
-                         end
-              }.to_json,
+          Orig: shipment.origin.postal_code,
+          Dest: shipment.destination.postal_code,
+          Accessorials: build_accessorials(shipment:),
+          Details: shipment.packages.map do |package|
+            {
+              Height: package.inches(:height).ceil.to_f,
+              Length: package.inches(:length).ceil.to_f,
+              Width: package.inches(:width).ceil.to_f,
+              Units: package.quantity.to_i,
+              Class: package.freight_class.to_f,
+              Weight: package.pounds(:total).ceil.to_f
+            }
+          end
+        }.to_json
       )
     end
 
@@ -300,7 +295,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]

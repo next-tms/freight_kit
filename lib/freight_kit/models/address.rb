@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Class representing a real, deliverable mailing address.
   class Address < Model
@@ -7,11 +5,9 @@ module FreightKit
     attr_reader :country
 
     def country=(country)
-      return @country = nil if country.blank?
+      raise ArgumentError, 'country must be a FreightKit::Country' unless country.blank? || country.is_a?(Country)
 
-      raise ArgumentError, 'country must be a FreightKit::Country' unless country.is_a?(Country)
-
-      @country = country
+      @country = country.presence
     end
   end
 end

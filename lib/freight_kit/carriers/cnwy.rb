@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class CNWY < Carrier
     class << self
@@ -75,15 +73,15 @@ module FreightKit
       body = URI.encode_www_form(
         grant_type: 'password',
         password: api_credentials.password,
-        username: api_credentials.username,
+        username: api_credentials.username
       )
 
       {
         body:,
         headers: {
-                   authorization: "Basic #{api_credentials.api_key}",
-                   content_type: 'application/x-www-form-urlencoded'
-                 },
+          authorization: "Basic #{api_credentials.api_key}",
+          content_type: 'application/x-www-form-urlencoded'
+        },
         method: :post,
         url: build_url(:token)
       }
@@ -116,9 +114,7 @@ module FreightKit
         raise e
       end
 
-      error = if json.is_a?(Hash)
-                json[:error_description] || json.dig(:fault, :description) || json.dig(:error, :message)
-              end
+      error = (json[:error_description] || json.dig(:fault, :description) || json.dig(:error, :message) if json.is_a?(Hash))
 
       if error.blank?
         return json if (200..299).include?(response.code)
@@ -162,10 +158,10 @@ module FreightKit
 
       if longest_dimension_in >= 96
         accessorials << {
-                          accessorial_cd: 'ELS',
-                          quantity_uom: 'INCH',
-                          quantity: longest_dimension_in
-                        }
+          accessorial_cd: 'ELS',
+          quantity_uom: 'INCH',
+          quantity: longest_dimension_in
+        }
       end
 
       return accessorials if shipment.accessorials.blank?
@@ -187,15 +183,15 @@ module FreightKit
       shipment.packages.map do |package|
         {
           dimensions: {
-                        dimensions_uom: 'INCH',
-                        height: package.inches(:height).ceil,
-                        length: package.inches(:length).ceil,
-                        width: package.inches(:width).ceil
-                      },
+            dimensions_uom: 'INCH',
+            height: package.inches(:height).ceil,
+            length: package.inches(:length).ceil,
+            width: package.inches(:width).ceil
+          },
           gross_weight: {
-                          weight: package.pounds(:total).ceil,
-                          weight_uom: 'LBS'
-                        },
+            weight: package.pounds(:total).ceil,
+            weight_uom: 'LBS'
+          },
           hazmat_ind: package.hazmat?,
           nmfc_class: package.freight_class.to_s,
           nmfc_item_cd: package.nmfc,
@@ -212,24 +208,24 @@ module FreightKit
       commodity = build_commodity(shipment:)
 
       body = {
-               shipmentInfo: {
-                               accessorials:,
-                               bill_2_party: { acct_inst_id: api_credentials.account },
-                               commodity:,
-                               consignee: { address: { postal_cd: shipment.destination.postal_code.to_s } },
-                               pallet_cnt: shipment.packages.map(&:packaging).map(&:pallet?).count(true),
-                               payment_term_cd: 'P', # prepaid,
-                               shipment_date:,
-                               shipper: { address: { postal_cd: shipment.origin.postal_code.to_s } }
-                             }
-             }.deep_transform_keys! { |key| key.to_s.camelize(:lower) }.to_json
+        shipmentInfo: {
+          accessorials:,
+          bill_2_party: { acct_inst_id: api_credentials.account },
+          commodity:,
+          consignee: { address: { postal_cd: shipment.destination.postal_code.to_s } },
+          pallet_cnt: shipment.packages.map(&:packaging).map(&:pallet?).count(true),
+          payment_term_cd: 'P', # prepaid,
+          shipment_date:,
+          shipper: { address: { postal_cd: shipment.origin.postal_code.to_s } }
+        }
+      }.deep_transform_keys! { |key| key.to_s.camelize(:lower) }.to_json
 
       request = {
-                  body:,
-                  headers: build_headers,
-                  method: :post,
-                  url: build_url(:rates)
-                }
+        body:,
+        headers: build_headers,
+        method: :post,
+        url: build_url(:rates)
+      }
 
       save_request(request)
       request
@@ -257,16 +253,16 @@ module FreightKit
       prices << FreightKit::Price.new(
         blame: :api,
         cents: parse_amount(
-          commodities.sum { |c| c.dig(:charge, :chargeAmt, :amt) },
+          commodities.sum { |c| c.dig(:charge, :chargeAmt, :amt) }
         ),
-        description: 'Freight',
+        description: 'Freight'
       )
 
       if deficit_weight.present?
         prices << FreightKit::Price.new(
           blame: :api,
           cents: parse_amount(deficit_weight.dig(:deficitAmt, :amt)),
-          description: <<~DESC.squish,
+          description: <<~DESC.squish
             Deficit weight
             #{deficit_weight.dig(:deficitWght, :weight).ceil}
             #{deficit_weight.dig(:deficitWght, :weightUom).downcase}
@@ -277,14 +273,14 @@ module FreightKit
       prices << FreightKit::Price.new(
         blame: :api,
         cents: parse_amount(response.dig(:data, :rateQuote, :totDiscountAmt, :amt)) * -1,
-        description: "Discount #{response.dig(:data, :rateQuote, :actlDiscountPct)}%",
+        description: "Discount #{response.dig(:data, :rateQuote, :actlDiscountPct)}%"
       )
 
       prices += accessorials.map do |accessorial|
         FreightKit::Price.new(
           blame: :api,
           cents: parse_amount(accessorial.dig(:chargeAmt, :amt)),
-          description: accessorial[:accessorialDesc].squish.capitalize.gsub('Xpo', 'XPO'),
+          description: accessorial[:accessorialDesc].squish.capitalize.gsub('Xpo', 'XPO')
         )
       end
 
@@ -315,7 +311,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]

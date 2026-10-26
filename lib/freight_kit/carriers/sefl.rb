@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class SEFL < FreightKit::Carrier
     class << self
@@ -41,10 +39,10 @@ module FreightKit
     @scac = 'SEFL'
 
     JSON_HEADERS = {
-                     Accept: 'application/json',
-                     charset: 'utf-8',
-                     'Content-Type' => 'application/x-www-form-urlencoded'
-                   }.freeze
+      Accept: 'application/json',
+      charset: 'utf-8',
+      'Content-Type' => 'application/x-www-form-urlencoded'
+    }.freeze
 
     # Documents
 
@@ -86,11 +84,11 @@ module FreightKit
       body = URI.encode_www_form(options[:body]) if options[:body].present?
 
       request = {
-                  url: options[:url].presence || build_url(action),
-                  headers:,
-                  method: @conf.dig(:api, :methods, action),
-                  body:
-                }
+        url: options[:url].presence || build_url(action),
+        headers:,
+        method: @conf.dig(:api, :methods, action),
+        body:
+      }
 
       save_request(request)
       request
@@ -120,16 +118,16 @@ module FreightKit
         serviceable_accessorials?(shipment.accessorials)
 
         shipment
-        .accessorials
-        .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
-        .each do |shipment_accessorial|
-          conf_accessorial = conf.dig(:accessorials, :mappable, shipment_accessorial)
+          .accessorials
+          .reject { |accessorial| conf.dig(:accessorials, :unquotable).include?(accessorial) }
+          .each do |shipment_accessorial|
+            conf_accessorial = conf.dig(:accessorials, :mappable, shipment_accessorial)
 
-          case conf_accessorial
-          when Array then accessorials += conf_accessorial
-          when String then accessorials << conf_accessorial
+            case conf_accessorial
+            when Array then accessorials += conf_accessorial
+            when String then accessorials << conf_accessorial
+            end
           end
-        end
       end
 
       longest_dimension = shipment.packages.map { |p| [p.width(:inches), p.length(:inches)].max }.max.ceil
@@ -144,32 +142,32 @@ module FreightKit
       api_credentials = fetch_credential(:api)
 
       body = {
-               allowSpot: longest_dimension >= 120 ? 'Y' : 'N',
-               CustomerAccount: api_credentials.account.to_i.to_s.rjust(9, '0'),
-               CustomerCity: customer_location.city,
-               CustomerName: customer_location.contact.company_name,
-               CustomerState: customer_location.province,
-               CustomerStreet: customer_location.address1,
-               CustomerZip: customer_location.postal_code,
-               Description: shipment_description,
-               DestCountry: 'U',
-               DestinationCity: shipment.destination.city,
-               DestinationState: shipment.destination.province,
-               DestinationZip: shipment.destination.postal_code,
-               DimsOption: 'I',
-               EmailAddress: customer_location.contact.email,
-               Option: 'T',
-               OrigCountry: 'U',
-               OriginCity: shipment.origin.city,
-               OriginState: shipment.origin.province,
-               OriginZip: shipment.origin.postal_code,
-               PickupDay: pickup_on.strftime('%_d'),
-               PickupMonth: pickup_on.strftime('%_m'),
-               PickupYear: pickup_on.strftime('%Y'),
-               rateXML: 'Y',
-               returnX: 'Y',
-               Terms: 'P'
-             }
+        allowSpot: longest_dimension >= 120 ? 'Y' : 'N',
+        CustomerAccount: api_credentials.account.to_i.to_s.rjust(9, '0'),
+        CustomerCity: customer_location.city,
+        CustomerName: customer_location.contact.company_name,
+        CustomerState: customer_location.province,
+        CustomerStreet: customer_location.address1,
+        CustomerZip: customer_location.postal_code,
+        Description: shipment_description,
+        DestCountry: 'U',
+        DestinationCity: shipment.destination.city,
+        DestinationState: shipment.destination.province,
+        DestinationZip: shipment.destination.postal_code,
+        DimsOption: 'I',
+        EmailAddress: customer_location.contact.email,
+        Option: 'T',
+        OrigCountry: 'U',
+        OriginCity: shipment.origin.city,
+        OriginState: shipment.origin.province,
+        OriginZip: shipment.origin.postal_code,
+        PickupDay: pickup_on.strftime('%_d'),
+        PickupMonth: pickup_on.strftime('%_m'),
+        PickupYear: pickup_on.strftime('%Y'),
+        rateXML: 'Y',
+        returnX: 'Y',
+        Terms: 'P'
+      }
 
       declared_value = if shipment.declared_value_cents.blank?
                          0
@@ -246,9 +244,7 @@ module FreightKit
       error = response['errorMessage']
 
       if error.present?
-        if error.include?('one point must be directly serviced')
-          rate_response.error = UnserviceableError.new(error.sub(' by SEFL.', ''))
-        end
+        rate_response.error = UnserviceableError.new(error.sub(' by SEFL.', '')) if error.include?('one point must be directly serviced')
 
         rate_response.error = ResponseError.new(error) if rate_response.error.blank?
         return rate_response
@@ -330,7 +326,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]
