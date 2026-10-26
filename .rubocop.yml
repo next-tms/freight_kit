@@ -12,3 +12,12 @@ Naming/PredicateMethod:
 Rails/RakeEnvironment:
   Exclude:
     - Rakefile
+
+Lint/UnusedMethodArgument:
+  AllowUnusedKeywordArguments: true
+
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
+Rails/TimeZone:
+  Enabled: false

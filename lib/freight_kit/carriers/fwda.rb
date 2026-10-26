@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class FWDA < FreightKit::Carrier
     class << self
@@ -36,11 +34,10 @@ module FreightKit
       end
     end
 
-    REACTIVE_FREIGHT_CARRIER = true
-
     include FreightKit::Rateable
     include FreightKit::Trackable
     include FreightKit::Pickupable
+    REACTIVE_FREIGHT_CARRIER = true
 
     class << self
       attr_reader :name, :scac
@@ -49,10 +46,10 @@ module FreightKit
     @scac = 'FWDA'
 
     JSON_HEADERS = {
-                     Accept: 'application/json',
-                     charset: 'utf-8',
-                     'Content-Type' => 'application/json'
-                   }.freeze
+      Accept: 'application/json',
+      charset: 'utf-8',
+      'Content-Type' => 'application/json'
+    }.freeze
 
     # Override Carrier#serviceable_accessorials? since we have separate delivery/pickup accessorials
     def serviceable_accessorials?(accessorials)
@@ -72,7 +69,7 @@ module FreightKit
       unsupported_accessorials = accessorials - serviceable_accessorials
 
       if unsupported_accessorials.any?
-        raise FreightKit::UnserviceableError, "#{self.class.name}: #{unsupported_accessorials.join(", ")} not supported"
+        raise FreightKit::UnserviceableError, "#{self.class.name}: #{unsupported_accessorials.join(', ')} not supported"
       end
 
       true
@@ -85,9 +82,7 @@ module FreightKit
       begin
         documents = commit(build_documents_request(tracking_number))
       rescue FreightKit::ResponseError => e
-        if e.message.downcase.include?('no airbills found')
-          return DocumentResponse.new(error: FreightKit::DocumentNotFoundError)
-        end
+        return DocumentResponse.new(error: FreightKit::DocumentNotFoundError) if e.message.downcase.include?('no airbills found')
 
         return DocumentResponse.new(error: e)
       end
@@ -109,9 +104,7 @@ module FreightKit
       begin
         documents = commit(build_documents_request(tracking_number))
       rescue FreightKit::ResponseError => e
-        if e.message.downcase.include?('no airbills found')
-          return DocumentResponse.new(error: FreightKit::DocumentNotFoundError)
-        end
+        return DocumentResponse.new(error: FreightKit::DocumentNotFoundError) if e.message.downcase.include?('no airbills found')
 
         return DocumentResponse.new(error: e)
       end
@@ -150,8 +143,8 @@ module FreightKit
       packages = shipment.packages.select { |package| package.height(:in) > 89 }
       if packages.any?
         message = <<~MESSAGE.squish
-          #{"Height".pluralize(packages)}
-          #{packages.map { |package| "#{package.height(:in)} inches" }.join(", ")}
+          #{'Height'.pluralize(packages)}
+          #{packages.map { |package| "#{package.height(:in)} inches" }.join(', ')}
           greater than maximum allowed of 89 inches.
         MESSAGE
         raise UnserviceableError, message
@@ -160,8 +153,8 @@ module FreightKit
       packages = shipment.packages.select { |package| package.length(:in) > 240 }
       if packages.any?
         message = <<~MESSAGE.squish
-          #{"Length".pluralize(packages)}
-          #{packages.map { |package| "#{package.length(:in)} inches" }.join(", ")}
+          #{'Length'.pluralize(packages)}
+          #{packages.map { |package| "#{package.length(:in)} inches" }.join(', ')}
           greater than maximum allowed of 240 inches.
         MESSAGE
         raise UnserviceableError, message
@@ -170,8 +163,8 @@ module FreightKit
       packages = shipment.packages.select { |package| package.width(:in) > 82 }
       if packages.any?
         message = <<~MESSAGE.squish
-          #{"Width".pluralize(packages)}
-          #{packages.map { |package| "#{package.width(:in)} inches" }.join(", ")}
+          #{'Width'.pluralize(packages)}
+          #{packages.map { |package| "#{package.width(:in)} inches" }.join(', ')}
           greater than maximum allowed of 82 inches.
         MESSAGE
         raise UnserviceableError, message
@@ -194,9 +187,7 @@ module FreightKit
              @conf.dig(:accessorials, :mappable, :pickup).include?(a)
             pickup_accessorials << @conf.dig(:accessorials, :mappable, :pickup)[a]
           end
-        end
 
-        accessorials.each do |a|
           if @conf.dig(:accessorials, :unserviceable).exclude?(a) &&
              @conf.dig(:accessorials, :mappable, :delivery).include?(a)
             delivery_accessorials << @conf.dig(:accessorials, :mappable, :delivery)[a]
@@ -265,7 +256,7 @@ module FreightKit
           customerId: api_credentials.username.upcase,
           password: api_credentials.password,
           user: api_credentials.username
-        },
+        }
       )
     end
 
@@ -275,11 +266,11 @@ module FreightKit
       body = options[:body].to_json if options[:body].present?
 
       request = {
-                  url: build_url(action, options),
-                  headers:,
-                  method: @conf.dig(:api, :methods, action),
-                  body:
-                }
+        url: build_url(action, options),
+        headers:,
+        method: @conf.dig(:api, :methods, action),
+        body:
+      }
 
       save_request(request)
       request
@@ -347,10 +338,10 @@ module FreightKit
 
     def build_document_request(doc_id:, tracking_number:)
       request = {
-                  url: build_url(:document, doc_id:, tracking_number:),
-                  headers: build_headers,
-                  method: @conf.dig(:api, :methods, :documents)
-                }
+        url: build_url(:document, doc_id:, tracking_number:),
+        headers: build_headers,
+        method: @conf.dig(:api, :methods, :documents)
+      }
 
       save_request(request)
       request
@@ -358,10 +349,10 @@ module FreightKit
 
     def build_documents_request(tracking_number)
       request = {
-                  url: build_url(:documents, tracking_number:),
-                  headers: build_headers,
-                  method: @conf.dig(:api, :methods, :documents)
-                }
+        url: build_url(:documents, tracking_number:),
+        headers: build_headers,
+        method: @conf.dig(:api, :methods, :documents)
+      }
 
       save_request(request)
       request
@@ -375,10 +366,10 @@ module FreightKit
 
     def build_locations_request
       request = {
-                  url: build_url(:locations),
-                  headers: build_headers,
-                  method: @conf.dig(:api, :methods, :locations)
-                }
+        url: build_url(:locations),
+        headers: build_headers,
+        method: @conf.dig(:api, :methods, :locations)
+      }
 
       save_request(request)
       request
@@ -397,7 +388,7 @@ module FreightKit
           city: location['city'],
           province: location['state'],
           country: ActiveUtils::Country.find(location['countrycd']),
-          contact: Contact.new(fax: location['fax'], phone: location['phone']),
+          contact: Contact.new(fax: location['fax'], phone: location['phone'])
         )
       end
 
@@ -431,92 +422,92 @@ module FreightKit
                        end
 
       delivery = {
-                   airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
-                   deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
-                 }
+        airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
+        deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
+      }
       description = shipment.packages.map(&:description).reject(&:blank?).uniq.join(', ')
 
       request = {
-                  headers: build_headers,
-                  method: @conf.dig(:api, :methods, :pickup),
-                  url: build_url(:pickup),
-                  body: {
-                          testmode: 'N',
-                          consignee: {
-                                       consigneeAddress1: shipment.destination.address1,
-                                       consigneeAddress2: '',
-                                       consigneeCity: shipment.destination.city,
-                                       consigneeCloseTime: delivery_to.strftime('%H:%M:00'),
-                                       consigneeContactEmail: '',
-                                       consigneeContactName: shipment.destination.contact.name || 'Receiving',
-                                       consigneeContactPhone: receiver_phone || '',
-                                       consigneeCountry: shipment.destination.country.code(:alpha2).value,
-                                       consigneeLocationName: shipment.destination.contact.name,
-                                       consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
-                                       consigneeState: shipment.destination.province,
-                                       consigneeZipCode: shipment.destination.postal_code.to_s
-                                     },
-                          shipper: {
-                                     shipperAddress1: shipment.origin.address1,
-                                     shipperAddress2: '',
-                                     shipperCity: shipment.origin.city,
-                                     shipperCloseTime: pickup_to.strftime('%H:%M:00'),
-                                     shipperContactEmail: '',
-                                     shipperContactName: shipment.origin.contact.name || 'Shipping',
-                                     shipperContactPhone: shipper_phone || '',
-                                     shipperCountry: shipment.origin.country.code(:alpha2).value,
-                                     shipperLocationName: shipment.origin.contact.name,
-                                     shipperOpenTime: pickup_from.strftime('%H:%M:00'),
-                                     shipperState: shipment.origin.province,
-                                     shipperZipCode: shipment.origin.postal_code.to_s
-                                   },
-                          orderDetails: {
-                                          airbillNumber: '00000000',
-                                          billToCustomerNumber: api_credentials.account&.to_s || '',
-                                          customerReferenceNumber: shipment.po_number,
-                                          declaredValue: declared_value,
-                                          description:,
-                                          destinationAirportCode: '',
-                                          guaranteedService: 'N',
-                                          hazmat: shipment.hazmat? ? 'Y' : 'N',
-                                          inBondShipment: declared_value.to_f.positive? ? 'Y' : 'N',
-                                          orderAction: 'CREATE',
-                                          originAirportCode: '',
-                                          shippingDate: pickup_from.strftime('%Y-%m-%d'),
-                                          shipperCustomerNumber: api_credentials.account&.to_s || '',
-                                          specialInstructions: '',
-                                          dimensions: {
-                                                        dimension: shipment.packages.map do |package|
-                                                          {
-                                                            height: package.inches(:height).ceil.to_s,
-                                                            length: package.inches(:length).ceil.to_s,
-                                                            width: package.inches(:width).ceil.to_s,
-                                                            pieces: package.quantity.to_s
-                                                          }
-                                                        end
-                                                      },
-                                          freightDetails: { freightDetail: build_freight_details(shipment.packages) },
-                                          delivery:,
-                                          emergencyContact: {
-                                                              email: dispatcher.email,
-                                                              name: dispatcher.name,
-                                                              phone: dispatcher_phone
-                                                            },
-                                          pickup: {
-                                                    airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
-                                                    pickupAccessorials: { pickupAccessorial: pickup_accessorials },
-                                                    pickupReadyTime: pickup_from.strftime('%H:%M:00')
-                                                  },
-                                          referenceNumbers: {
-                                                              referenceNumber: [
-                                                                                 shipment.order_number,
-                                                                                 shipment.po_number,
-                                                                                 '',
-                                                                               ]
-                                                            }
-                                        }
-                        }.to_json
+        headers: build_headers,
+        method: @conf.dig(:api, :methods, :pickup),
+        url: build_url(:pickup),
+        body: {
+          testmode: 'N',
+          consignee: {
+            consigneeAddress1: shipment.destination.address1,
+            consigneeAddress2: '',
+            consigneeCity: shipment.destination.city,
+            consigneeCloseTime: delivery_to.strftime('%H:%M:00'),
+            consigneeContactEmail: '',
+            consigneeContactName: shipment.destination.contact.name || 'Receiving',
+            consigneeContactPhone: receiver_phone || '',
+            consigneeCountry: shipment.destination.country.code(:alpha2).value,
+            consigneeLocationName: shipment.destination.contact.name,
+            consigneeOpenTime: delivery_from.strftime('%H:%M:00'),
+            consigneeState: shipment.destination.province,
+            consigneeZipCode: shipment.destination.postal_code.to_s
+          },
+          shipper: {
+            shipperAddress1: shipment.origin.address1,
+            shipperAddress2: '',
+            shipperCity: shipment.origin.city,
+            shipperCloseTime: pickup_to.strftime('%H:%M:00'),
+            shipperContactEmail: '',
+            shipperContactName: shipment.origin.contact.name || 'Shipping',
+            shipperContactPhone: shipper_phone || '',
+            shipperCountry: shipment.origin.country.code(:alpha2).value,
+            shipperLocationName: shipment.origin.contact.name,
+            shipperOpenTime: pickup_from.strftime('%H:%M:00'),
+            shipperState: shipment.origin.province,
+            shipperZipCode: shipment.origin.postal_code.to_s
+          },
+          orderDetails: {
+            airbillNumber: '00000000',
+            billToCustomerNumber: api_credentials.account.to_s,
+            customerReferenceNumber: shipment.po_number,
+            declaredValue: declared_value,
+            description:,
+            destinationAirportCode: '',
+            guaranteedService: 'N',
+            hazmat: shipment.hazmat? ? 'Y' : 'N',
+            inBondShipment: declared_value.to_f.positive? ? 'Y' : 'N',
+            orderAction: 'CREATE',
+            originAirportCode: '',
+            shippingDate: pickup_from.strftime('%Y-%m-%d'),
+            shipperCustomerNumber: api_credentials.account.to_s,
+            specialInstructions: '',
+            dimensions: {
+              dimension: shipment.packages.map do |package|
+                {
+                  height: package.inches(:height).ceil.to_s,
+                  length: package.inches(:length).ceil.to_s,
+                  width: package.inches(:width).ceil.to_s,
+                  pieces: package.quantity.to_s
                 }
+              end
+            },
+            freightDetails: { freightDetail: build_freight_details(shipment.packages) },
+            delivery:,
+            emergencyContact: {
+              email: dispatcher.email,
+              name: dispatcher.name,
+              phone: dispatcher_phone
+            },
+            pickup: {
+              airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
+              pickupAccessorials: { pickupAccessorial: pickup_accessorials },
+              pickupReadyTime: pickup_from.strftime('%H:%M:00')
+            },
+            referenceNumbers: {
+              referenceNumber: [
+                shipment.order_number,
+                shipment.po_number,
+                ''
+              ]
+            }
+          }
+        }.to_json
+      }
 
       save_request(request)
       request
@@ -550,35 +541,35 @@ module FreightKit
       pickup_accessorials, delivery_accessorials = build_accessorials(shipment.accessorials)
 
       delivery = {
-                   airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
-                   deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
-                 }
+        airportDelivery: delivery_accessorials&.include?('ALD') ? 'Y' : 'N',
+        deliveryAccessorials: { deliveryAccessorial: delivery_accessorials }
+      }
 
       request = {
-                  url: build_url(:rates),
-                  headers: build_headers,
-                  method: @conf.dig(:api, :methods, :rates),
-                  body: {
-                          billToCustomerNumber: api_credentials.account,
-                          origin: {
-                                    originZipCode: shipment.origin.postal_code.to_s.upcase,
-                                    pickup: {
-                                              airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
-                                              pickupAccessorials: { pickupAccessorial: pickup_accessorials }
-                                            }
-                                  },
-                          destination: {
-                                         destinationZipCode: shipment.destination.postal_code.to_s.upcase,
-                                         delivery:
-                                       },
-                          dimensions: { dimension: dimensions },
-                          freightDetails: { freightDetail: freight_details },
-                          hazmat: shipment.hazmat? ? 'Y' : 'N',
-                          inBondShipment: 'N',
-                          declaredValue: declared_value,
-                          shippingDate: Date.current.strftime('%Y-%m-%d')
-                        }.to_json
-                }
+        url: build_url(:rates),
+        headers: build_headers,
+        method: @conf.dig(:api, :methods, :rates),
+        body: {
+          billToCustomerNumber: api_credentials.account,
+          origin: {
+            originZipCode: shipment.origin.postal_code.to_s.upcase,
+            pickup: {
+              airportPickup: pickup_accessorials&.include?('ALP') ? 'Y' : 'N',
+              pickupAccessorials: { pickupAccessorial: pickup_accessorials }
+            }
+          },
+          destination: {
+            destinationZipCode: shipment.destination.postal_code.to_s.upcase,
+            delivery:
+          },
+          dimensions: { dimension: dimensions },
+          freightDetails: { freightDetail: freight_details },
+          hazmat: shipment.hazmat? ? 'Y' : 'N',
+          inBondShipment: 'N',
+          declaredValue: declared_value,
+          shippingDate: Date.current.strftime('%Y-%m-%d')
+        }.to_json
+      }
 
       save_request(request)
       request
@@ -627,7 +618,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]
@@ -650,14 +641,14 @@ module FreightKit
 
     def build_tracking_request(tracking_number)
       request = {
-                  url: build_url(:track, tracking_number:),
-                  headers: build_headers,
-                  method: @conf.dig(:api, :methods, :track),
-                  body: {
-                          billToCustomerNumber: fetch_credential(:api).account,
-                          referenceNumber: tracking_number.to_s
-                        }.to_json
-                }
+        url: build_url(:track, tracking_number:),
+        headers: build_headers,
+        method: @conf.dig(:api, :methods, :track),
+        body: {
+          billToCustomerNumber: fetch_credential(:api).account,
+          referenceNumber: tracking_number.to_s
+        }.to_json
+      }
 
       save_request(request)
       request
@@ -697,7 +688,7 @@ module FreightKit
           city: api_event['city'].titleize,
           province: api_event['state'].upcase,
           postal_code: api_event['zip'].upcase,
-          country: ActiveUtils::Country.find(api_event['country']),
+          country: ActiveUtils::Country.find(api_event['country'])
         )
 
         date_time = parse_api_date_time(api_event['recordDate'], location)
@@ -735,7 +726,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:,
+        tracking_number:
       )
 
       tracking_response

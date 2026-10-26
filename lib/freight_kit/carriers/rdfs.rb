@@ -1,10 +1,7 @@
-# frozen_string_literal: true
-
 module FreightKit
   class RDFS < Carrier
-    REACTIVE_FREIGHT_CARRIER = true
-
     include FreightKit::Rateable
+    REACTIVE_FREIGHT_CARRIER = true
 
     class << self
       attr_reader :name, :scac
@@ -74,33 +71,31 @@ module FreightKit
 
       {
         authentication_header: {
-                                 :@xmlns => @conf.dig(:api, :soap, :namespaces, action),
-                                 password: api_credential.password,
-                                 user_name: api_credential.username
-                               }
+          :@xmlns => @conf.dig(:api, :soap, :namespaces, action),
+          password: api_credential.password,
+          user_name: api_credential.username
+        }
       }
     end
 
     def commit(action, request)
       client_args = {
-                      wsdl: request_url(action),
-                      convert_request_keys_to: :camelcase,
-                      env_namespace: :soap,
-                      element_form_default: :qualified
-                    }
+        wsdl: request_url(action),
+        convert_request_keys_to: :camelcase,
+        env_namespace: :soap,
+        element_form_default: :qualified
+      }
 
       call_args = {
-                    soap_header: build_soap_header(action),
-                    message: request
-                  }
+        soap_header: build_soap_header(action),
+        message: request
+      }
 
       soap_operation = @conf.dig(:api, :actions, action)
 
-      response = ::FreightKit::SoapClient
-                 .new(carrier: self, action:, client_args:, call_args:, soap_operation:)
-                 .call(handle_soap_fault_error: false)
-
-      response
+      ::FreightKit::SoapClient
+        .new(carrier: self, action:, client_args:, call_args:, soap_operation:)
+        .call(handle_soap_fault_error: false)
     rescue Savon::SOAPFault => e
       raise InvalidCredentialsError, 'Invalid credentials' if e.message.include?('RRTS.Common.BLL.InvalidUserException')
 
@@ -159,7 +154,7 @@ module FreightKit
 
     def validate_api_credential!(api_credential)
       %i[account password username].each do |attribute|
-        if !api_credential.respond_to?(attribute) || api_credential.send(attribute).blank?
+        if !api_credential.respond_to?(attribute) || api_credential.public_send(attribute).blank?
           raise InvalidCredentialsError, "Invalid #{attribute}"
         end
 
@@ -204,9 +199,9 @@ module FreightKit
       validate_api_credential!(api_credential)
 
       service_delivery_options = [
-                                   # API calls this invalid now
-                                   # service_options: { service_code: 'SS' }
-                                 ]
+        # API calls this invalid now
+        # service_options: { service_code: 'SS' }
+      ]
 
       if shipment.accessorials.present?
         serviceable_accessorials?(shipment.accessorials)
@@ -217,12 +212,12 @@ module FreightKit
                                    .map do |shipment_accessorial|
                                      {
                                        service_options: {
-                                                          service_code: conf.dig(
-                                                            :accessorials,
-                                                            :mappable,
-                                                            shipment_accessorial,
-                                                          )
-                                                        }
+                                         service_code: conf.dig(
+                                           :accessorials,
+                                           :mappable,
+                                           shipment_accessorial
+                                         )
+                                       }
                                      }
                                    end
       end
@@ -256,9 +251,9 @@ module FreightKit
 
         package.quantity.times do
           shipment_detail << {
-                               'ActualClass' => package.freight_class,
-                               'Weight' => package.pounds(:each).ceil
-                             }
+            'ActualClass' => package.freight_class,
+            'Weight' => package.pounds(:each).ceil
+          }
         end
       end
 
@@ -269,20 +264,20 @@ module FreightKit
                    end
 
       request = {
-                  'request' => {
-                                 account: api_credential.account,
-                                 cubic_feet:,
-                                 destination_zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase,
-                                 # linear_feet: linear_ft(packages),
-                                 origin_type: 'B', # O for shipper, I for consignee, B for third party
-                                 origin_zip: shipment.origin.postal_code.gsub(/\s+/, '').upcase,
-                                 pallet_count: shipment_pallet_count,
-                                 payment_type: 'P', # prepaid
-                                 pieces: shipment_box_count,
-                                 service_delivery_options:,
-                                 shipment_details: { shipment_detail: }
-                               }
-                }
+        'request' => {
+          account: api_credential.account,
+          cubic_feet:,
+          destination_zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase,
+          # linear_feet: linear_ft(packages),
+          origin_type: 'B', # O for shipper, I for consignee, B for third party
+          origin_zip: shipment.origin.postal_code.gsub(/\s+/, '').upcase,
+          pallet_count: shipment_pallet_count,
+          payment_type: 'P', # prepaid
+          pieces: shipment_box_count,
+          service_delivery_options:,
+          shipment_details: { shipment_detail: }
+        }
+      }
 
       save_request(request)
       request
@@ -296,7 +291,7 @@ module FreightKit
 
       if error_number.present?
         case error_number
-        when 99991
+        when 99_991
           rate_response.error = UnserviceableError.new(error_message)
           return rate_response
         end
@@ -337,7 +332,7 @@ module FreightKit
           prices << Price.new(
             blame: :api,
             cents: parse_amount(rate_detail[:charge]),
-            description: 'Freight',
+            description: 'Freight'
           )
 
           next
@@ -346,7 +341,7 @@ module FreightKit
         prices << FreightKit::Price.new(
           blame: :api,
           cents: parse_amount(rate_detail[:charge]),
-          description: rate_detail[:description]&.capitalize,
+          description: rate_detail[:description]&.capitalize
         )
       end
 
@@ -360,7 +355,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]
@@ -393,7 +388,7 @@ module FreightKit
           return Location.new(
             city: 'Long Beach',
             province: 'CA',
-            country: ActiveUtils::Country.find('USA'),
+            country: ActiveUtils::Country.find('USA')
           )
         end
 
@@ -428,13 +423,13 @@ module FreightKit
       receiver_location = Location.new(
         city: search_result.dig('Shipment', 'Consignee', 'City').titleize,
         province: search_result.dig('Shipment', 'Consignee', 'State').upcase,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
 
       shipper_location = Location.new(
         city: search_result.dig('Shipment', 'Origin', 'City').titleize,
         province: search_result.dig('Shipment', 'Origin', 'State').upcase,
-        country: ActiveUtils::Country.find('USA'),
+        country: ActiveUtils::Country.find('USA')
       )
 
       api_date_time = search_result.dig('Shipment', 'DeliveredDateTime')
@@ -496,7 +491,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:,
+        tracking_number:
       )
 
       tracking_response

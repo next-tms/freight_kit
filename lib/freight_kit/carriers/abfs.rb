@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class ABFS < FreightKit::Carrier
     class << self
@@ -45,17 +43,17 @@ module FreightKit
     @scac = 'ABFS'
 
     XML_HEADERS = {
-                    'Accept' => 'application/xml',
-                    'charset' => 'utf-8',
-                    'Content-Type' => 'application/xml'
-                  }.freeze
+      'Accept' => 'application/xml',
+      'charset' => 'utf-8',
+      'Content-Type' => 'application/xml'
+    }.freeze
 
     def serviceable_accessorials?(accessorials)
       unsupported_accessorials = conf.dig(:accessorials, :unserviceable).select do |key|
         accessorials.include?(key)
       end.sort!
 
-      message = "#{unsupported_accessorials.join(", ")} unserviceable"
+      message = "#{unsupported_accessorials.join(', ')} unserviceable"
       raise FreightKit::UnserviceableError, message if unsupported_accessorials.any?
 
       true
@@ -67,11 +65,13 @@ module FreightKit
       raise FreightKit::UnserviceableError, 'Too many packages' if packages.count > 15
 
       unsupported_packaging_types = packages.map(&:packaging).map(&:type).select do |type|
-        conf.dig(:package_types).keys.exclude?(type)
+        conf[:package_types].keys.exclude?(type)
       end.sort!
 
-      raise FreightKit::UnserviceableError,
-            "#{unsupported_packaging_types.join(", ").upcase_first} unserviceable" if unsupported_packaging_types.any?
+      if unsupported_packaging_types.any?
+        raise FreightKit::UnserviceableError,
+              "#{unsupported_packaging_types.join(', ').upcase_first} unserviceable"
+      end
 
       true
     end
@@ -108,10 +108,10 @@ module FreightKit
 
     def build_request(action, options = {})
       request = {
-                  url: build_url(action, options),
-                  headers: XML_HEADERS,
-                  method: @conf.dig(:api, :methods, action)
-                }
+        url: build_url(action, options),
+        headers: XML_HEADERS,
+        method: @conf.dig(:api, :methods, action)
+      }
 
       save_request(request)
       request
@@ -184,30 +184,30 @@ module FreightKit
       end
 
       shipper = {
-                  'ShipCity' => shipment.origin.city,
-                  'ShipState' => shipment.origin.province,
-                  'ShipZip' => shipment.origin.postal_code,
-                  'ShipCountry' => shipment.origin.country.code(:alpha2).value
-                }
+        'ShipCity' => shipment.origin.city,
+        'ShipState' => shipment.origin.province,
+        'ShipZip' => shipment.origin.postal_code,
+        'ShipCountry' => shipment.origin.country.code(:alpha2).value
+      }
 
       consignee = {
-                    'ConsCity' => shipment.destination.city,
-                    'ConsState' => shipment.destination.province,
-                    'ConsZip' => shipment.destination.postal_code,
-                    'ConsCountry' => shipment.destination.country.code(:alpha2).value
-                  }
+        'ConsCity' => shipment.destination.city,
+        'ConsState' => shipment.destination.province,
+        'ConsZip' => shipment.destination.postal_code,
+        'ConsCountry' => shipment.destination.country.code(:alpha2).value
+      }
 
       third_party = {
-                      'TPBAcct' => broker_credential.account,
-                      'TPBAddr' => [customer_location.address1, customer_location.address2].compact.join(', '),
-                      'TPBAff' => 'Y',
-                      'TPBCity' => customer_location.city,
-                      'TPBCountry' => customer_location.country.code(:alpha2).value,
-                      'TPBName' => customer_location.contact&.company_name,
-                      'TPBPay' => 'Y',
-                      'TPBState' => customer_location.province,
-                      'TPBZip' => customer_location.postal_code
-                    }
+        'TPBAcct' => broker_credential.account,
+        'TPBAddr' => [customer_location.address1, customer_location.address2].compact.join(', '),
+        'TPBAff' => 'Y',
+        'TPBCity' => customer_location.city,
+        'TPBCountry' => customer_location.country.code(:alpha2).value,
+        'TPBName' => customer_location.contact&.company_name,
+        'TPBPay' => 'Y',
+        'TPBState' => customer_location.province,
+        'TPBZip' => customer_location.postal_code
+      }
                     .compact_blank!
 
       shipment.packages.map { |p| p.pounds(:total).ceil }.sum
@@ -229,11 +229,11 @@ module FreightKit
       time = Time.current.in_time_zone('America/Chicago')
 
       specifics = {
-                    'FrtLWHType' => 'IN',
-                    'ShipMonth' => time.strftime('%m'),
-                    'ShipDay' => time.strftime('%d'),
-                    'ShipYear' => time.strftime('%Y')
-                  }
+        'FrtLWHType' => 'IN',
+        'ShipMonth' => time.strftime('%m'),
+        'ShipDay' => time.strftime('%d'),
+        'ShipYear' => time.strftime('%Y')
+      }
 
       if shipment.packages.map { |package| package.cubic_ft(:each) }.all?(&:present?)
         specifics['Cube'] = shipment.packages.sum { |package| package.cubic_ft(:each) }.ceil
@@ -291,9 +291,7 @@ module FreightKit
           if longest_dimension_in >= 96
             builder['Acc_OD'] = 'Y'
 
-            if longest_dimension_in >= 336
-              builder['Acc_CAP'] = 'Y'
-            end
+            builder['Acc_CAP'] = 'Y' if longest_dimension_in >= 336
           end
         end
 
@@ -305,16 +303,16 @@ module FreightKit
       end
 
       params = [
-                 account,
-                 commodities,
-                 consignee,
-                 delivery,
-                 other_options,
-                 pickup,
-                 shipper,
-                 specifics,
-                 third_party,
-               ]
+        account,
+        commodities,
+        consignee,
+        delivery,
+        other_options,
+        pickup,
+        shipper,
+        specifics,
+        third_party
+      ]
                .reduce({}, :merge)
 
       build_request(:rates, { params: })
@@ -355,14 +353,14 @@ module FreightKit
           service_name: :standard,
           shipment:,
           prices: [
-                    Price.new(
-                      blame: :api,
-                      cents:,
-                      description: 'Freight',
-                    ),
-                  ],
+            Price.new(
+              blame: :api,
+              cents:,
+              description: 'Freight'
+            )
+          ],
           transit_days:,
-          with_excessive_length_fees:,
+          with_excessive_length_fees:
         )
 
         guaranteed_options = response.dig(:guaranteedoptions, :option)
@@ -382,14 +380,14 @@ module FreightKit
               service_name:,
               shipment:,
               prices: [
-                        Price.new(
-                          blame: :api,
-                          cents:,
-                          description: 'Freight',
-                        ),
-                      ],
+                Price.new(
+                  blame: :api,
+                  cents:,
+                  description: 'Freight'
+                )
+              ],
               transit_days:,
-              with_excessive_length_fees:,
+              with_excessive_length_fees:
             )
           end
         end

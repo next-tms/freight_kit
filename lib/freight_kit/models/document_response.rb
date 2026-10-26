@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Represents the response to calls:
   #   - {FreightKit::Carrier#bol}

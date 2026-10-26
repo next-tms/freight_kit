@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class Platform < Carrier
     # Credentials should be a `Credential` or `Array` of `Credential`
@@ -14,9 +12,9 @@ module FreightKit
                   .join(
                     File.expand_path(
                       '../../../../configuration/platforms',
-                      self.class.const_source_location(:REACTIVE_FREIGHT_PLATFORM).first,
+                      self.class.const_source_location(:REACTIVE_FREIGHT_PLATFORM).first
                     ),
-                    "#{parent_class_name}.yml",
+                    "#{parent_class_name}.yml"
                   )
       @conf = YAML.safe_load_file(conf_path, permitted_classes: [Symbol])
 
@@ -24,9 +22,9 @@ module FreightKit
                   .join(
                     File.expand_path(
                       '../../../../configuration/carriers',
-                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first,
+                      self.class.const_source_location(:REACTIVE_FREIGHT_CARRIER).first
                     ),
-                    "#{self.class.to_s.demodulize.underscore}.yml",
+                    "#{self.class.to_s.demodulize.underscore}.yml"
                   )
       @conf = @conf.deep_merge(YAML.safe_load_file(conf_path, permitted_classes: [Symbol]))
 

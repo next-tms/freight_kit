@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class PENS < FreightKit::Carrier
     class << self
@@ -28,9 +26,8 @@ module FreightKit
       end
     end
 
-    REACTIVE_FREIGHT_CARRIER = true
-
     include FreightKit::Rateable
+    REACTIVE_FREIGHT_CARRIER = true
 
     class << self
       attr_reader :name, :scac
@@ -46,11 +43,11 @@ module FreightKit
 
     def commit(action, request)
       client_args = {
-                      wsdl: request_url(action),
-                      convert_request_keys_to: :lower_camelcase,
-                      env_namespace: :soap,
-                      element_form_default: :qualified
-                    }
+        wsdl: request_url(action),
+        convert_request_keys_to: :lower_camelcase,
+        env_namespace: :soap,
+        element_form_default: :qualified
+      }
 
       call_args = { message: request }
 
@@ -59,7 +56,7 @@ module FreightKit
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action),
+        soap_operation: @conf.dig(:api, :actions, action)
       ).call
     end
 
@@ -92,21 +89,21 @@ module FreightKit
       api_credentials = fetch_credential(:api)
 
       request = {
-                  accessorial_list: '', # TODO: Fix this!
-                  account: api_credentials.account,
-                  class_list: shipment.packages.map(&:freight_class).join(','),
-                  customer_type: 'B',
-                  destination_zip: shipment.destination.postal_code.to_s,
-                  none_palletized_mode: shipment.packages.map(&:packaging).map(&:pallet?).any?(false) ? 'Y' : 'N',
-                  origin_zip: shipment.origin.postal_code.to_s,
-                  password: api_credentials.password,
-                  plt_count_list: shipment.packages.map(&:quantity).join(','),
-                  plt_length_list: shipment.packages.map { |p| p.inches(:length).ceil }.join(','),
-                  plt_total_weight: shipment.packages.map { |p| p.pounds(:total).ceil }.join(','),
-                  plt_width_list: shipment.packages.map { |p| p.inches(:width).ceil }.join(','),
-                  user_id: api_credentials.username,
-                  weight_list: shipment.packages.map { |p| p.pounds(:total) }.join(',')
-                }
+        accessorial_list: '', # TODO: Fix this!
+        account: api_credentials.account,
+        class_list: shipment.packages.map(&:freight_class).join(','),
+        customer_type: 'B',
+        destination_zip: shipment.destination.postal_code.to_s,
+        none_palletized_mode: shipment.packages.map(&:packaging).map(&:pallet?).any?(false) ? 'Y' : 'N',
+        origin_zip: shipment.origin.postal_code.to_s,
+        password: api_credentials.password,
+        plt_count_list: shipment.packages.map(&:quantity).join(','),
+        plt_length_list: shipment.packages.map { |p| p.inches(:length).ceil }.join(','),
+        plt_total_weight: shipment.packages.map { |p| p.pounds(:total).ceil }.join(','),
+        plt_width_list: shipment.packages.map { |p| p.inches(:width).ceil }.join(','),
+        user_id: api_credentials.username,
+        weight_list: shipment.packages.map { |p| p.pounds(:total) }.join(',')
+      }
 
       save_request(request)
       request
@@ -154,7 +151,7 @@ module FreightKit
       prices << Price.new(
         blame: :api,
         cents: parse_amount(result.dig(:quote, :gross_charge)),
-        description: 'Charge based on class and weight',
+        description: 'Charge based on class and weight'
       )
 
       accessorial_details = result.dig(:quote, :accessorial_detail)
@@ -166,20 +163,20 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents: parse_amount(accessorial_item[:charge]),
-          description: accessorial_item[:description]&.capitalize,
+          description: accessorial_item[:description]&.capitalize
         )
       end
 
       prices << Price.new(
         blame: :api,
         cents: parse_amount(result.dig(:quote, :discount_amount)),
-        description: 'Discount',
+        description: 'Discount'
       )
 
       prices << Price.new(
         blame: :api,
         cents: parse_amount(result.dig(:quote, :fsc_amount)),
-        description: 'Fuel surcharge',
+        description: 'Fuel surcharge'
       )
 
       rate = Rate.new(
@@ -192,7 +189,7 @@ module FreightKit
         shipment:,
         prices:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]

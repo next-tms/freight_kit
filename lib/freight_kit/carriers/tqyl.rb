@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class TQYL < FreightKit::Carrier
     class << self
@@ -20,6 +18,9 @@ module FreightKit
       end
     end
 
+    include FreightKit::Rateable
+    include FreightKit::Trackable
+    include FreightKit::Pickupable
     REACTIVE_FREIGHT_CARRIER = true
 
     class << self
@@ -28,11 +29,7 @@ module FreightKit
     @name = 'Total Quality Logistics'
     @scac = 'TQYL'
 
-    API_SCOPE = 'https://tqlidentity.onmicrosoft.com/services_combined/LTLQuotes.Tender'
-
-    include FreightKit::Rateable
-    include FreightKit::Trackable
-    include FreightKit::Pickupable
+    API_SCOPE = 'https://tqlidentity.onmicrosoft.com/services_combined/LTLQuotes.Tender'.freeze
 
     protected
 
@@ -44,12 +41,12 @@ module FreightKit
       fetch_credential(:api).api_key
 
       request = {
-                  url: build_url(action),
-                  method: @conf.dig(:api, :methods, action),
-                  headers: {},
-                  body:,
-                  query:
-                }.compact
+        url: build_url(action),
+        method: @conf.dig(:api, :methods, action),
+        headers: {},
+        body:,
+        query:
+      }.compact
 
       request[:headers] = { 'Authorization' => "Bearer #{build_access_token}" } unless action == :auth
 
@@ -63,7 +60,7 @@ module FreightKit
         request[:url],
         headers: request[:headers].merge(subscription_key_headers),
         query: request[:query],
-        body: request[:body],
+        body: request[:body]
       )
 
       parsed_response = JSON.parse(response.body)
@@ -77,9 +74,7 @@ module FreightKit
 
       raise FreightKit::ResponseError, message
     rescue JSON::ParserError => e
-      if response.body.include?('Sorry, but we&#39;re having trouble signing you in')
-        raise FreightKit::InvalidCredentialsError
-      end
+      raise FreightKit::InvalidCredentialsError if response.body.include?('Sorry, but we&#39;re having trouble signing you in')
 
       raise FreightKit::ResponseError, e.message
     end
@@ -89,12 +84,12 @@ module FreightKit
       credentials = fetch_credential(:api)
 
       request_body = {
-                       username: credentials.username,
-                       password: credentials.password,
-                       grant_type: 'password',
-                       scope: API_SCOPE,
-                       client_id: credentials.api_key
-                     }
+        username: credentials.username,
+        password: credentials.password,
+        grant_type: 'password',
+        scope: API_SCOPE,
+        client_id: credentials.api_key
+      }
 
       request = build_request(:auth, query: request_body)
       response = commit(request)
@@ -113,10 +108,10 @@ module FreightKit
 
     def build_tracking_request(tracking_number)
       request = {
-                  url: build_url(:track).gsub('%TRACKING_NUMBER%', tracking_number.to_s),
-                  method: @conf.dig(:api, :methods, :track),
-                  headers: { 'Authorization' => "Bearer #{build_access_token}" }
-                }.compact
+        url: build_url(:track).gsub('%TRACKING_NUMBER%', tracking_number.to_s),
+        method: @conf.dig(:api, :methods, :track),
+        headers: { 'Authorization' => "Bearer #{build_access_token}" }
+      }.compact
 
       save_request(request)
       request
@@ -154,7 +149,7 @@ module FreightKit
         shipment_events << ShipmentEvent.new(
           date_time: api_event['time'],
           location: Location.new(city: api_event['city'], province: api_event['state'], country:),
-          type_code: event,
+          type_code: event
         )
       end
 
@@ -167,7 +162,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:,
+        tracking_number:
       )
     end
 
@@ -191,36 +186,36 @@ module FreightKit
       build_request(
         :pickup,
         body: {
-                scac:,
-                serviceLevel: service.to_s.capitalize,
-                shipmentDate: pickup_from.iso8601,
-                commodities: build_commodities(shipment),
-                accessorials: build_accessorials(shipment:),
-                pickupDetails: {
-                                 address1: origin.address1,
-                                 postalCode: origin.postal_code.to_i,
-                                 city: origin.city,
-                                 state: origin.province.upcase,
-                                 country: origin.country.code(:alpha3).value,
-                                 contactName: origin.contact.name || 'Shipping',
-                                 contactPhone: shipper_phone || '',
-                                 stopName: origin.contact.name || 'Shipping',
-                                 hoursOpen: pickup_from.strftime('%I:%M %p'),
-                                 hoursClosed: pickup_to.strftime('%I:%M %p')
-                               },
-                deliveryDetails: {
-                                   address1: destination.address1,
-                                   postalCode: destination.postal_code.to_i,
-                                   city: destination.city,
-                                   state: destination.province.upcase,
-                                   country: destination.country.code(:alpha3).value,
-                                   contactName: destination.contact.name || 'Receiving',
-                                   contactPhone: receiver_phone || '',
-                                   stopName: destination.contact.name || 'Receiving',
-                                   hoursOpen: delivery_from.strftime('%I:%M %p'),
-                                   hoursClosed: delivery_to.strftime('%I:%M %p')
-                                 }
-              },
+          scac:,
+          serviceLevel: service.to_s.capitalize,
+          shipmentDate: pickup_from.iso8601,
+          commodities: build_commodities(shipment),
+          accessorials: build_accessorials(shipment:),
+          pickupDetails: {
+            address1: origin.address1,
+            postalCode: origin.postal_code.to_i,
+            city: origin.city,
+            state: origin.province.upcase,
+            country: origin.country.code(:alpha3).value,
+            contactName: origin.contact.name || 'Shipping',
+            contactPhone: shipper_phone || '',
+            stopName: origin.contact.name || 'Shipping',
+            hoursOpen: pickup_from.strftime('%I:%M %p'),
+            hoursClosed: pickup_to.strftime('%I:%M %p')
+          },
+          deliveryDetails: {
+            address1: destination.address1,
+            postalCode: destination.postal_code.to_i,
+            city: destination.city,
+            state: destination.province.upcase,
+            country: destination.country.code(:alpha3).value,
+            contactName: destination.contact.name || 'Receiving',
+            contactPhone: receiver_phone || '',
+            stopName: destination.contact.name || 'Receiving',
+            hoursOpen: delivery_from.strftime('%I:%M %p'),
+            hoursClosed: delivery_to.strftime('%I:%M %p')
+          }
+        }
       )
     end
 
@@ -276,24 +271,24 @@ module FreightKit
       build_request(
         :rates,
         body: {
-                accessorials: build_accessorials(shipment:),
-                pickLocationType: origin.type || 'Commercial',
-                origin: {
-                          postalCode: origin.postal_code.to_i,
-                          city: origin.city,
-                          state: origin.province.upcase,
-                          country: origin.country.code(:alpha3).value
-                        },
-                dropLocationType: destination.type || 'Commercial',
-                destination: {
-                               postalCode: destination.postal_code.to_i,
-                               city: destination.city,
-                               state: destination.province.upcase,
-                               country: destination.country.code(:alpha3).value
-                             },
-                shipmentDate: shipment.pickup_at.date_time_with_zone.iso8601,
-                quoteCommodities: build_commodities(shipment)
-              }.to_json,
+          accessorials: build_accessorials(shipment:),
+          pickLocationType: origin.type || 'Commercial',
+          origin: {
+            postalCode: origin.postal_code.to_i,
+            city: origin.city,
+            state: origin.province.upcase,
+            country: origin.country.code(:alpha3).value
+          },
+          dropLocationType: destination.type || 'Commercial',
+          destination: {
+            postalCode: destination.postal_code.to_i,
+            city: destination.city,
+            state: destination.province.upcase,
+            country: destination.country.code(:alpha3).value
+          },
+          shipmentDate: shipment.pickup_at.date_time_with_zone.iso8601,
+          quoteCommodities: build_commodities(shipment)
+        }.to_json
       )
     end
 
@@ -320,13 +315,13 @@ module FreightKit
           currency: 'USD',
           estimate_reference: response_line['id'],
           prices: [
-                    Price.new(blame: :api, cents: rate_in_cents, description: response_line['CarrierName']),
-                  ],
+            Price.new(blame: :api, cents: rate_in_cents, description: response_line['CarrierName'])
+          ],
           scac: response_line['scac'],
           service_name: :standard,
           shipment:,
           transit_days: response_line['transitDays'],
-          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
         )
       end
 

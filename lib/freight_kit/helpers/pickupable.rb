@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   module Pickupable
     def create_pickup(
@@ -20,15 +18,15 @@ module FreightKit
         pickup_to:,
         scac:,
         service:,
-        shipment:,
+        shipment:
       )
 
       begin
         # For SOAP APIs, the :action parameter is required
         response = commit(:pickup, request) if method(:commit).parameters.count == 2
         response ||= commit(request)
-      rescue FreightKit::Error => error
-        response = PickupResponse.new(request:, response: nil, error:)
+      rescue FreightKit::Error => e
+        response = PickupResponse.new(request:, response: nil, error: e)
       end
 
       return response if response.is_a?(PickupResponse)

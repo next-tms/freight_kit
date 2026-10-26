@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'spec_helper'
 
 describe FreightKit::Carrier do
@@ -11,7 +9,7 @@ describe FreightKit::Carrier do
       { length:, width:, height: },
       :pallet,
       units: :imperial,
-      quantity:,
+      quantity:
     )
   end
 
@@ -21,12 +19,12 @@ describe FreightKit::Carrier do
   let(:covering_tariff) do
     FreightKit::Tariff.new(
       overlength_rules: [
-                          {
-                            min_length: Measured::Length.new(96, :inches),
-                            max_length: nil,
-                            fee_cents: 15_000
-                          },
-                        ],
+        {
+          min_length: Measured::Length.new(96, :inches),
+          max_length: nil,
+          fee_cents: 15_000
+        }
+      ]
     )
   end
 

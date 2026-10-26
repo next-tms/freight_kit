@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class HTTPClient
     # Adapts an ActiveSupport::Cache::Store-like backend (#read, #write, #delete_matched)
@@ -7,7 +5,7 @@ module FreightKit
     #
     # HTTPX responses hold sockets and options, so only status, headers and body are stored.
     class CacheStore
-      NAMESPACE = 'freight_kit/http_client'
+      NAMESPACE = 'freight_kit/http_client'.freeze
       VALIDATOR_HEADERS = ['if-modified-since', 'if-none-match'].freeze
 
       def initialize(backend) = @backend = backend
@@ -41,7 +39,7 @@ module FreightKit
             headers: response.headers.to_h,
             status: response.status,
             version: response.version
-          },
+          }
         )
       end
 

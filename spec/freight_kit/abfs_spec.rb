@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'spec_helper'
 
 describe FreightKit::ABFS do
@@ -8,13 +6,13 @@ describe FreightKit::ABFS do
       type: :api,
       account: Faker::Number.number.to_s,
       username: Faker::Alphanumeric.alphanumeric(number: 8).upcase,
-      password: Faker::Internet.password,
+      password: Faker::Internet.password
     )
   end
   let(:tms_credential) do
     FreightKit::Credential.new(
       type: :api_key,
-      api_key: Faker::Number.number(digits: 32).to_s,
+      api_key: Faker::Number.number(digits: 32).to_s
     )
   end
   let(:credentials) { [broker_credential, tms_credential] }
@@ -22,14 +20,14 @@ describe FreightKit::ABFS do
     FreightKit::Location.new(
       contact: FreightKit::Contact.new(
         company_name: Faker::Company.name,
-        email: Faker::Internet.email,
+        email: Faker::Internet.email
       ),
       address1: Faker::Address.street_address,
       address2: [Faker::Address.street_address, nil].sample,
       city: Faker::Address.city,
       postal_code: Faker::Address.postcode,
       province: Faker::Address.state_abbr,
-      country: ActiveUtils::Country.find('US'),
+      country: ActiveUtils::Country.find('US')
     )
   end
 
@@ -43,7 +41,7 @@ describe FreightKit::ABFS do
         city: Faker::Address.city,
         postal_code: Faker::Address.postcode,
         province: Faker::Address.state_abbr,
-        country: ActiveUtils::Country.find('US'),
+        country: ActiveUtils::Country.find('US')
       )
     end
     let(:origin) do
@@ -52,7 +50,7 @@ describe FreightKit::ABFS do
         city: Faker::Address.city,
         postal_code: Faker::Address.postcode,
         province: Faker::Address.state_abbr,
-        country: ActiveUtils::Country.find('US'),
+        country: ActiveUtils::Country.find('US')
       )
     end
     let(:packages) do
@@ -67,13 +65,13 @@ describe FreightKit::ABFS do
           :pallet,
           units: :imperial,
           quantity: 1,
-          description: Faker::Lorem.words.join(' '),
+          description: Faker::Lorem.words.join(' ')
         )
       end
     end
     let(:shipment) { FreightKit::Shipment.new(accessorials:, destination:, origin:, packages:) }
 
-    let(:result) { carrier.send(:build_rate_request, shipment:) }
+    let(:result) { carrier.__send__(:build_rate_request, shipment:) }
 
     let(:headers) { result[:headers] }
     let(:method) { result[:method] }
@@ -171,8 +169,8 @@ describe FreightKit::ABFS do
             :box,
             units: :imperial,
             quantity: 1,
-            description: Faker::Lorem.words.join(' '),
-          ),
+            description: Faker::Lorem.words.join(' ')
+          )
         ]
       end
 
@@ -193,7 +191,7 @@ describe FreightKit::ABFS do
             %i[box pallet].sample,
             units: :imperial,
             quantity: 1,
-            description: Faker::Lorem.words.join(' '),
+            description: Faker::Lorem.words.join(' ')
           )
         end
       end
@@ -214,7 +212,7 @@ describe FreightKit::ABFS do
             %i[box pallet].sample,
             units: :imperial,
             quantity: 1,
-            description: Faker::Lorem.words.join(' '),
+            description: Faker::Lorem.words.join(' ')
           )
         end
       end

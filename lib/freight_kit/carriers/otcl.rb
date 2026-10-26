@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class OTCL < FreightKit::Carrier
     class << self
@@ -45,10 +43,10 @@ module FreightKit
     @scac = 'OTCL'
 
     XML_HEADERS = {
-                    Accept: 'application/xml',
-                    charset: 'utf-8',
-                    'Content-Type': 'application/xml'
-                  }.freeze
+      Accept: 'application/xml',
+      charset: 'utf-8',
+      'Content-Type': 'application/xml'
+    }.freeze
 
     # Override Carrier#serviceable_accessorials? since we have separate delivery/pickup accessorials
     def serviceable_accessorials?(accessorials)
@@ -97,7 +95,7 @@ module FreightKit
         pickup_to:,
         scac:,
         service:,
-        shipment:,
+        shipment:
       )
 
       labels = parse_shipment_response(commit(request))
@@ -110,7 +108,7 @@ module FreightKit
         pickup_to:,
         scac:,
         service:,
-        shipment:,
+        shipment:
       )
 
       parse_pickup_response(response: commit(request), labels:)
@@ -149,10 +147,10 @@ module FreightKit
 
     def build_request(action, options = {})
       request = {
-                  url: build_url(action, options),
-                  headers: XML_HEADERS,
-                  method: @conf.dig(:api, :methods, action)
-                }
+        url: build_url(action, options),
+        headers: XML_HEADERS,
+        method: @conf.dig(:api, :methods, action)
+      }
 
       save_request(request)
       request
@@ -184,7 +182,7 @@ module FreightKit
 
       return true if invalid_states.blank?
 
-      raise FreightKit::UnserviceableError, "No service to #{invalid_states.join(", ")}"
+      raise FreightKit::UnserviceableError, "No service to #{invalid_states.join(', ')}"
     end
 
     # Documents
@@ -206,26 +204,26 @@ module FreightKit
       raise UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
 
       request_body = {
-                       Address: shipment.origin.address1,
-                       City: shipment.origin.city,
-                       CloseAt: pickup_to.strftime('%H:%M:00'),
-                       Contact: shipment.origin.contact.name || 'Shipping',
-                       Date: pickup_from.to_date,
-                       DelZip: shipment.destination.postal_code,
-                       Instructions: '',
-                       Name: shipment.origin.contact.company_name,
-                       Phone: dispatcher_phone,
-                       ReadyAt: pickup_from.strftime('%H:%M:00'),
-                       State: shipment.origin.province,
-                       Zip: shipment.origin.postal_code
-                     }.freeze
+        Address: shipment.origin.address1,
+        City: shipment.origin.city,
+        CloseAt: pickup_to.strftime('%H:%M:00'),
+        Contact: shipment.origin.contact.name || 'Shipping',
+        Date: pickup_from.to_date,
+        DelZip: shipment.destination.postal_code,
+        Instructions: '',
+        Name: shipment.origin.contact.company_name,
+        Phone: dispatcher_phone,
+        ReadyAt: pickup_from.strftime('%H:%M:00'),
+        State: shipment.origin.province,
+        Zip: shipment.origin.postal_code
+      }.freeze
 
       request = {
-                  headers: XML_HEADERS,
-                  method: @conf.dig(:api, :methods, :pickups),
-                  url: build_url(:pickups),
-                  body: request_body.to_xml(root: 'OnTracPickupRequest', skip_types: true)
-                }
+        headers: XML_HEADERS,
+        method: @conf.dig(:api, :methods, :pickups),
+        url: build_url(:pickups),
+        body: request_body.to_xml(root: 'OnTracPickupRequest', skip_types: true)
+      }
 
       save_request(request)
       request
@@ -253,45 +251,45 @@ module FreightKit
       raise UnserviceableError, 'Palletized freight unsupported' unless shipment.loose?
 
       base_api_shipment = {
-                            consignee: {
-                                         Name: shipment.destination.contact.company_name,
-                                         Addr1: shipment.destination.address1,
-                                         Addr2: '',
-                                         Addr3: '',
-                                         City: shipment.destination.city,
-                                         Contact: shipment.destination.contact.name || 'Shipping',
-                                         Phone: receiver_phone || '',
-                                         State: shipment.destination.province,
-                                         Zip: shipment.destination.postal_code.to_s
-                                       },
-                            shipper: {
-                                       Name: shipment.origin.contact.company_name,
-                                       Addr1: shipment.origin.address1,
-                                       City: shipment.origin.city,
-                                       State: shipment.origin.province,
-                                       Zip: shipment.origin.postal_code,
-                                       Contact: shipment.origin.contact.name || 'Shipping',
-                                       Phone: dispatcher_phone
-                                     },
-                            BillTo: '0',
-                            CargoType: '0',
-                            COD: '0',
-                            CODType: 'NONE',
-                            Declared: declared_value,
-                            DelEmail: dispatcher.email,
-                            Instructions: '',
-                            LabelType: '1', # PDF label
-                            Reference: shipment.order_number,
-                            Reference2: shipment.po_number,
-                            Reference3: '',
-                            Residential: shipment.accessorials.include?(:residential_delivery) ? 'true' : 'false',
-                            SaturdayDel: 'false',
-                            Service: 'C',
-                            ShipDate: pickup_from.to_date.to_s,
-                            ShipEmail: dispatcher.email,
-                            SignatureRequired: 'true',
-                            Tracking: ''
-                          }.freeze
+        consignee: {
+          Name: shipment.destination.contact.company_name,
+          Addr1: shipment.destination.address1,
+          Addr2: '',
+          Addr3: '',
+          City: shipment.destination.city,
+          Contact: shipment.destination.contact.name || 'Shipping',
+          Phone: receiver_phone || '',
+          State: shipment.destination.province,
+          Zip: shipment.destination.postal_code.to_s
+        },
+        shipper: {
+          Name: shipment.origin.contact.company_name,
+          Addr1: shipment.origin.address1,
+          City: shipment.origin.city,
+          State: shipment.origin.province,
+          Zip: shipment.origin.postal_code,
+          Contact: shipment.origin.contact.name || 'Shipping',
+          Phone: dispatcher_phone
+        },
+        BillTo: '0',
+        CargoType: '0',
+        COD: '0',
+        CODType: 'NONE',
+        Declared: declared_value,
+        DelEmail: dispatcher.email,
+        Instructions: '',
+        LabelType: '1', # PDF label
+        Reference: shipment.order_number,
+        Reference2: shipment.po_number,
+        Reference3: '',
+        Residential: shipment.accessorials.include?(:residential_delivery) ? 'true' : 'false',
+        SaturdayDel: 'false',
+        Service: 'C',
+        ShipDate: pickup_from.to_date.to_s,
+        ShipEmail: dispatcher.email,
+        SignatureRequired: 'true',
+        Tracking: ''
+      }.freeze
 
       api_shipments = []
 
@@ -300,25 +298,25 @@ module FreightKit
           api_shipments << base_api_shipment.merge(
             {
               DIM: {
-                     Length: package.length(:inches).ceil,
-                     Width: package.width(:inches).ceil,
-                     Height: package.height(:inches).ceil
-                   },
+                Length: package.length(:inches).ceil,
+                Width: package.width(:inches).ceil,
+                Height: package.height(:inches).ceil
+              },
               UID: SecureRandom.uuid,
               Weight: package.pounds(:each).ceil
-            },
+            }
           )
         end
       end
 
       request = {
-                  headers: XML_HEADERS,
-                  method: @conf.dig(:api, :methods, :shipments),
-                  url: build_url(:shipments),
-                  body: {
-                          Shipments: api_shipments
-                        }.to_xml(root: 'OnTracShipmentRequest', skip_types: true)
-                }
+        headers: XML_HEADERS,
+        method: @conf.dig(:api, :methods, :shipments),
+        url: build_url(:shipments),
+        body: {
+          Shipments: api_shipments
+        }.to_xml(root: 'OnTracShipmentRequest', skip_types: true)
+      }
 
       save_request(request)
       request
@@ -394,7 +392,7 @@ module FreightKit
 
       if dim_weights_too_heavy.any?
         message = <<~MESSAGE.squish
-          Dimensional weight(s) of #{dim_weights_too_heavy.map(&:round).join("lbs, ")} lbs more than maximum of
+          Dimensional weight(s) of #{dim_weights_too_heavy.map(&:round).join('lbs, ')} lbs more than maximum of
           #{self.class.maximum_weight.value.round} lbs
         MESSAGE
         raise FreightKit::UnserviceableError, message
@@ -508,7 +506,7 @@ module FreightKit
         service_name: :standard,
         shipment:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]

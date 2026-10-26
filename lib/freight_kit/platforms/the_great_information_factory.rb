@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class TheGreatInformationFactory < Platform
     class << self
@@ -16,11 +14,10 @@ module FreightKit
       end
     end
 
-    REACTIVE_FREIGHT_PLATFORM = true
-
     include FreightKit::Rateable
     include FreightKit::Trackable
     include FreightKit::Pickupable
+    REACTIVE_FREIGHT_PLATFORM = true
 
     protected
 
@@ -36,23 +33,23 @@ module FreightKit
 
     def commit(action, request)
       client_args = {
-                      wsdl: build_url(action),
-                      convert_request_keys_to: :upcase,
-                      env_namespace: :soapenv
-                    }
+        wsdl: build_url(action),
+        convert_request_keys_to: :upcase,
+        env_namespace: :soapenv
+      }
 
       call_args = {
-                    headers: { 'SOAPAction' => '""' },
-                    soap_action: false,
-                    message: request
-                  }
+        headers: { 'SOAPAction' => '""' },
+        soap_action: false,
+        message: request
+      }
 
       ::FreightKit::SoapClient.new(
         carrier: self,
         action:,
         client_args:,
         call_args:,
-        soap_operation: @conf.dig(:api, :actions, action),
+        soap_operation: @conf.dig(:api, :actions, action)
       ).call
     end
 
@@ -87,7 +84,7 @@ module FreightKit
 
     # Rates
 
-    def build_calculated_accessorials(packages)
+    def build_calculated_accessorials(_packages)
       []
     end
 
@@ -118,26 +115,26 @@ module FreightKit
       end
 
       request = {
-                  securityinfo: build_soap_header,
-                  quote: {
-                           iam: 'D', # S for shipper, C for consignee, D for third party
-                           shipper: {
-                                      city: shipment.origin.city.upcase,
-                                      state: shipment.origin.province.upcase,
-                                      zip: shipment.origin.postal_code.gsub(/\s+/, '').upcase
-                                    },
-                           consignee: {
-                                        city: shipment.destination.city.upcase,
-                                        state: shipment.destination.province.upcase,
-                                        zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase
-                                      },
-                           accessorialcount: accessorials.count,
-                           accessorial: accessorials.map { |code| { code: } },
-                           ppdcol: 'P', # Prepaid
-                           itemcount: shipment.packages.sum(&:quantity),
-                           item:
-                         }
-                }
+        securityinfo: build_soap_header,
+        quote: {
+          iam: 'D', # S for shipper, C for consignee, D for third party
+          shipper: {
+            city: shipment.origin.city.upcase,
+            state: shipment.origin.province.upcase,
+            zip: shipment.origin.postal_code.gsub(/\s+/, '').upcase
+          },
+          consignee: {
+            city: shipment.destination.city.upcase,
+            state: shipment.destination.province.upcase,
+            zip: shipment.destination.postal_code.gsub(/\s+/, '').upcase
+          },
+          accessorialcount: accessorials.count,
+          accessorial: accessorials.map { |code| { code: } },
+          ppdcol: 'P', # Prepaid
+          itemcount: shipment.packages.sum(&:quantity),
+          item:
+        }
+      }
 
       request = wrap_request(request)
       save_request(request)
@@ -196,12 +193,12 @@ module FreightKit
       # appear
       if prices.sum(&:cents) < total_cents
         prices = [
-                   Price.new(
-                     blame: :api,
-                     cents: total_cents - prices.sum(&:cents),
-                     description: 'Freight',
-                   ),
-                 ] + prices
+          Price.new(
+            blame: :api,
+            cents: total_cents - prices.sum(&:cents),
+            description: 'Freight'
+          )
+        ] + prices
       end
 
       if self.class.overlength_fees_require_tariff?
@@ -212,7 +209,7 @@ module FreightKit
           prices << Price.new(
             blame: :tariff,
             cents:,
-            description: 'Overlength fee',
+            description: 'Overlength fee'
           )
         end
       end
@@ -221,7 +218,7 @@ module FreightKit
         :getquote_response,
         :return,
         :service,
-        :days,
+        :days
       ).to_i
 
       # Calculate real transit time based on information we have about the destination service days
@@ -233,7 +230,7 @@ module FreightKit
         :getquote_response,
         :return,
         :rating,
-        :quotenumber,
+        :quotenumber
       )
 
       rate = Rate.new(
@@ -246,7 +243,7 @@ module FreightKit
         service_name: :standard,
         shipment:,
         transit_days:,
-        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+        with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
       )
 
       rate_response.rates = [rate]
@@ -274,7 +271,7 @@ module FreightKit
         Location.new(
           city: location[:city],
           province: location[:state],
-          country:,
+          country:
         )
       else
         Location.new(city: code, country:)
@@ -306,7 +303,7 @@ module FreightKit
 
       receiver_location = build_location(
         mapped_response.dig(:consignee, :city),
-        mapped_response.dig(:consignee, :state),
+        mapped_response.dig(:consignee, :state)
       )
       shipper_location = build_location(mapped_response.dig(:shipper, :city), mapped_response.dig(:shipper, :state))
 
@@ -411,7 +408,7 @@ module FreightKit
         ship_time:,
         shipment_events:,
         status:,
-        tracking_number:,
+        tracking_number:
       )
 
       tracking_response
@@ -451,36 +448,36 @@ module FreightKit
       shipper_phone = shipper_phone[1..] if shipper_phone.length == 11
 
       request = {
-                  securityinfo: build_soap_header,
-                  shipperinfo: {
-                                 name: shipment.origin.contact.company_name,
-                                 contact: shipment.origin.contact.name,
-                                 phonenumber: shipper_phone,
-                                 address1: shipment.origin.address1,
-                                 address2: shipment.origin.address2,
-                                 city: shipment.origin.city,
-                                 state: shipment.origin.province,
-                                 ReadyDate: pickup_from.strftime('%m/%d/%Y'),
-                                 ReadyTime: pickup_from.strftime('%H%M').to_i,
-                                 CloseTime: pickup_to.strftime('%H%M').to_i,
-                                 zip: shipment.origin.postal_code,
-                                 SpecialInstructions: ''
-                               },
-                  ShipmentCount: 1,
-                  shipments: [
-                               {
-                                 DestZip: shipment.destination.postal_code,
-                                 Pieces: shipment.packages.sum(&:quantity),
-                                 Pallets: shipment.packages.select { |p| p.packaging.pallet? }.sum(&:quantity),
-                                 Weight: shipment.packages.sum { |p| p.pounds(:total).ceil },
-                                 HAZ: shipment.packages.any?(&:hazmat?) ? 'Y' : 'N',
-                                 dblStack: 'N',
-                                 SortSeg: 'N',
-                                 Pro: shipment.pro,
-                                 Liftgate: shipment.accessorials.include?(:liftgate_pickup) ? 'Y' : 'N'
-                               },
-                             ]
-                }
+        securityinfo: build_soap_header,
+        shipperinfo: {
+          name: shipment.origin.contact.company_name,
+          contact: shipment.origin.contact.name,
+          phonenumber: shipper_phone,
+          address1: shipment.origin.address1,
+          address2: shipment.origin.address2,
+          city: shipment.origin.city,
+          state: shipment.origin.province,
+          ReadyDate: pickup_from.strftime('%m/%d/%Y'),
+          ReadyTime: pickup_from.strftime('%H%M').to_i,
+          CloseTime: pickup_to.strftime('%H%M').to_i,
+          zip: shipment.origin.postal_code,
+          SpecialInstructions: ''
+        },
+        ShipmentCount: 1,
+        shipments: [
+          {
+            DestZip: shipment.destination.postal_code,
+            Pieces: shipment.packages.sum(&:quantity),
+            Pallets: shipment.packages.select { |p| p.packaging.pallet? }.sum(&:quantity),
+            Weight: shipment.packages.sum { |p| p.pounds(:total).ceil },
+            HAZ: shipment.packages.any?(&:hazmat?) ? 'Y' : 'N',
+            dblStack: 'N',
+            SortSeg: 'N',
+            Pro: shipment.pro,
+            Liftgate: shipment.accessorials.include?(:liftgate_pickup) ? 'Y' : 'N'
+          }
+        ]
+      }
 
       request = wrap_request(request)
       save_request(request)

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 FactoryBot.define do
   factory(:credential, class: 'FreightKit::Credential') do
     factory(:api_credential) do

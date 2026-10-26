@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'spec_helper'
 
 describe FreightKit::AmazonWarehouse do
@@ -9,7 +7,7 @@ describe FreightKit::AmazonWarehouse do
       city: 'Aurora',
       country: ActiveUtils::Country.find('US'),
       postal_code:,
-      province: 'CO',
+      province: 'CO'
     )
   end
 

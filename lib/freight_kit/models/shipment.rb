@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Shipment is the abstract base class for all rate requests.
   #

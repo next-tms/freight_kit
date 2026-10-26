@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class TOTL < CarrierLogistics
     class << self
@@ -107,17 +105,17 @@ module FreightKit
         prices << Price.new(
           blame: :api,
           cents:,
-          description: ratequote_line_description(ratequote_line),
+          description: ratequote_line_description(ratequote_line)
         )
       end
 
       prices = [
-                 Price.new(
-                   blame: :api,
-                   cents: total_cents - prices.sum(&:cents),
-                   description: 'Freight',
-                 ),
-               ] + prices
+        Price.new(
+          blame: :api,
+          cents: total_cents - prices.sum(&:cents),
+          description: 'Freight'
+        )
+      ] + prices
 
       # Carrier-specific pricing structure
       oversized_pallets_cents = 0
@@ -145,27 +143,27 @@ module FreightKit
         prices << Price.new(
           blame: :library,
           cents: oversized_pallets_cents,
-          description: 'Overlength fees',
+          description: 'Overlength fees'
         )
       end
 
       RateResponse.new(
         rates: [
-                 Rate.new(
-                   carrier: self,
-                   carrier_name: self.class.name,
-                   currency: 'USD',
-                   estimate_reference:,
-                   scac: self.class.scac.upcase,
-                   service_name: :standard,
-                   shipment:,
-                   prices:,
-                   transit_days:,
-                   with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
-                 ),
-               ],
+          Rate.new(
+            carrier: self,
+            carrier_name: self.class.name,
+            currency: 'USD',
+            estimate_reference:,
+            scac: self.class.scac.upcase,
+            service_name: :standard,
+            shipment:,
+            prices:,
+            transit_days:,
+            with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
+          )
+        ],
         request: last_request,
-        response:,
+        response:
       )
     end
   end

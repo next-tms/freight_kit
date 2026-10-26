@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class HTTPClient
     # HTTPX plugin making revalidated (304 Not Modified) responses look like the cached

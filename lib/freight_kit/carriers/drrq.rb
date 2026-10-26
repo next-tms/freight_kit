@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class DRRQ < FreightKit::Carrier
     class << self
@@ -23,10 +21,10 @@ module FreightKit
     REACTIVE_FREIGHT_CARRIER = true
 
     JSON_HEADERS = {
-                     Accept: 'application/json',
-                     'Content-Type': 'application/json',
-                     charset: 'utf-8'
-                   }.freeze
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      charset: 'utf-8'
+    }.freeze
 
     class << self
       attr_reader :name, :scac
@@ -69,7 +67,7 @@ module FreightKit
         pickup_to:,
         scac:,
         service:,
-        shipment:,
+        shipment:
       )
 
       parse_pickup_response(commit(request))
@@ -105,9 +103,7 @@ module FreightKit
       end
 
       longest_dimension_ft = shipment.packages.map { |p| [p.width(:feet), p.length(:feet)].max }.max.ceil
-      if longest_dimension_ft >= 8 && longest_dimension_ft < 30
-        parsed_accessorials << { ServiceCode: "OVL#{longest_dimension_ft}" }
-      end
+      parsed_accessorials << { ServiceCode: "OVL#{longest_dimension_ft}" } if longest_dimension_ft >= 8 && longest_dimension_ft < 30
 
       parsed_accessorials.uniq.to_a
     end
@@ -155,11 +151,11 @@ module FreightKit
 
     # Documents
 
-    def build_document_request(type, tracking_number, options = {})
+    def build_document_request(type, tracking_number, _options = {})
       request = {
-                  url: request_url(type).sub('%TRACKING_NUMBER%', tracking_number),
-                  method: @conf.dig(:api, :methods, type)
-                }
+        url: request_url(type).sub('%TRACKING_NUMBER%', tracking_number),
+        method: @conf.dig(:api, :methods, type)
+      }
 
       request[:headers] = build_headers if type == :bol
 
@@ -217,8 +213,8 @@ module FreightKit
 
       begin
         browser
-        .element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
-        .click
+          .element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
+          .click
       rescue Selenium::WebDriver::Error::UnexpectedAlertOpenError => e
         browser.close
 
@@ -231,41 +227,41 @@ module FreightKit
 
       browser.iframes(src: '../mainframe/MainFrame.jsp?bRedirect=true')
       browser
-      .iframe(name: 'AppBody')
-      .frame(id: 'Header')
-      .select(name: 'column')
-      .select('Primary Reference')
+        .iframe(name: 'AppBody')
+        .frame(id: 'Header')
+        .select(name: 'column')
+        .select('Primary Reference')
       browser
-      .iframe(name: 'AppBody')
-      .frame(id: 'Header')
-      .select(name: 'condition')
-      .select('=')
+        .iframe(name: 'AppBody')
+        .frame(id: 'Header')
+        .select(name: 'condition')
+        .select('=')
       browser
-      .iframe(name: 'AppBody')
-      .frame(id: 'Header')
-      .text_field(name: 'filter')
-      .set(tracking_number)
+        .iframe(name: 'AppBody')
+        .frame(id: 'Header')
+        .text_field(name: 'filter')
+        .set(tracking_number)
       browser
-      .iframe(name: 'AppBody')
-      .frame(id: 'Header')
-      .button(value: 'Find')
-      .click
+        .iframe(name: 'AppBody')
+        .frame(id: 'Header')
+        .button(value: 'Find')
+        .click
 
       begin
         browser
-        .iframe(name: 'AppBody')
-        .frame(id: 'Detail')
-        .iframe(id: 'transportsWin')
-        .element(xpath: '/html/body/div/table/tbody/tr[2]/td[1]/span/a[2]')
-        .wait_until(&:present?)
-        .click
+          .iframe(name: 'AppBody')
+          .frame(id: 'Detail')
+          .iframe(id: 'transportsWin')
+          .element(xpath: '/html/body/div/table/tbody/tr[2]/td[1]/span/a[2]')
+          .wait_until(&:present?)
+          .click
 
         browser
-        .iframe(name: 'AppBody')
-        .frame(id: 'Detail')
-        .element(xpath: '/html/body/div[1]/div/div/div[1]/div[1]/div[2]/div/a[5]')
-        .wait_until(&:present?)
-        .click
+          .iframe(name: 'AppBody')
+          .frame(id: 'Detail')
+          .element(xpath: '/html/body/div[1]/div/div/div[1]/div[1]/div[2]/div/a[5]')
+          .wait_until(&:present?)
+          .click
       rescue Watir::Wait::TimeoutError
         # POD not yet available
         browser.close
@@ -345,108 +341,108 @@ module FreightKit
 
         i += 1
         items << {
-                   Id: i.to_s,
-                   FreightClasses: {
-                                     FreightClass: package.freight_class.to_s,
-                                     Type: ''
-                                   },
-                   Dimensions: {
-                                 Height: package.height(:in).ceil,
-                                 Length: package.length(:in).ceil,
-                                 Uom: 'in',
-                                 Width: package.width(:in).ceil
-                               },
-                   HazardousMaterial: package.hazmat?,
-                   Description: package.description,
-                   Quantities: {
-                                 Actual: package.quantity,
-                                 Uom: package_type
-                               },
-                   Weights: {
-                              Actual: package.pounds(:total).ceil,
-                              Uom: 'lb'
-                            }
-                 }
+          Id: i.to_s,
+          FreightClasses: {
+            FreightClass: package.freight_class.to_s,
+            Type: ''
+          },
+          Dimensions: {
+            Height: package.height(:in).ceil,
+            Length: package.length(:in).ceil,
+            Uom: 'in',
+            Width: package.width(:in).ceil
+          },
+          HazardousMaterial: package.hazmat?,
+          Description: package.description,
+          Quantities: {
+            Actual: package.quantity,
+            Uom: package_type
+          },
+          Weights: {
+            Actual: package.pounds(:total).ceil,
+            Uom: 'lb'
+          }
+        }
       end
 
       body = {
-               Comments: {
-                           Comment: '',
-                           Type: 'SpecialInstructions'
-                         },
-               Consignee: {
-                            AddressLine1: shipment.destination.address1,
-                            City: shipment.destination.city,
-                            Contact: {
-                                       Name: shipment.destination.contact.name,
-                                       Phone: receiver_phone,
-                                       Fax: '',
-                                       Email: ''
-                                     },
-                            CountryCode: shipment.destination.country.code(:alpha3),
-                            IsResidential: shipment.accessorials.include?(:residential_pickup),
-                            Name: shipment.destination.contact.company_name,
-                            PostalCode: shipment.destination.postal_code,
-                            StateProvince: shipment.destination.province
-                          },
-               Dates: {
-                        EarliestPickupDate: "#{pickup_from.iso8601[..-7]}Z",
-                        LatestPickupDate: "#{pickup_to.iso8601[..-7]}Z",
-                        EarliestDropDate: "#{delivery_from.iso8601[..-7]}Z",
-                        LatestDropDate: "#{delivery_to.iso8601[..-7]}Z"
-                      },
-               Items: items,
-               Payment: {
-                          Address: {
-                                     IsResidential: false,
-                                     LocationCode: 'MNP9C1C',
-                                     PostalCode: '60490'
-                                   }
-                        },
-               Pricesheets: [
-                              {
-                                IsSelected: true,
-                                Mode: mode,
-                                Scac: scac,
-                                Type: 'Carrier'
-                              },
-                            ],
-               ReferenceNumbers: [
-                                   {
-                                     IsPrimary: true,
-                                     ReferenceNumber: shipment.order_number.to_s,
-                                     Type: 'Ship Ref'
-                                   },
-                                   {
-                                     IsPrimary: false, # must have one true
-                                     ReferenceNumber: shipment.po_number.to_s,
-                                     Type: 'PO Number'
-                                   },
-                                 ],
-               ServiceFlags: accessorials,
-               Shipper: {
-                          AddressLine1: shipment.origin.address1,
-                          City: shipment.origin.city,
-                          Contact: {
-                                     Name: shipment.origin.contact.name,
-                                     Phone: shipper_phone,
-                                     Fax: '',
-                                     Email: ''
-                                   },
-                          CountryCode: shipment.origin.country.code(:alpha3),
-                          IsResidential: shipment.accessorials.include?(:residential_pickup),
-                          Name: shipment.origin.contact.company_name,
-                          PostalCode: shipment.origin.postal_code,
-                          StateProvince: shipment.origin.province
-                        },
-               Status: 'pending'
-             }.to_json
+        Comments: {
+          Comment: '',
+          Type: 'SpecialInstructions'
+        },
+        Consignee: {
+          AddressLine1: shipment.destination.address1,
+          City: shipment.destination.city,
+          Contact: {
+            Name: shipment.destination.contact.name,
+            Phone: receiver_phone,
+            Fax: '',
+            Email: ''
+          },
+          CountryCode: shipment.destination.country.code(:alpha3),
+          IsResidential: shipment.accessorials.include?(:residential_pickup),
+          Name: shipment.destination.contact.company_name,
+          PostalCode: shipment.destination.postal_code,
+          StateProvince: shipment.destination.province
+        },
+        Dates: {
+          EarliestPickupDate: "#{pickup_from.iso8601[..-7]}Z",
+          LatestPickupDate: "#{pickup_to.iso8601[..-7]}Z",
+          EarliestDropDate: "#{delivery_from.iso8601[..-7]}Z",
+          LatestDropDate: "#{delivery_to.iso8601[..-7]}Z"
+        },
+        Items: items,
+        Payment: {
+          Address: {
+            IsResidential: false,
+            LocationCode: 'MNP9C1C',
+            PostalCode: '60490'
+          }
+        },
+        Pricesheets: [
+          {
+            IsSelected: true,
+            Mode: mode,
+            Scac: scac,
+            Type: 'Carrier'
+          }
+        ],
+        ReferenceNumbers: [
+          {
+            IsPrimary: true,
+            ReferenceNumber: shipment.order_number.to_s,
+            Type: 'Ship Ref'
+          },
+          {
+            IsPrimary: false, # must have one true
+            ReferenceNumber: shipment.po_number.to_s,
+            Type: 'PO Number'
+          }
+        ],
+        ServiceFlags: accessorials,
+        Shipper: {
+          AddressLine1: shipment.origin.address1,
+          City: shipment.origin.city,
+          Contact: {
+            Name: shipment.origin.contact.name,
+            Phone: shipper_phone,
+            Fax: '',
+            Email: ''
+          },
+          CountryCode: shipment.origin.country.code(:alpha3),
+          IsResidential: shipment.accessorials.include?(:residential_pickup),
+          Name: shipment.origin.contact.company_name,
+          PostalCode: shipment.origin.postal_code,
+          StateProvince: shipment.origin.province
+        },
+        Status: 'pending'
+      }.to_json
 
       request = {
-                  url: request_url(:pickup),
-                  method: @conf.dig(:api, :methods, :pickup),
-                  body:
-                }
+        url: request_url(:pickup),
+        method: @conf.dig(:api, :methods, :pickup),
+        body:
+      }
 
       request[:headers] = build_headers
 
@@ -492,36 +488,36 @@ module FreightKit
       drop_event_date = (pickup_event_date + 7.days).beginning_of_day + 12.hours
 
       body = {
-               Constraints: {
-                              ServiceFlags: accessorials
-                            },
-               Items: items,
-               PickupEvent: {
-                              City: shipment.origin.city.upcase,
-                              Country: shipment.origin.country.code(:alpha3).value,
-                              Date: pickup_event_date.strftime('%m/%d/%Y %I:%M:00 %p'),
-                              LocationCode: 'PLocationCode',
-                              State: shipment.origin.province.upcase,
-                              Zip: shipment.origin.postal_code.to_s.upcase
-                            },
-               DropEvent: {
-                            City: shipment.destination.city.upcase,
-                            Country: shipment.destination.country.code(:alpha3).value,
-                            Date: drop_event_date.strftime('%m/%d/%Y %I:%M:00 %p'),
-                            LocationCode: 'DLocationCode',
-                            MaxPriceSheet: 6,
-                            ShowInsurance: false,
-                            State: shipment.destination.province.upcase,
-                            Zip: shipment.destination.postal_code.to_s.upcase
-                          }
-             }.to_json
+        Constraints: {
+          ServiceFlags: accessorials
+        },
+        Items: items,
+        PickupEvent: {
+          City: shipment.origin.city.upcase,
+          Country: shipment.origin.country.code(:alpha3).value,
+          Date: pickup_event_date.strftime('%m/%d/%Y %I:%M:00 %p'),
+          LocationCode: 'PLocationCode',
+          State: shipment.origin.province.upcase,
+          Zip: shipment.origin.postal_code.to_s.upcase
+        },
+        DropEvent: {
+          City: shipment.destination.city.upcase,
+          Country: shipment.destination.country.code(:alpha3).value,
+          Date: drop_event_date.strftime('%m/%d/%Y %I:%M:00 %p'),
+          LocationCode: 'DLocationCode',
+          MaxPriceSheet: 6,
+          ShowInsurance: false,
+          State: shipment.destination.province.upcase,
+          Zip: shipment.destination.postal_code.to_s.upcase
+        }
+      }.to_json
 
       request = {
-                  url: request_url(:quote),
-                  headers: build_headers,
-                  method: @conf.dig(:api, :methods, :quote),
-                  body:
-                }
+        url: request_url(:quote),
+        headers: build_headers,
+        method: @conf.dig(:api, :methods, :quote),
+        body:
+      }
 
       save_request(request)
       request
@@ -567,7 +563,7 @@ module FreightKit
           service_name: service,
           shipment:,
           transit_days:,
-          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees),
+          with_excessive_length_fees: @conf.dig(:attributes, :rates, :with_excessive_length_fees)
         )
       end
 

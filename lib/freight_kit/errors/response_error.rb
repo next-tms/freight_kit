@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class ResponseError < Error
     attr_reader :response

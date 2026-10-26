@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 FactoryBot.define do
   factory(:contact, class: 'FreightKit::Contact') do
     company_name { Faker::Company.name }

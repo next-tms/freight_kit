@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   # Contact is the abstract base class for all contacts.
   #
@@ -12,6 +10,6 @@ module FreightKit
   class Contact < Model
     attr_accessor :company_name, :department, :email, :fax, :name, :phone
 
-    alias_method :company, :company_name
+    alias company company_name
   end
 end

@@ -1,15 +1,13 @@
-# frozen_string_literal: true
-
 module FreightKit
   class SoapClient
     API_EXCEPTIONS = [
-                       Savon::HTTPError,
-                       Net::ReadTimeout,
-                       Net::OpenTimeout,
-                       Errno::ECONNREFUSED,
-                       Errno::ECONNRESET,
-                       Errno::EHOSTUNREACH,
-                     ]
+      Savon::HTTPError,
+      Net::ReadTimeout,
+      Net::OpenTimeout,
+      Errno::ECONNREFUSED,
+      Errno::ECONNRESET,
+      Errno::EHOSTUNREACH
+    ].freeze
 
     def initialize(carrier:, action:, client_args:, call_args:, soap_operation:)
       @carrier = carrier

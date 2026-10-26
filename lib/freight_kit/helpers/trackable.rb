@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   module Trackable
     def find_tracking_info(tracking_number, *)

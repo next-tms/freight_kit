@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class HTTPClient
     # Like HTTParty::Response, unknown methods (e.g. #dig, #[]) are delegated to the parsed body.

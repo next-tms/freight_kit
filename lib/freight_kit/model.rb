@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class Model
     include ActiveModel::AttributeAssignment
@@ -12,6 +10,6 @@ module FreightKit
     def attributes
       instance_values.with_indifferent_access
     end
-    alias_method :to_hash, :attributes
+    alias to_hash attributes
   end
 end

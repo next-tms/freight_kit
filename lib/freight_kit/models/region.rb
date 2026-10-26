@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class Region
     attr_reader :abbreviation, :country, :iso31662, :name
@@ -12,7 +10,7 @@ module FreightKit
     end
 
     def ==(other) = other.is_a?(Region) && other.id == id
-    alias_method :eql?, :==
+    alias eql? ==
 
     def hash = [self.class, id].hash
     def id = iso31662

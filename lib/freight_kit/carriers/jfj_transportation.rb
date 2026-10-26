@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module FreightKit
   class JFJTransportation < Next
     REACTIVE_FREIGHT_CARRIER = true
