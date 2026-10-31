@@ -13,6 +13,10 @@ shared_examples 'a Carrier Logistics platform carrier' do
   it_behaves_like 'a platform carrier', FreightKit::Platforms::CarrierLogistics
 end
 
+shared_examples 'a DSDC platform carrier' do
+  it_behaves_like 'a platform carrier', FreightKit::Platforms::DSDC
+end
+
 shared_examples 'a Next TMS platform carrier' do
   it_behaves_like 'a platform carrier', FreightKit::Platforms::NextTMS
 end
