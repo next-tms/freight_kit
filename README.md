@@ -84,19 +84,21 @@ Debug output contains request headers and bodies, which include carrier credenti
 
 The client uses conditional requests: it sends `If-None-Match` and `If-Modified-Since` and reuses the cached body when the carrier replies `304 Not Modified`.
 
-By default, the client keeps cached responses in an in-process `ActiveSupport::Cache::MemoryStore`. To share the cache between processes, set your own backend at boot. The backend must respond to `read`, `write`, and `delete_matched`, like `ActiveSupport::Cache::Store`.
+FreightKit keeps cached data, such as HTTP responses, in `FreightKit.cache`. By default, this is an in-process `ActiveSupport::Cache::MemoryStore`. To share the cache between processes, set your own backend at boot. The backend must respond to `read`, `write`, `fetch`, and `delete_matched`, like `ActiveSupport::Cache::Store`.
 
 In Rails, add this line to an initializer:
 
 ```ruby
-FreightKit::HTTPClient.cache = Rails.cache
+FreightKit.cache = Rails.cache
 ```
 
 In Hanami or plain Ruby, give any compatible store:
 
 ```ruby
-FreightKit::HTTPClient.cache = ActiveSupport::Cache::RedisCacheStore.new(url: ENV.fetch('REDIS_URL'))
+FreightKit.cache = ActiveSupport::Cache::RedisCacheStore.new(url: ENV.fetch('REDIS_URL'))
 ```
+
+To use a different store for HTTP responses only, set `FreightKit::HTTPClient.cache`.
 
 Cache entries contain carrier response bodies. Use a backend that you trust with that data. Keys are SHA-256 digests of the method, the URL, and all request headers. Requests with different credentials thus never share an entry. To turn off the cache, set `ActiveSupport::Cache::NullStore.new`.
 

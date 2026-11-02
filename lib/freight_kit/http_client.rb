@@ -2,7 +2,7 @@ module FreightKit
   # Thin wrapper around HTTPX that negotiates Brotli/Zstandard compression, keeps connections
   # open between requests and revalidates cached responses with conditional requests (ETag/Last-Modified).
   #
-  # The cache and logger are hookable; they default to the host Rails/Hanami app's logger:
+  # The cache defaults to {FreightKit.cache}, and the logger to the host Rails/Hanami app's logger. Both are hookable:
   #
   #   FreightKit::HTTPClient.cache = Rails.cache
   #   FreightKit::HTTPClient.logger = Rails.logger
@@ -12,11 +12,11 @@ module FreightKit
     @sessions = Concurrent::Map.new
 
     class << self
-      def cache = @cache ||= ActiveSupport::Cache::MemoryStore.new
+      def cache = @cache || FreightKit.cache
 
       def cache=(store)
         @cache = store
-        @sessions.clear
+        reset
       end
 
       def get(url, **) = request(:get, url, **)
@@ -24,7 +24,7 @@ module FreightKit
 
       def logger=(logger)
         @logger = logger
-        @sessions.clear
+        reset
       end
 
       def post(url, **) = request(:post, url, **)
@@ -45,6 +45,9 @@ module FreightKit
 
         Response.new(response)
       end
+
+      # Rebuilds sessions on their next request, e.g. after the cache or logger changes.
+      def reset = @sessions.clear
 
       private
 

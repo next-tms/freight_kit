@@ -19,6 +19,21 @@ require 'zeitwerk'
 module FreightKit
   VERSION = File.read(File.expand_path('../VERSION', __dir__)).strip.freeze
 
+  class << self
+    # The cache FreightKit stores data in, such as HTTP responses. It is in memory unless the host app passes its own:
+    #
+    #   FreightKit.cache = Rails.cache
+    #   FreightKit.cache = Hanami.app['cache']
+    #
+    # @return [ActiveSupport::Cache::Store] Or any store that responds to `#read`, `#write`, `#fetch` and `#delete_matched`.
+    def cache = @cache ||= ActiveSupport::Cache::MemoryStore.new
+
+    def cache=(store)
+      @cache = store
+      HTTPClient.reset
+    end
+  end
+
   class Inflector < Zeitwerk::Inflector
     CARRIER_ACRONYMS = [
       'AAA',
