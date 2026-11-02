@@ -3,6 +3,7 @@ require 'active_support/all'
 require 'active_utils'
 require 'business_time'
 require 'countries'
+require 'graphql/client'
 require 'httpx'
 require 'measured'
 require 'mimemagic'
@@ -136,5 +137,6 @@ loader.collapse("#{__dir__}/freight_kit/helpers")
 loader.collapse("#{__dir__}/freight_kit/models")
 
 loader.inflector = FreightKit::Inflector.new
+loader.inflector.inflect('graphql_client' => 'GraphQLClient', 'orm' => 'ORM')
 
 loader.setup

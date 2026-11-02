@@ -4,27 +4,14 @@ Gem::Specification.new do |spec|
   spec.name = 'freight_kit'
   spec.version = version
 
-  spec.authors = [
-    'Third Party Transportation Systems LLC',
-    'Brody Hoskins',
-    'Sub Pop Records',
-    'Shopify'
-  ]
-  spec.email = [
-    'hello@next-tms.com',
-    'brody@brody.digital',
-    'webmaster@subpop.com',
-    'integrations-team@shopify.com'
-  ]
+  spec.authors = ['Third Party Transportation Systems LLC', 'Brody Hoskins', 'Sub Pop Records', 'Shopify']
+  spec.email = ['hello@next-tms.com', 'brody@brody.digital', 'webmaster@subpop.com', 'integrations-team@shopify.com']
 
   spec.description = 'Freight carrier API and website abstraction library for transportation management systems (TMS)'
   spec.homepage = 'https://github.com/next-tms/freight_kit'
   spec.summary = spec.description
 
-  spec.files = Dir['[A-Z]*'] +
-               Dir['configuration/*/*.yml'] +
-               Dir['lib/**/*'] +
-               Dir['test/**/*']
+  spec.files = Dir['[A-Z]*'] + Dir['configuration/*/*.yml'] + Dir['lib/**/*'] + Dir['schemas/*'] + Dir['test/**/*']
   spec.require_paths = ['lib']
 
   spec.add_development_dependency('faker', '~> 3.8.0')
@@ -41,6 +28,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency('brotli', '>= 0.9.2', '< 1') # CVE-2026-111497
   spec.add_dependency('business_time', '~> 0.13.0')
   spec.add_dependency('countries', '~> 8.1')
+  spec.add_dependency('graphql', '>= 2.0', '< 3') # Next TMS
+  spec.add_dependency('graphql-client', '>= 0.23.0', '< 1') # Next TMS
   spec.add_dependency('httpx', '>= 1.9.0', '< 2')
   spec.add_dependency('json', '< 3') # measured
   spec.add_dependency('measured', '>= 2.0', '< 3.2.3')

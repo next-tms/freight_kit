@@ -29,9 +29,10 @@ module FreightKit
 
       def post(url, **) = request(:post, url, **)
 
-      def request(verb, url, body: nil, headers: {}, proxy: nil, query: nil)
+      def request(verb, url, body: nil, headers: {}, proxy: nil, query: nil, read_timeout: nil)
         options = { headers: }
         options[:params] = query if query.present?
+        options[:timeout] = { read_timeout: } if read_timeout
 
         # Like HTTParty, hashes are form-encoded regardless of the Content-Type header
         if body.is_a?(Hash)
