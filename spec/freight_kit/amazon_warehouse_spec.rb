@@ -2,13 +2,7 @@ require 'spec_helper'
 
 describe FreightKit::AmazonWarehouse do
   def build_location(address1:, postal_code:)
-    FreightKit::Location.new(
-      address1:,
-      city: 'Aurora',
-      country: ActiveUtils::Country.find('US'),
-      postal_code:,
-      province: 'CO'
-    )
+    FreightKit::Location.new(address1:, city: 'Aurora', country: ActiveUtils::Country.find('US'), postal_code:, province: 'CO')
   end
 
   describe '.find' do

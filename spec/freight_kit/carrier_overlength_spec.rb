@@ -17,9 +17,7 @@ describe FreightKit::Carrier do
   let(:overlength_package) { build_package(length: 121) } # 121 in > 96 in threshold
 
   let(:covering_tariff) do
-    FreightKit::Tariff.new(
-      overlength_rules: [{ min_length: Measured::Length.new(96, :inches), max_length: nil, fee_cents: 15_000 }]
-    )
+    FreightKit::Tariff.new(overlength_rules: [{ min_length: Measured::Length.new(96, :inches), max_length: nil, fee_cents: 15_000 }])
   end
 
   let(:empty_tariff) { FreightKit::Tariff.new(overlength_rules: []) }

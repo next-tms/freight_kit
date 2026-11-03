@@ -9,9 +9,7 @@ describe FreightKit::Carriers::ABFFreightSystem do
       password: Faker::Internet.password
     )
   end
-  let(:tms_credential) do
-    FreightKit::Credential.new(type: :api_key, api_key: Faker::Number.number(digits: 32).to_s)
-  end
+  let(:tms_credential) { FreightKit::Credential.new(type: :api_key, api_key: Faker::Number.number(digits: 32).to_s) }
   let(:credentials) { [broker_credential, tms_credential] }
   let(:customer_location) do
     FreightKit::Location.new(

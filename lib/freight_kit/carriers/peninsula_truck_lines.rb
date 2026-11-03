@@ -100,21 +100,13 @@ module FreightKit
 
         call_args = { message: request }
 
-        ::FreightKit::SoapClient.new(
-          carrier: self,
-          action:,
-          client_args:,
-          call_args:,
-          soap_operation: API.dig(:actions, action)
-        ).call
+        ::FreightKit::SoapClient.new(carrier: self, action:, client_args:, call_args:, soap_operation: API.dig(:actions, action)).call
       end
 
       def parse_amount(amount)
         negative = amount.start_with?('-$') || amount.start_with?('-')
 
-        ['$', '-', ','].each do |char|
-          amount = amount.sub(char, '')
-        end
+        ['$', '-', ','].each { |char| amount = amount.sub(char, '') }
 
         return 0 if amount.blank?
 
@@ -182,17 +174,9 @@ module FreightKit
           )
         end
 
-        prices << Price.new(
-          blame: :api,
-          cents: parse_amount(result.dig(:quote, :discount_amount)),
-          description: 'Discount'
-        )
+        prices << Price.new(blame: :api, cents: parse_amount(result.dig(:quote, :discount_amount)), description: 'Discount')
 
-        prices << Price.new(
-          blame: :api,
-          cents: parse_amount(result.dig(:quote, :fsc_amount)),
-          description: 'Fuel surcharge'
-        )
+        prices << Price.new(blame: :api, cents: parse_amount(result.dig(:quote, :fsc_amount)), description: 'Fuel surcharge')
 
         rate = Rate.new(
           carrier: self,

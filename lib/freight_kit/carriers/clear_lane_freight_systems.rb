@@ -274,9 +274,7 @@ module FreightKit
       end
 
       def parse_amount(amount)
-        ['$', ','].each do |char|
-          amount = amount.sub(char, '')
-        end
+        ['$', ','].each { |char| amount = amount.sub(char, '') }
 
         return 0 if amount.blank?
 
@@ -312,13 +310,10 @@ module FreightKit
 
         # Hack to get around JavaScript messing up our input
         sleep(1)
-        from.chars.each do |char|
-          browser.text_field(name: 'txtFromDate').append(char)
-        end
+        from.chars.each { |char| browser.text_field(name: 'txtFromDate').append(char) }
 
         browser.text_field(name: 'txtToDate').click
-        browser.element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div').wait_until(&:present?)
-               .click
+        browser.element(xpath: '/html/body/form/div[3]/div[4]/div[3]/div[2]/div/div/div[3]/div').wait_until(&:present?).click
 
         browser.button(name: 'btnSubmit').click
 
@@ -335,9 +330,7 @@ module FreightKit
           return document_response
         end
 
-        browser.element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a')
-               .wait_until(&:present?)
-               .click
+        browser.element(xpath: '/html/body/form/div[3]/div[4]/div[8]/div/table/tbody/tr/td[12]/a').wait_until(&:present?).click
 
         browser.switch_window
 
@@ -409,9 +402,7 @@ module FreightKit
 
         if error.present?
           if error.include?('do not service this lane')
-            rate_response.error = UnserviceableError.new(
-              'Incorrect ZIP code or no service available at origin and/or destination'
-            )
+            rate_response.error = UnserviceableError.new('Incorrect ZIP code or no service available at origin and/or destination')
             return rate_response
           end
 

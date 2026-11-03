@@ -32,9 +32,7 @@ module FreightKit
         def scac = 'ABFS'
 
         def serviceable_accessorials?(accessorials)
-          unsupported_accessorials = unserviceable_accessorials.select do |key|
-            accessorials.include?(key)
-          end.sort!
+          unsupported_accessorials = unserviceable_accessorials.select { |key| accessorials.include?(key) }.sort!
 
           message = "#{unsupported_accessorials.join(', ')} unserviceable"
           raise FreightKit::UnserviceableError, message if unsupported_accessorials.any?
@@ -105,9 +103,7 @@ module FreightKit
           # query params
           raise FreightKit::UnserviceableError, 'Too many packages' if packages.count > 15
 
-          unsupported_packaging_types = packages.map(&:packaging).map(&:type).select do |type|
-            PACKAGE_TYPES.keys.exclude?(type)
-          end.sort!
+          unsupported_packaging_types = packages.map(&:packaging).map(&:type).select { |type| PACKAGE_TYPES.keys.exclude?(type) }.sort!
 
           message = "#{unsupported_packaging_types.join(', ').upcase_first} unserviceable"
           raise FreightKit::UnserviceableError, message if unsupported_packaging_types.any?
@@ -305,9 +301,7 @@ module FreightKit
         end
 
         other_options = {}.tap do |builder|
-          alpha2_codes = [shipment.destination.country, shipment.origin.country].map do |country|
-            country.code(:alpha2).value
-          end
+          alpha2_codes = [shipment.destination.country, shipment.origin.country].map { |country| country.code(:alpha2).value }
 
           builder['Acc_ARR'] = 'Y' if shipment.accessorials.include?(:appointment_delivery)
 
@@ -329,25 +323,15 @@ module FreightKit
           builder['Acc_HAZ'] = 'Y' if shipment.packages.any?(&:hazmat?)
           builder['Acc_PALLET'] = 'Y' if shipment.packages.map(&:packaging).all?(&:pallet?)
 
-          unless shipment.accessorials.intersect?(%i[
-                                                    church_pickup
-                                                    inside_pickup
-                                                    liftgate_pickup
-                                                    residential_pickup
-                                                    restaurant_pickup
-                                                  ])
+          unless shipment.accessorials.intersect?(%i[church_pickup inside_pickup liftgate_pickup residential_pickup restaurant_pickup])
             builder['Acc_SL'] = 'Y'
           end
 
           builder['Acc_SS'] = 'Y'
 
-          longest_dimension_in = if shipment.packages.all? do |package|
-                                      package.length(:inch).present? && package.width(:inch).present?
-                                    end
+          longest_dimension_in = if shipment.packages.all? { |package| package.length(:inch).present? && package.width(:inch).present? }
 
-                                   shipment.packages.map do |package|
-                                     [package.length(:in), package.width(:in)].max
-                                   end.max.ceil
+                                   shipment.packages.map { |package| [package.length(:in), package.width(:in)].max }.max.ceil
                                  end
 
           if longest_dimension_in.present?
@@ -367,8 +351,7 @@ module FreightKit
           end
         end
 
-        params = [account, commodities, consignee, delivery, other_options, pickup, shipper, specifics, third_party]
-                 .reduce({}, :merge)
+        params = [account, commodities, consignee, delivery, other_options, pickup, shipper, specifics, third_party].reduce({}, :merge)
 
         build_request(:rates, { params: })
       end

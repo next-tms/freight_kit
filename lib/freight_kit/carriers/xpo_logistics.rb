@@ -17,11 +17,7 @@ module FreightKit
 
         def contacts
           [
-            Contact.new(
-              department: 'Customer Service - Kingman, AZ',
-              id: '5bb9caaa-ae84-4ee6-90ef-3c14f6d434c6',
-              phone: '+17609228255'
-            )
+            Contact.new(department: 'Customer Service - Kingman, AZ', id: '5bb9caaa-ae84-4ee6-90ef-3c14f6d434c6', phone: '+17609228255')
           ]
         end
 
@@ -159,11 +155,7 @@ module FreightKit
         def website_url = 'https://www.xpo.com'
       end
 
-      API = {
-        domain: 'api.ltl.xpo.com',
-        endpoints: { rates: '/rating/1.0/ratequotes', token: '/token' },
-        use_ssl: true
-      }.freeze
+      API = { domain: 'api.ltl.xpo.com', endpoints: { rates: '/rating/1.0/ratequotes', token: '/token' }, use_ssl: true }.freeze
 
       # Documents
 
@@ -223,11 +215,7 @@ module FreightKit
       def build_bearer_token_request
         api_credentials = fetch_credential(:api)
 
-        body = URI.encode_www_form(
-          grant_type: 'password',
-          password: api_credentials.password,
-          username: api_credentials.username
-        )
+        body = URI.encode_www_form(grant_type: 'password', password: api_credentials.password, username: api_credentials.username)
 
         {
           body:,

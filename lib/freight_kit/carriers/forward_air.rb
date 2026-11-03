@@ -316,22 +316,14 @@ module FreightKit
       end
 
       def build_document_request(doc_id:, tracking_number:)
-        request = {
-          url: build_url(:document, doc_id:, tracking_number:),
-          headers: build_headers,
-          method: API.dig(:methods, :documents)
-        }
+        request = { url: build_url(:document, doc_id:, tracking_number:), headers: build_headers, method: API.dig(:methods, :documents) }
 
         save_request(request)
         request
       end
 
       def build_documents_request(tracking_number)
-        request = {
-          url: build_url(:documents, tracking_number:),
-          headers: build_headers,
-          method: API.dig(:methods, :documents)
-        }
+        request = { url: build_url(:documents, tracking_number:), headers: build_headers, method: API.dig(:methods, :documents) }
 
         save_request(request)
         request

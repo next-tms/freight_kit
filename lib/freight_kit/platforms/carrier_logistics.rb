@@ -120,8 +120,7 @@ module FreightKit
       def map_response_errors(response, not_found_error: DocumentNotFoundError)
         return ResponseError.new('Unknown response') if response.blank?
 
-        webspeed_error = (response.is_a?(String) || response.is_a?(HTTPClient::Response)) &&
-                         response.include?('WebSpeed error')
+        webspeed_error = (response.is_a?(String) || response.is_a?(HTTPClient::Response)) && response.include?('WebSpeed error')
         return ResponseError.new('Temporary error (WebSpeed error)') if webspeed_error
 
         return if response.code == 200
@@ -132,9 +131,7 @@ module FreightKit
       def parse_amount(amount)
         negative = amount.include?('-')
 
-        ['$', ',', '-'].each do |char|
-          amount = amount.sub(char, '')
-        end
+        ['$', ',', '-'].each { |char| amount = amount.sub(char, '') }
 
         return 0 if amount.blank?
 
@@ -283,9 +280,7 @@ module FreightKit
         if self.class.overlength_fees_require_tariff?
           cents = 0
 
-          shipment.packages.each do |package|
-            cents += overlength_fee(tariff, package)
-          end
+          shipment.packages.each { |package| cents += overlength_fee(tariff, package) }
 
           prices << Price.new(blame: :tariff, cents:, description: 'Overlength fees') if cents.nonzero?
         end

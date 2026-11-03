@@ -190,16 +190,7 @@ module FreightKit
         service:,
         shipment:
       )
-        request = build_pickup_request(
-          delivery_from:,
-          delivery_to:,
-          dispatcher:,
-          pickup_from:,
-          pickup_to:,
-          scac:,
-          service:,
-          shipment:
-        )
+        request = build_pickup_request(delivery_from:, delivery_to:, dispatcher:, pickup_from:, pickup_to:, scac:, service:, shipment:)
 
         parse_pickup_response(commit(request))
       end
@@ -468,8 +459,7 @@ module FreightKit
         logout_url = 'https://rrd.mercurygate.net/MercuryGate/login/urlRedirect.jsp?Logout=true'
 
         begin
-          browser.element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]')
-                 .click
+          browser.element(xpath: '//*[@id="__AppFrameBaseTable"]/tbody/tr[2]/td/div[4]').click
         rescue Selenium::WebDriver::Error::UnexpectedAlertOpenError => e
           browser.close
 
@@ -484,8 +474,7 @@ module FreightKit
         browser.iframe(name: 'AppBody').frame(id: 'Header').select(name: 'column').select('Primary Reference')
         browser.iframe(name: 'AppBody').frame(id: 'Header').select(name: 'condition').select('=')
         browser.iframe(name: 'AppBody').frame(id: 'Header').text_field(name: 'filter').set(tracking_number)
-        browser.iframe(name: 'AppBody').frame(id: 'Header').button(value: 'Find')
-               .click
+        browser.iframe(name: 'AppBody').frame(id: 'Header').button(value: 'Find').click
 
         begin
           browser.iframe(name: 'AppBody').frame(id: 'Detail').iframe(id: 'transportsWin')
@@ -505,8 +494,7 @@ module FreightKit
           return document_response
         end
 
-        html = browser.iframe(name: 'AppBody').frame(id: 'Detail').iframes[1].element(xpath: '/html/body/table[3]')
-                      .html
+        html = browser.iframe(name: 'AppBody').frame(id: 'Detail').iframes[1].element(xpath: '/html/body/table[3]').html
         html = Nokogiri::HTML(html)
 
         browser.goto(logout_url)

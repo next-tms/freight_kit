@@ -160,11 +160,7 @@ module FreightKit
         methods: { get_rate: :get, rates: :post },
         use_ssl: false
       }.freeze
-      JSON_HEADERS = {
-        Accept: 'application/json',
-        charset: 'utf-8',
-        'Content-Type' => 'application/x-www-form-urlencoded'
-      }.freeze
+      JSON_HEADERS = { Accept: 'application/json', charset: 'utf-8', 'Content-Type' => 'application/x-www-form-urlencoded' }.freeze
 
       # Documents
 
@@ -296,12 +292,7 @@ module FreightKit
         headers = headers.merge(options[:headers]) if options[:headers].present?
         body = URI.encode_www_form(options[:body]) if options[:body].present?
 
-        request = {
-          url: options[:url].presence || build_url(action),
-          headers:,
-          method: API.dig(:methods, action),
-          body:
-        }
+        request = { url: options[:url].presence || build_url(action), headers:, method: API.dig(:methods, action), body: }
 
         save_request(request)
         request

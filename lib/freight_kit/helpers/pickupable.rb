@@ -10,16 +10,7 @@ module FreightKit
       service:,
       shipment:
     )
-      request = build_pickup_request(
-        delivery_from:,
-        delivery_to:,
-        dispatcher:,
-        pickup_from:,
-        pickup_to:,
-        scac:,
-        service:,
-        shipment:
-      )
+      request = build_pickup_request(delivery_from:, delivery_to:, dispatcher:, pickup_from:, pickup_to:, scac:, service:, shipment:)
 
       begin
         # For SOAP APIs, the :action parameter is required

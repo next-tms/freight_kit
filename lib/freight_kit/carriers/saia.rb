@@ -265,9 +265,7 @@ module FreightKit
                          end
 
         if declared_value.present?
-          request = request.deep_merge(
-            { request: { DeclaredValue: declared_value, FullValueCoverage: declared_value } }
-          )
+          request = request.deep_merge({ request: { DeclaredValue: declared_value, FullValueCoverage: declared_value } })
         end
 
         save_request(request)
@@ -281,12 +279,7 @@ module FreightKit
       end
 
       def commit(action, request)
-        client_args = {
-          wsdl: request_url(action),
-          convert_request_keys_to: :none,
-          env_namespace: :soap,
-          element_form_default: :qualified
-        }
+        client_args = { wsdl: request_url(action), convert_request_keys_to: :none, env_namespace: :soap, element_form_default: :qualified }
 
         call_args = { message: request_blueprint.deep_merge(request) }
 
@@ -307,11 +300,7 @@ module FreightKit
       end
 
       def parse_api_location(api_event)
-        Location.new(
-          city: api_event[:city]&.titleize,
-          province: api_event[:state]&.upcase,
-          country: ActiveUtils::Country.find('USA')
-        )
+        Location.new(city: api_event[:city]&.titleize, province: api_event[:state]&.upcase, country: ActiveUtils::Country.find('USA'))
       end
 
       def parse_rate_response(shipment:, response:)
@@ -477,11 +466,7 @@ module FreightKit
         api_events = search_result.dig(:history, :history_item)
 
         if api_events.blank?
-          shipment_events << ShipmentEvent.new(
-            date_time: pickup_date,
-            location: shipper_location,
-            type_code: :picked_up
-          )
+          shipment_events << ShipmentEvent.new(date_time: pickup_date, location: shipper_location, type_code: :picked_up)
         else
           api_events = [api_events] if api_events.is_a?(Hash)
 

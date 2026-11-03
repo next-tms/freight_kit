@@ -17,11 +17,7 @@ module FreightKit
 
         def contacts
           [
-            Contact.new(
-              department: 'Dispatch - Mira Loma, CA',
-              id: 'dc14714f-e381-4b8b-97a6-f002c0897409',
-              phone: '+19513615900'
-            ),
+            Contact.new(department: 'Dispatch - Mira Loma, CA', id: 'dc14714f-e381-4b8b-97a6-f002c0897409', phone: '+19513615900'),
             Contact.new(department: 'Main', id: '22203680-060c-41db-ba65-9925e8fa381d', phone: '+14146151696')
           ]
         end
@@ -398,9 +394,7 @@ module FreightKit
       def parse_amount(amount)
         negative = amount.start_with?('-$') || amount.start_with?('-')
 
-        ['$', '-', ','].each do |char|
-          amount = amount.sub(char, '')
-        end
+        ['$', '-', ','].each { |char| amount = amount.sub(char, '') }
 
         return 0 if amount.blank?
 

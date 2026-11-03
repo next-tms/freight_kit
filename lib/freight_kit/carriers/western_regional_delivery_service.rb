@@ -81,11 +81,7 @@ module FreightKit
       def parse_api_city_state(str)
         return if str.blank?
 
-        Location.new(
-          city: str[..-3].strip.titleize,
-          province: str[-2..].upcase,
-          country: ActiveUtils::Country.find('USA')
-        )
+        Location.new(city: str[..-3].strip.titleize, province: str[-2..].upcase, country: ActiveUtils::Country.find('USA'))
       end
 
       def parse_api_city_state_zip(str)
@@ -152,9 +148,7 @@ module FreightKit
         image_url = nil
         browser.switch_window.use do
           page_count = browser.element(xpath: '/html/body/form/div[3]/b/span').text.strip.to_i
-          (page_count - 1).times do
-            browser.element(xpath: '/html/body/form/div[3]/input[2]').wait_until(&:present?).click
-          end
+          (page_count - 1).times { browser.element(xpath: '/html/body/form/div[3]/input[2]').wait_until(&:present?).click }
           image_url = browser.element(css: '#cphMain_imgImage').attribute_value('src')
         end
         browser.close

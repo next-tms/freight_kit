@@ -42,9 +42,5 @@ describe FreightKit::Carriers do
     carrier.superclass == FreightKit::Carrier && carrier.instance_methods(false).empty?
   end
 
-  without_api.each do |carrier|
-    describe carrier do
-      it_behaves_like 'a carrier without an API'
-    end
-  end
+  without_api.each { |carrier| describe(carrier) { it_behaves_like 'a carrier without an API' } }
 end
