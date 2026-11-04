@@ -174,9 +174,7 @@ module FreightKit
 
           next if longest_dimension < 96
 
-          package.quantity.times do
-            accessorials << { Code: 'EXLEN', Factor: longest_dimension }
-          end
+          package.quantity.times { accessorials << { Code: 'EXLEN', Factor: longest_dimension } }
         end
 
         shipment.accessorials.map do |accessorial|
@@ -377,8 +375,7 @@ module FreightKit
         expires_at = ::Time.iso8601(response['QuoteExpiryDate'])
 
         transit_days = (
-          ::Time.iso8601(response['EarliestDeliveryDate']).to_date -
-          ::Time.iso8601(response['PickupDate']).to_date
+          ::Time.iso8601(response['EarliestDeliveryDate']).to_date - ::Time.iso8601(response['PickupDate']).to_date
         ).to_i
 
         prices = []

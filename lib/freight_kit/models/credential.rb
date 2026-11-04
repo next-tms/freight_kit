@@ -96,20 +96,7 @@ module FreightKit
       url.path = '/wd/hub/'
       url = url.to_s
 
-      @watir_args = [
-        browser,
-        {
-          options: {
-            prefs: {
-              download: {
-                directory_upgrade: true,
-                prompt_for_download: false
-              }
-            }
-          },
-          url:
-        }
-      ]
+      @watir_args = [browser, { options: { prefs: { download: { directory_upgrade: true, prompt_for_download: false } } }, url: }]
     end
   end
 end

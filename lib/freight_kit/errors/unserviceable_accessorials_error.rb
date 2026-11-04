@@ -9,9 +9,7 @@ module FreightKit
     end
 
     def message
-      @message ||= "Unable to service #{@accessorials.map do |accessorial|
-                                          accessorial.to_s.gsub('_', ' ')
-                                        end.join(', ')}"
+      @message ||= "Unable to service #{@accessorials.map { |accessorial| accessorial.to_s.gsub('_', ' ') }.join(', ')}"
     end
   end
 end

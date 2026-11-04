@@ -125,10 +125,7 @@ module FreightKit
       include FreightKit::Trackable
       include FreightKit::Pickupable
 
-      API = {
-        actions: { rates: :getquote, track: :tracktrace, pickup: :requestpickup },
-        use_ssl: { rates: false, track: false }
-      }.freeze
+      API = { actions: { rates: :getquote, track: :tracktrace, pickup: :requestpickup }, use_ssl: { rates: false, track: false } }.freeze
       EVENTS = {
         types: {
           arrived_at_terminal: 'arrived',
@@ -472,10 +469,7 @@ module FreightKit
           return tracking_response
         end
 
-        receiver_location = build_location(
-          mapped_response.dig(:consignee, :city),
-          mapped_response.dig(:consignee, :state)
-        )
+        receiver_location = build_location(mapped_response.dig(:consignee, :city), mapped_response.dig(:consignee, :state))
         shipper_location = build_location(mapped_response.dig(:shipper, :city), mapped_response.dig(:shipper, :state))
 
         actual_delivery_date = mapped_response[:deliverydate]
@@ -566,9 +560,7 @@ module FreightKit
         status = shipment_events.last&.type_code
 
         # Workarounds for false status on certain events when timestamps are in wrong order
-        status = :out_for_delivery if shipment_events.find do |shipment_event|
-                                        shipment_event.type_code == :out_for_delivery
-                                      end
+        status = :out_for_delivery if shipment_events.find { |shipment_event| shipment_event.type_code == :out_for_delivery }
         status = :delivered if shipment_events.find { |shipment_event| shipment_event.type_code == :delivered }
 
         tracking_response.assign_attributes(

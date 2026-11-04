@@ -72,10 +72,7 @@ module FreightKit
       # @param package [FreightKit::Package]
       # @return [Measured::Length]
       def longest_dimension(package)
-        [
-          Measured::Length.new(package.length(:inches), :inches),
-          Measured::Length.new(package.width(:inches), :inches)
-        ].max
+        [Measured::Length.new(package.length(:inches), :inches), Measured::Length.new(package.width(:inches), :inches)].max
       end
 
       # FreightKit accessorials the carrier prices, mapped to the carrier's codes.
@@ -254,9 +251,7 @@ module FreightKit
             [package.height(:inches), package.length(:inches), package.width(:inches)].any?(&:zero?)
           end
 
-          uncovered_overlength = packages.any? do |package|
-            overlength?(package) && overlength_rule_for(tariff, package).nil?
-          end
+          uncovered_overlength = packages.any? { |package| overlength?(package) && overlength_rule_for(tariff, package).nil? }
 
           if missing_dimensions
             message << 'item dimensions are required'

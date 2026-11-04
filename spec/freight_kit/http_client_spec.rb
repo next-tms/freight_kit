@@ -16,6 +16,10 @@ describe FreightKit::HTTPClient do
       '/empty' => [200, {}, ''],
       '/etag' => [200, { 'Cache-Control' => 'no-cache', 'Content-Type' => 'application/json', 'ETag' => '"v1"' }, json],
       '/fresh' => [200, stale_headers, json],
+      '/limited' => [429, { 'Retry-After' => '0' }, ''],
+      '/padded' => [429, { 'Retry-After' => '061' }, ''],
+      '/slowed' => [429, { 'Retry-After' => '1' }, ''],
+      '/throttled' => [429, { 'Retry-After' => '120' }, ''],
       '/xml' => [200, { 'Content-Type' => 'application/xml' }, '<a><b>1</b></a>'],
       '/zstd' => [200, { 'Content-Encoding' => 'zstd', 'Content-Type' => 'application/json' }, Zstd.compress(json)]
     }
@@ -27,9 +31,7 @@ describe FreightKit::HTTPClient do
     responses = self.responses
     server = self.server
 
-    Thread.new do
-      loop { serve(server.accept, requests:, responses:) }
-    end
+    Thread.new { loop { serve(server.accept, requests:, responses:) } }
   end
 
   def serve(socket, requests:, responses:)
@@ -173,6 +175,39 @@ describe FreightKit::HTTPClient do
       let(:verb) { :post }
 
       it { expect(requests.size).to(eq(1)) }
+    end
+  end
+
+  describe 'retries when rate limited' do
+    subject(:elapsed) do
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      described_class.post("#{url}#{path}")
+      Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+    end
+
+    let(:path) { '/limited' }
+
+    before { elapsed }
+
+    it { expect(requests.size).to(eq(2)) }
+
+    context 'with a long Retry-After' do
+      let(:path) { '/throttled' }
+
+      it { expect(requests.size).to(eq(1)) }
+    end
+
+    context 'with a long Retry-After that has a leading zero, which is not octal' do
+      let(:path) { '/padded' }
+
+      it { expect(requests.size).to(eq(1)) }
+    end
+
+    context 'with a short Retry-After' do
+      let(:path) { '/slowed' }
+
+      it { expect(elapsed).to(be >= 1) }
+      it { expect(requests.size).to(eq(2)) }
     end
   end
 

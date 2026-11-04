@@ -64,8 +64,7 @@ namespace :amazon_warehouses do
 
     previous_count = File.exist?(path) ? FreightKit::AmazonWarehouse.all.size : 0
     if warehouses.size < previous_count * 0.9 && ENV['FORCE'].blank?
-      raise "Fetched #{warehouses.size} warehouses, down from #{previous_count}. " \
-            'Set FORCE=1 to write the file anyway.'
+      raise "Fetched #{warehouses.size} warehouses, down from #{previous_count}. Set FORCE=1 to write the file anyway."
     end
 
     mkdir_p(File.dirname(path))

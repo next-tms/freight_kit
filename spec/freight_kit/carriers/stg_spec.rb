@@ -18,9 +18,7 @@ describe FreightKit::Carriers::STG do
   describe '#build_calculated_accessorials' do
     subject(:accessorials) { carrier.build_calculated_accessorials(shipment) }
 
-    let(:package) do
-      FreightKit::Package.new(480, { length: 48, width: 40, height: 40 }, :pallet, units: :imperial, quantity: 1)
-    end
+    let(:package) { FreightKit::Package.new(480, { length: 48, width: 40, height: 40 }, :pallet, units: :imperial, quantity: 1) }
     let(:shipment) { FreightKit::Shipment.new(destination:, packages: [package]) }
 
     context 'with an Amazon warehouse destination' do

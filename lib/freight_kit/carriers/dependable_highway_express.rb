@@ -155,10 +155,7 @@ module FreightKit
         },
         use_ssl: { rates: false, track: false }
       }.freeze
-      CITY_STATES = {
-        ca: ['Los Angeles', 'Mammoth Lakes', 'Sacramento', 'Redding', 'West Sacramento'],
-        nv: ['Reno', 'Sparks']
-      }.freeze
+      CITY_STATES = { ca: ['Los Angeles', 'Mammoth Lakes', 'Sacramento', 'Redding', 'West Sacramento'], nv: ['Reno', 'Sparks'] }.freeze
       EVENTS = {
         types: {
           arrived_at_terminal: 'linehaul arrived',
@@ -180,8 +177,7 @@ module FreightKit
         country_codes = [shipment.destination.country.code(:alpha2).value, shipment.origin.country.code(:alpha2).value]
 
         if country_codes.reject { |c| c.upcase == 'US' }.any?
-          raise UnserviceableError,
-                "No service from #{shipment.origin.postal_code} to #{shipment.destination.postal_code}"
+          raise UnserviceableError, "No service from #{shipment.origin.postal_code} to #{shipment.destination.postal_code}"
         end
 
         accessorials = []
@@ -262,9 +258,7 @@ module FreightKit
       def parse_amount(amount)
         negative = amount.include?('(') && amount.include?(')')
 
-        ['$', ',', '(', ')'].each do |char|
-          amount = amount.sub(char, '')
-        end
+        ['$', ',', '(', ')'].each { |char| amount = amount.sub(char, '') }
 
         return 0 if amount.blank?
 
@@ -333,8 +327,7 @@ module FreightKit
         browser.button(name: 'ctl00$ContentPlaceHolder1$btnSubmit').click
 
         begin
-          browser.element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a')
-                 .click
+          browser.element(xpath: '//*[@id="ContentPlaceHolder1_GridView1"]/tbody/tr[2]/td[2]/a').click
         rescue Watir::Exception::UnknownObjectException
           document_response.error = DocumentNotFoundError.new
           return document_response
@@ -438,12 +431,7 @@ module FreightKit
 
         prices = []
 
-        shipment_details = response.dig(
-          :get_rates_response,
-          :get_rates_result,
-          :shipment_detail_response,
-          :shipment_detail_row
-        )
+        shipment_details = response.dig(:get_rates_response, :get_rates_result, :shipment_detail_response, :shipment_detail_row)
 
         shipment_details.each do |shipment_detail|
           next if shipment_detail[:charge].blank?

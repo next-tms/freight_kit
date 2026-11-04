@@ -17,11 +17,7 @@ module FreightKit
 
         def contacts
           [
-            Contact.new(
-              department: 'Rating',
-              email: 'rates@alohafreight.com',
-              id: '5de89baa-e0df-4374-a3be-018251dd6f4e'
-            )
+            Contact.new(department: 'Rating', email: 'rates@alohafreight.com', id: '5de89baa-e0df-4374-a3be-018251dd6f4e')
           ]
         end
 

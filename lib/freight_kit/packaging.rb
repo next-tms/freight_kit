@@ -1,22 +1,7 @@
 module FreightKit
   class Packaging
     PALLET_TYPES = %i[crate drum pallet tote].freeze
-    VALID_TYPES = %i[
-      box
-      bundle
-      container
-      crate
-      cylinder
-      drum
-      luggage
-      pail
-      pallet
-      piece
-      roll
-      tote
-      truckload
-      tote
-    ].freeze
+    VALID_TYPES = %i[box bundle container crate cylinder drum luggage pail pallet piece roll tote truckload tote].freeze
 
     attr_accessor :type
 

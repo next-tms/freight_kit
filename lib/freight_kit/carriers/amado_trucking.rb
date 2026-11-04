@@ -4,11 +4,7 @@ module FreightKit
       class << self
         def contacts
           [
-            Contact.new(
-              department: 'Dispatch',
-              email: 'la.dispatch@amadotrucking.com',
-              id: 'c5dab2fd-b178-41f7-bc2b-3f53f8717c01'
-            )
+            Contact.new(department: 'Dispatch', email: 'la.dispatch@amadotrucking.com', id: 'c5dab2fd-b178-41f7-bc2b-3f53f8717c01')
           ]
         end
 

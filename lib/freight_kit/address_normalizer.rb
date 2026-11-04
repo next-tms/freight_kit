@@ -17,9 +17,7 @@ module FreightKit
         words = words.take_while { |word| UNIT_DESIGNATORS.exclude?(word) }
         return unless words.first&.match?(/\d/)
 
-        words.map do |word|
-          StreetAddress::US::DIRECTIONAL[word]&.downcase || StreetAddress::US::STREET_TYPES[word] || word
-        end.join(' ')
+        words.map { |word| StreetAddress::US::DIRECTIONAL[word]&.downcase || StreetAddress::US::STREET_TYPES[word] || word }.join(' ')
       end
     end
   end

@@ -155,29 +155,11 @@ module FreightKit
         service:,
         shipment:
       )
-        request = build_shipment_request(
-          delivery_from:,
-          delivery_to:,
-          dispatcher:,
-          pickup_from:,
-          pickup_to:,
-          scac:,
-          service:,
-          shipment:
-        )
+        request = build_shipment_request(delivery_from:, delivery_to:, dispatcher:, pickup_from:, pickup_to:, scac:, service:, shipment:)
 
         labels = parse_shipment_response(commit(request))
 
-        request = build_pickup_request(
-          delivery_from:,
-          delivery_to:,
-          dispatcher:,
-          pickup_from:,
-          pickup_to:,
-          scac:,
-          service:,
-          shipment:
-        )
+        request = build_pickup_request(delivery_from:, delivery_to:, dispatcher:, pickup_from:, pickup_to:, scac:, service:, shipment:)
 
         parse_pickup_response(response: commit(request), labels:)
       end
@@ -487,8 +469,8 @@ module FreightKit
         prices = []
         transit_days = nil
 
-        api_shipments = response.dig('OnTracRateResponse', 'Shipments', 'Shipment')
-        api_shipments = [api_shipments] unless api_shipments.is_a?(Array)
+        api_shipments = Array.wrap(response.dig('OnTracRateResponse', 'Shipments', 'Shipment'))
+        return rate_response.tap { |item| item.error = ResponseError.new('API Error: Blank shipment') } if api_shipments.empty?
 
         if api_shipments.any? { |api_shipment| api_shipment['Error']&.downcase&.include?('not serviced') }
           rate_response.error = UnserviceableError.new
@@ -546,7 +528,7 @@ module FreightKit
         end
 
         api_shipments = response.dig('OnTracShipmentResponse', 'Shipments', 'Shipment')
-        api_shipments = [api_shipments] unless api_shipments.is_a?(Array)
+        api_shipments = Array.wrap(api_shipments)
 
         base64_labels = api_shipments&.map { |s| s['Label'] }
         raise FreightKit::ResponseError, 'API Error: Blank label' if base64_labels.blank?

@@ -64,13 +64,7 @@ module FreightKit # :nodoc:
 
       @quantity = options[:quantity] || 1
 
-      @total_weight = attribute_from_metric_or_imperial(
-        total_grams_or_ounces,
-        Measured::Weight,
-        @weight_unit_system,
-        :grams,
-        :ounces
-      )
+      @total_weight = attribute_from_metric_or_imperial(total_grams_or_ounces, Measured::Weight, @weight_unit_system, :grams, :ounces)
 
       @each_weight = attribute_from_metric_or_imperial(
         total_grams_or_ounces / @quantity.to_f,
@@ -91,9 +85,7 @@ module FreightKit # :nodoc:
         @dimensions = @dimensions.map do |l|
           attribute_from_metric_or_imperial(l, Measured::Length, @dimensions_unit_system, :centimetres, :inches)
         end
-        2.downto(@dimensions.length) do |_n|
-          @dimensions.unshift(@dimensions[0])
-        end
+        2.downto(@dimensions.length) { |_n| @dimensions.unshift(@dimensions[0]) }
       end
 
       @value = Package.cents_from(options[:value])
@@ -274,9 +266,7 @@ module FreightKit # :nodoc:
       # [1,2] => [1,1,2]
       # [5] => [5,5,5]
       # etc..
-      2.downto(@dimensions.length) do |_n|
-        @dimensions.unshift(@dimensions[0])
-      end
+      2.downto(@dimensions.length) { |_n| @dimensions.unshift(@dimensions[0]) }
     end
 
     def sanitized_freight_class(freight_class)

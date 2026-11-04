@@ -3,6 +3,7 @@ require 'active_support/all'
 require 'active_utils'
 require 'business_time'
 require 'countries'
+require 'graphql/client'
 require 'httpx'
 require 'measured'
 require 'mimemagic'
@@ -18,6 +19,21 @@ require 'zeitwerk'
 
 module FreightKit
   VERSION = File.read(File.expand_path('../VERSION', __dir__)).strip.freeze
+
+  class << self
+    # The cache FreightKit stores data in, such as HTTP responses. It is in memory unless the host app passes its own:
+    #
+    #   FreightKit.cache = Rails.cache
+    #   FreightKit.cache = Hanami.app['cache']
+    #
+    # @return [ActiveSupport::Cache::Store] Or any store that responds to `#read`, `#write`, `#fetch` and `#delete_matched`.
+    def cache = @cache ||= ActiveSupport::Cache::MemoryStore.new
+
+    def cache=(store)
+      @cache = store
+      HTTPClient.reset
+    end
+  end
 
   class Inflector < Zeitwerk::Inflector
     CARRIER_ACRONYMS = [
@@ -121,5 +137,6 @@ loader.collapse("#{__dir__}/freight_kit/helpers")
 loader.collapse("#{__dir__}/freight_kit/models")
 
 loader.inflector = FreightKit::Inflector.new
+loader.inflector.inflect('graphql_client' => 'GraphQLClient', 'orm' => 'ORM')
 
 loader.setup
