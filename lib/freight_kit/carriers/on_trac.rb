@@ -399,9 +399,9 @@ module FreightKit
 
         response = case method
                    when :post
-                     HTTPClient.post(url, headers:, body:)
+                     HTTPClient.post(url, headers:, body:, proxy_url:)
                    else
-                     HTTPClient.get(url, headers:)
+                     HTTPClient.get(url, headers:, proxy_url:)
                    end
 
         response.parsed_response if response&.parsed_response

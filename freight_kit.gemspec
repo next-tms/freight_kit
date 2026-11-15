@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('countries', '~> 8.1')
   spec.add_dependency('graphql', '>= 2.0', '< 3') # Next TMS
   spec.add_dependency('graphql-client', '>= 0.23.0', '< 1') # Next TMS
-  spec.add_dependency('httpx', '>= 1.9.0', '< 2')
+  spec.add_dependency('httpx', '>= 1.9.0', '!= 1.9.1', '< 2') # 1.9.1: https://github.com/HoneyryderChuck/httpx/issues/162
   spec.add_dependency('json', '< 3') # measured
   spec.add_dependency('measured', '>= 2.0', '< 3.2.3')
   spec.add_dependency('mimemagic', '~> 0.4.3')

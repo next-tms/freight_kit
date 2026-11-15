@@ -70,7 +70,7 @@ module FreightKit
       end
 
       def commit(request)
-        response = HTTPClient.request(request[:method], request[:url], **request.slice(:body, :headers, :query))
+        response = HTTPClient.request(request[:method], request[:url], **request.slice(:body, :headers, :query), proxy_url:)
 
         raise InvalidCredentialsError, "HTTP #{response.code}: #{response}" if [401, 403].include?(response.code)
         raise HTTPError.new(body: response.body, code: response.code) unless (200..299).cover?(response.code)

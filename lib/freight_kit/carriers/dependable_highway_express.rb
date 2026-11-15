@@ -366,7 +366,7 @@ module FreightKit
         document_response.request = URI.parse(url)
 
         begin
-          response = HTTPClient.get(url)
+          response = HTTPClient.get(url, proxy_url:)
         rescue StandardError => e
           document_response.error = e
           return document_response

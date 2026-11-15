@@ -90,14 +90,14 @@ describe FreightKit::Platforms::NextTMS do
       document_response
     end
 
-    it { expect(FreightKit::HTTPClient).to(have_received(:request).with(:get, 'https://tms.example.com/rails/active_storage/blobs/redirect/bol.pdf')) }
+    it { expect(FreightKit::HTTPClient).to(have_received(:request).with(:get, 'https://tms.example.com/rails/active_storage/blobs/redirect/bol.pdf', proxy_url: nil)) }
     it { expect(document_response).to(have_attributes(content_type: 'application/pdf', data: '%PDF', error: nil)) }
     it { expect(carrier.last_request[:body]).to(include('"loadIdEq":1234')) }
 
     context 'with the POD' do
       subject(:document_response) { carrier.pod('1234') }
 
-      it { expect(FreightKit::HTTPClient).to(have_received(:request).with(:get, 'https://storage.example.com/pod.pdf')) }
+      it { expect(FreightKit::HTTPClient).to(have_received(:request).with(:get, 'https://storage.example.com/pod.pdf', proxy_url: nil)) }
     end
 
     context 'with the scanned BOL, which customers cannot see' do
@@ -140,8 +140,8 @@ describe FreightKit::Platforms::NextTMS do
       pickup_response
     end
 
-    it { expect(FreightKit::HTTPClient).to(have_received(:request).with(:get, 'https://tms.example.com/label.pdf')) }
-    it { expect(FreightKit::HTTPClient).to(have_received(:request).with(:post, anything, body: pickup_on, headers: anything, read_timeout: 300).twice) }
+    it { expect(FreightKit::HTTPClient).to(have_received(:request).with(:get, 'https://tms.example.com/label.pdf', proxy_url: nil)) }
+    it { expect(FreightKit::HTTPClient).to(have_received(:request).with(:post, anything, body: pickup_on, headers: anything, proxy_url: nil, read_timeout: 300).twice) }
     it { expect(carrier).not_to(have_received(:sleep)) }
     it { expect(pickup_response.labels.map(&:data)).to(eq(['%PDF'])) }
     it { expect(pickup_response.pickup_number).to(eq('4321')) }

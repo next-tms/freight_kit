@@ -427,6 +427,10 @@ module FreightKit
 
     protected
 
+    # Proxy for HTTP requests, from the optional `:api_proxy` credential.
+    # @return [String|NilClass]
+    def proxy_url = fetch_credential(:api_proxy)&.proxy_url
+
     # Use after building the request to save for later inspection.
     # @return [void]
     def save_request(request) = @last_request = request
