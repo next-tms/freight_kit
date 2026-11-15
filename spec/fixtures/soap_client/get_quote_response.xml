@@ -1,0 +1,3 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body><GetQuoteResponse><Rate>1</Rate></GetQuoteResponse></soap:Body>
+</soap:Envelope>

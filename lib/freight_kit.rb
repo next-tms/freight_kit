@@ -21,7 +21,7 @@ module FreightKit
   VERSION = File.read(File.expand_path('../VERSION', __dir__)).strip.freeze
 
   class << self
-    # The cache FreightKit stores data in, such as HTTP responses. It is in memory unless the host app passes its own:
+    # The cache FreightKit stores data in, such as HTTP responses and SOAP WSDLs. It is in memory unless the host app passes its own:
     #
     #   FreightKit.cache = Rails.cache
     #   FreightKit.cache = Hanami.app['cache']
@@ -137,6 +137,6 @@ loader.collapse("#{__dir__}/freight_kit/helpers")
 loader.collapse("#{__dir__}/freight_kit/models")
 
 loader.inflector = FreightKit::Inflector.new
-loader.inflector.inflect('graphql_client' => 'GraphQLClient', 'orm' => 'ORM')
+loader.inflector.inflect('graphql_client' => 'GraphQLClient', 'httpi_adapter' => 'HTTPIAdapter', 'orm' => 'ORM')
 
 loader.setup

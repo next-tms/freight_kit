@@ -1,0 +1,22 @@
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:tns="urn:quotes" targetNamespace="urn:quotes">
+  <message name="GetQuoteRequest"/>
+  <message name="GetQuoteResponse"/>
+  <portType name="QuotePortType">
+    <operation name="GetQuote">
+      <input message="tns:GetQuoteRequest"/>
+      <output message="tns:GetQuoteResponse"/>
+    </operation>
+  </portType>
+  <binding name="QuoteBinding" type="tns:QuotePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="GetQuote">
+      <soap:operation soapAction="urn:quotes#GetQuote"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+  </binding>
+  <service name="QuoteService">
+    <port name="QuotePort" binding="tns:QuoteBinding"><soap:address location="%<url>s/soap"/></port>
+  </service>
+</definitions>
