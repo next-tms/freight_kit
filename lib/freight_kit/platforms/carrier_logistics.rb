@@ -114,7 +114,7 @@ module FreightKit
         url = build_url(action, query:)
         save_request(url)
 
-        HTTPClient.get(url)
+        HTTPClient.get(url, proxy_url:)
       end
 
       def map_response_errors(response, not_found_error: DocumentNotFoundError)
@@ -217,7 +217,7 @@ module FreightKit
         end
 
         begin
-          response = HTTPClient.get(url)
+          response = HTTPClient.get(url, proxy_url:)
         rescue StandardError => e
           document_response.error = e
           return document_response

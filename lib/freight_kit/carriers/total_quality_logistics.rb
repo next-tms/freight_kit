@@ -214,7 +214,8 @@ module FreightKit
           request[:url],
           headers: request[:headers].merge(subscription_key_headers),
           query: request[:query],
-          body: request[:body]
+          body: request[:body],
+          proxy_url:
         )
 
         parsed_response = JSON.parse(response.body)

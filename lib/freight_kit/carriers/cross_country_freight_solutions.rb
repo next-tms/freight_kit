@@ -128,7 +128,7 @@ module FreightKit
         def minimum_length_for_overlength_fees = Measured::Length.new(6, :feet)
         def name = 'CrossCountry Freight Solutions'
         def overlength_fees_require_tariff? = false
-        def required_credential_types = %i[api_key api_proxy]
+        def required_credential_types = %i[api_key]
         def requirements = %i[credentials]
         def scac = 'CCYQ'
         def unquotable_accessorials = %i[athletic_facility_delivery dock_dropoff dock_pickup]
@@ -264,16 +264,8 @@ module FreightKit
 
       def build_request(action, body: {}, query: {})
         api_key = fetch_credential(:api_key).api_key
-        proxy_url = fetch_credential(:api_proxy).proxy_url
 
-        request = {
-          url: build_url(action),
-          headers: { APIKEY: api_key },
-          method: API.dig(:methods, action),
-          body:,
-          query:,
-          proxy_url:
-        }.compact
+        request = { url: build_url(action), headers: { APIKEY: api_key }, method: API.dig(:methods, action), body:, query: }.compact
 
         save_request(request)
         request
@@ -289,7 +281,7 @@ module FreightKit
           headers: request[:headers].merge(JSON_HEADERS),
           body: request[:body],
           query: request[:query],
-          proxy: request[:proxy_url]
+          proxy_url:
         )
 
         unless response.code == 200

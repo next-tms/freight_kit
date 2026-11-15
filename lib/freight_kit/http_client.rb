@@ -29,7 +29,7 @@ module FreightKit
 
       def post(url, **) = request(:post, url, **)
 
-      def request(verb, url, body: nil, headers: {}, proxy: nil, query: nil, read_timeout: nil)
+      def request(verb, url, body: nil, headers: {}, proxy_url: nil, query: nil, read_timeout: nil)
         options = { headers: }
         options[:params] = query if query.present?
         options[:timeout] = { read_timeout: } if read_timeout
@@ -41,7 +41,7 @@ module FreightKit
           options[:body] = body
         end
 
-        response = session(proxy.presence).request(verb.to_s.upcase, url, **options)
+        response = session(proxy_url.presence).request(verb.to_s.upcase, url, **options)
         raise response.error if response.is_a?(HTTPX::ErrorResponse)
 
         Response.new(response)
@@ -61,8 +61,8 @@ module FreightKit
       end
 
       # Sessions own their connection pool, so they are built once (per proxy) and reused
-      def session(proxy)
-        @sessions.compute_if_absent(proxy) do
+      def session(proxy_url)
+        @sessions.compute_if_absent(proxy_url) do
           session = HTTPX.plugin(:brotli).plugin(Zstd).plugin(:follow_redirects)
                          .plugin(:response_cache, response_cache_store: CacheStore.new(cache))
                          .plugin(Revalidation)
@@ -72,7 +72,7 @@ module FreightKit
           logger = self.logger
           session = session.with(debug: LogDevice.new(logger), debug_level: 2) if logger.level <= ::Logger::DEBUG
 
-          proxy ? session.plugin(:proxy).with(proxy: { uri: proxy }) : session
+          proxy_url ? session.plugin(:proxy).with(proxy: { uri: proxy_url }) : session
         end
       end
     end

@@ -10,6 +10,6 @@ describe FreightKit::Carriers::CrossCountryFreightSolutions do
   it { expect(described_class).to(be_find_rates_implemented) }
   it { expect(described_class).not_to(be_find_rates_with_declared_value) }
   it { expect(described_class).not_to(be_pickup_number_is_tracking_number) }
-  it { expect(described_class.required_credential_types).to(eq(%i[api_key api_proxy])) }
+  it { expect(described_class.required_credential_types).to(eq(%i[api_key])) }
   it { expect(described_class.us_mc_number).to(eq(209_657)) }
 end

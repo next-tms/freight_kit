@@ -70,9 +70,9 @@ module FreightKit
         url = request_url(action)
 
         response = if API.dig(:methods, action) == :post
-                     options[:params].blank? ? HTTPClient.post(url) : HTTPClient.post(url, query: options[:params])
+                     options[:params].blank? ? HTTPClient.post(url, proxy_url:) : HTTPClient.post(url, proxy_url:, query: options[:params])
                    else
-                     HTTPClient.get(url)
+                     HTTPClient.get(url, proxy_url:)
                    end
 
         response.parsed_response if response&.parsed_response
@@ -114,7 +114,7 @@ module FreightKit
         document_response = DocumentResponse.new(request: URI.parse(url))
 
         begin
-          response = HTTPClient.get(url)
+          response = HTTPClient.get(url, proxy_url:)
         rescue StandardError => e
           document_response.error = e
           return document_response

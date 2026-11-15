@@ -51,7 +51,7 @@ module FreightKit
                      when :api, :website
                        { password: String }
                      when :api_proxy
-                       { api_key: String, proxy_url: String }
+                       { proxy_url: String }
                      when :oauth2
                        { access_token: String, expires_at: ::DateTime, scope: String }
                      when :selenoid

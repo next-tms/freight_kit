@@ -249,7 +249,13 @@ module FreightKit
       def camelize_keys(hash) = hash.deep_transform_keys { |key| key.to_s.camelize(:lower) }
 
       def commit(request)
-        response = HTTPClient.request(request[:method], request[:url], **request.slice(:body, :headers), read_timeout: READ_TIMEOUT)
+        response = HTTPClient.request(
+          request[:method],
+          request[:url],
+          **request.slice(:body, :headers),
+          proxy_url:,
+          read_timeout: READ_TIMEOUT
+        )
 
         raise InvalidCredentialsError, "HTTP #{response.code}: #{response}" if [401, 403].include?(response.code)
         raise RateLimitError.new(body: response.body, code: 429, retry_after: response.headers['retry-after']&.to_i) if response.code == 429
@@ -284,7 +290,7 @@ module FreightKit
 
       # URLs are signed and expire after 5 minutes, so they are downloaded right away, without the API key.
       def download(url)
-        response = HTTPClient.get(URI.join(base_url, url).to_s)
+        response = HTTPClient.get(URI.join(base_url, url).to_s, proxy_url:)
         raise HTTPError.new(body: response.body, code: response.code) unless response.code == 200
 
         response
