@@ -19,6 +19,17 @@ module FreightKit
         def id = 'e899224d-f3c9-47b5-9e2f-61c9c0d8c497'
         def name = 'A1 Express'
         def scac = 'AOXQ'
+
+        # Southern California, plus Las Vegas and all of Clark County, Nevada, by ZIP prefix.
+        def territories
+          country = Countries.find_by(iso31661_alpha2: 'US')
+          southern_california = [*'900'..'908', *'910'..'928', '930', '931', '935', '93225', '93243', '93420']
+
+          [
+            Territory.new(country:, postal_codes: southern_california, region_abbreviation: 'CA'),
+            Territory.new(country:, postal_codes: ['889', '890', '891'], region_abbreviation: 'NV')
+          ]
+        end
       end
     end
   end

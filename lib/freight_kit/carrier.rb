@@ -61,6 +61,10 @@ module FreightKit
         false
       end
 
+      # The directed lanes the carrier serves, for carriers that serve only some origins to some destinations.
+      # @return [Array<FreightKit::Lane>]
+      def lanes = []
+
       # The carrier's registered legal name, with its entity suffix (e.g. "Saia Motor Freight Line LLC"), when known.
       # {.name} is the name the carrier does business as.
       # @return [String, nil]
@@ -78,6 +82,16 @@ module FreightKit
       # FreightKit accessorials the carrier prices, mapped to the carrier's codes.
       # @return [Hash{Symbol => Object}]
       def mappable_accessorials = {}
+
+      # The carrier's lanes that go from the origin to the destination, most specific first.
+      # @param destination [FreightKit::Location]
+      # @param origin [FreightKit::Location]
+      # @return [Array<FreightKit::Lane>]
+      def matching_lanes(origin, destination)
+        lanes
+          .select { |lane| lane.include?(origin, destination) }
+          .sort_by.with_index { |lane, index| [-lane.specificity, index] }
+      end
 
       # The maximum height the carrier will accept.
       # @return [Measured::Length]
@@ -143,6 +157,18 @@ module FreightKit
       # @return [String, nil]
       def scac = nil
 
+      # Whether the carrier serves a shipment from the origin to the destination: a lane matches, or both locations are
+      # inside its territories. A carrier without lanes or territories serves everywhere.
+      # @param destination [FreightKit::Location]
+      # @param origin [FreightKit::Location]
+      # @return [Boolean]
+      def serve?(origin, destination)
+        return true if lanes.blank? && territories.blank?
+
+        matching_lanes(origin, destination).any? ||
+          [origin, destination].all? { |location| territories.any? { |territory| territory.include?(location) } }
+      end
+
       # Raises {UnserviceableAccessorialsError} for accessorials the carrier refuses, or that it neither maps nor serves
       # unpriced. Returns false when the carrier maps no accessorials.
       # @return [Boolean]
@@ -166,6 +192,10 @@ module FreightKit
       # The carrier's terminals, so applications need not enter them for each customer.
       # @return [Array<FreightKit::Terminal>]
       def terminals = []
+
+      # The areas the carrier picks up from and delivers to, in any combination.
+      # @return [Array<FreightKit::Territory>]
+      def territories = []
 
       # The template URL for tracking one of carrier's `NUMBERS` publicly. A template URL is a URL containing the token
       # "%s" that can be replaced to generate a valid URL.
