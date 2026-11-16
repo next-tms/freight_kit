@@ -16,6 +16,19 @@ module FreightKit
         end
 
         def id = '42b3f8f9-c85c-4144-b2e3-172386bc29d4'
+
+        def lanes
+          country = Countries.find_by(iso31661_alpha2: 'US')
+
+          [
+            Lane.new(
+              destination: Territory.new(country:, region_abbreviation: 'KS'),
+              id: '868188aa-d976-4c9a-8a06-0536bd0dc8f2',
+              origin: Territory.new(country:)
+            )
+          ]
+        end
+
         def name = 'GSP Express'
         def us_mc_number = 1_480_261
       end

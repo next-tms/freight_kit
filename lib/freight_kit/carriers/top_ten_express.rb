@@ -18,6 +18,19 @@ module FreightKit
         end
 
         def id = '06cb58f8-4542-4ffc-aebc-98272678c78b'
+
+        def lanes
+          country = Countries.find_by(iso31661_alpha2: 'US')
+
+          [
+            Lane.new(
+              destination: Territory.new(country:, region_abbreviation: 'NY'),
+              id: '876f6e13-8611-4b8c-9982-8f661bc2684c',
+              origin: Territory.new(country:, region_abbreviation: 'WI')
+            )
+          ]
+        end
+
         def legal_name = 'Top-ten Express Corp'
         def name = 'Top Ten Express'
         def us_dot_number = 1_625_877

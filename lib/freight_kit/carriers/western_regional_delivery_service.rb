@@ -31,6 +31,27 @@ module FreightKit
         end
 
         def id = '2d9b9c4c-717e-4832-8c14-2c4e56b01ae7'
+
+        def lanes
+          country = Countries.find_by(iso31661_alpha2: 'US')
+          origin = Territory.new(country:, region_abbreviation: 'CA')
+
+          {
+            'CO' => '9709c88e-5019-4bd7-81f4-25a4fc3d0357',
+            'ID' => '2da75d3b-7e6c-4f00-b6b1-42b57f1bdbd6',
+            'KS' => '9da3069e-ef97-4f96-a6bc-b7be662350ef',
+            'MT' => '755ed10f-5dec-426c-8d22-f64dc1565ccd',
+            'ND' => '087be435-b4cf-448d-b047-7afd54aa7565',
+            'NE' => '6aed2331-66aa-4baa-8e4a-40d3bd2ec989',
+            'NM' => '49a7987e-8ef8-43c3-b6fb-d122cc421648',
+            'SD' => '75d5539f-f15b-495d-a551-1c79fb91bf39',
+            'UT' => 'f6f9fccd-8ce1-43ca-a4a3-36c12d3f309c',
+            'WY' => '3eb6baaa-cc92-4aa2-ae5f-40176f09e0a9'
+          }.map do |region_abbreviation, id|
+            Lane.new(destination: Territory.new(country:, region_abbreviation:), id:, origin:)
+          end
+        end
+
         def legal_name = 'South Coast Transportation & Dist. , Inc.'
         def name = 'Western Regional Delivery Service'
         def required_credential_types = %i[selenoid website]
