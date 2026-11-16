@@ -155,7 +155,7 @@ module FreightKit
       include FreightKit::Pickupable
 
       API = {
-        domain: 'ccfs.com/api/public',
+        domain: 'api.ccfs.com/api/public',
         endpoints: { bol: '/Image', pod: '/Image', rates: '/Quote', track: '/Track', pickup: '/Pickup' },
         methods: { bol: :get, pod: :get, rates: :post, track: :get, pickup: :post }
       }.freeze
