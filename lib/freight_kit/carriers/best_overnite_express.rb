@@ -64,13 +64,15 @@ module FreightKit
           '62': { city: 'Denver', province: 'CO', state: 'CO' },
           '71': { city: 'Salt Lake City', province: 'UT', state: 'UT' },
           'BEN': { city: 'Benicia', province: 'CA', state: 'CA' },
+          'CHI': { city: 'Chicago', province: 'IL', state: 'IL' },
           'DAL': { city: 'Dallas', province: 'TX', state: 'TX' },
           'FRES': { city: 'Fresno', province: 'CA', state: 'CA' },
           'KENT': { city: 'Kent', province: 'WA', state: 'WA' },
           'LA': { city: 'Los Angeles', province: 'CA', state: 'CA' },
           'PDX': { city: 'Portland', province: 'OR', state: 'OR' },
           'SAC': { city: 'Sacramento', province: 'CA', state: 'CA' },
-          'SJ': { city: 'San Jose', province: 'CA', state: 'CA' }
+          'SJ': { city: 'San Jose', province: 'CA', state: 'CA' },
+          'SLC': { city: 'Salt Lake City', province: 'UT', state: 'UT' }
         }
       ).freeze
     end
