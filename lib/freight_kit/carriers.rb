@@ -44,6 +44,7 @@ FreightKit::Carriers.register(:MountainValleyExpress)
 FreightKit::Carriers.register(:JFJTransportation)
 FreightKit::Carriers.register(:STG)
 FreightKit::Carriers.register(:TotalTransportation)
+FreightKit::Carriers.register(:ChampsFreightSolutions)
 
 # Without an API
 FreightKit::Carriers.register(:AAAExpeditedServices)

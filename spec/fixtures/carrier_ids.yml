@@ -852,6 +852,10 @@
   - 18fee829-ec90-4f6d-8db2-e24afcf4d214
   headquarters: 5ccf6389-bdfe-490f-867c-28ecc7bd20f7
   terminals: []
+850ea54e-1547-4ced-a20d-96dc85f47243:
+  check_mailing_addresses: []
+  contacts: []
+  terminals: []
 8605a52e-c75f-4a29-8d55-c2cde69fbae8:
   check_mailing_addresses: []
   contacts: []
