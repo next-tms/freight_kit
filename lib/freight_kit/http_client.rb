@@ -7,6 +7,9 @@ module FreightKit
   #   FreightKit::HTTPClient.cache = Rails.cache
   #   FreightKit::HTTPClient.logger = Rails.logger
   class HTTPClient
+    # Seconds. A slow carrier must not hold the caller's threads, so the total covers every retry: one connect plus one
+    # read. Callers waiting on slow APIs pass a longer `read_timeout:`, which raises the total to match.
+    TIMEOUTS = { connect_timeout: 5, read_timeout: 15, total_request_timeout: 20, write_timeout: 15 }.freeze
     USER_AGENT = "freight_kit/#{VERSION} #{HTTPX::Options::USER_AGENT}".freeze
 
     @sessions = Concurrent::Map.new
@@ -32,7 +35,7 @@ module FreightKit
       def request(verb, url, body: nil, headers: {}, proxy_url: nil, query: nil, read_timeout: nil)
         options = { headers: }
         options[:params] = query if query.present?
-        options[:timeout] = { read_timeout: } if read_timeout
+        options[:timeout] = { read_timeout:, total_request_timeout: TIMEOUTS[:connect_timeout] + read_timeout } if read_timeout
 
         # Like HTTParty, hashes are form-encoded regardless of the Content-Type header
         if body.is_a?(Hash)
@@ -67,7 +70,7 @@ module FreightKit
                          .plugin(:response_cache, response_cache_store: CacheStore.new(cache))
                          .plugin(Revalidation)
                          .plugin(SafeRetries)
-                         .with(close_on_fork: true, headers: { 'user-agent' => USER_AGENT })
+                         .with(close_on_fork: true, headers: { 'user-agent' => USER_AGENT }, timeout: TIMEOUTS)
 
           logger = self.logger
           session = session.with(debug: LogDevice.new(logger), debug_level: 2) if logger.level <= ::Logger::DEBUG

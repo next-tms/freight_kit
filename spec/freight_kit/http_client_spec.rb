@@ -18,6 +18,7 @@ describe FreightKit::HTTPClient do
       '/fresh' => [200, stale_headers, json],
       '/limited' => [429, { 'Retry-After' => '0' }, ''],
       '/padded' => [429, { 'Retry-After' => '061' }, ''],
+      '/slow' => [200, { 'Content-Type' => 'application/json' }, json],
       '/slowed' => [429, { 'Retry-After' => '1' }, ''],
       '/throttled' => [429, { 'Retry-After' => '120' }, ''],
       '/xml' => [200, { 'Content-Type' => 'application/xml' }, '<a><b>1</b></a>'],
@@ -42,6 +43,7 @@ describe FreightKit::HTTPClient do
       headers[field.downcase] = value
     end
     requests << headers
+    sleep({ '/slow' => 1, '/stall' => 0.3 }.fetch(path, 0))
 
     # Unknown paths drop the connection without responding
     return socket.close unless responses.key?(path)
@@ -207,6 +209,52 @@ describe FreightKit::HTTPClient do
       let(:path) { '/slowed' }
 
       it { expect(elapsed).to(be >= 1) }
+      it { expect(requests.size).to(eq(2)) }
+    end
+  end
+
+  describe 'TIMEOUTS' do
+    it { expect(described_class::TIMEOUTS).to(eq(connect_timeout: 5, read_timeout: 15, total_request_timeout: 20, write_timeout: 15)) }
+  end
+
+  describe 'timeouts' do
+    subject(:get) { described_class.get("#{url}#{path}", read_timeout:) }
+
+    let(:path) { '/slow' }
+    let(:read_timeout) { nil }
+    let(:timeouts) { { connect_timeout: 0.1, read_timeout: 0.4, total_request_timeout: 0.5, write_timeout: 0.4 } }
+
+    before do
+      stub_const("#{described_class}::TIMEOUTS", timeouts)
+      described_class.reset
+    end
+
+    it { expect { get }.to(raise_error(HTTPX::ReadTimeoutError)) }
+
+    context 'with a longer read_timeout' do
+      let(:read_timeout) { 2 }
+
+      it { expect(get.parsed_response).to(eq('ok' => true)) }
+    end
+
+    context 'with a Retry-After longer than the total_request_timeout' do
+      before { described_class.post("#{url}/slowed") }
+
+      it { expect(requests.size).to(eq(1)) }
+    end
+
+    context 'with retries' do
+      subject(:error) do
+        get
+      rescue HTTPX::Error => e
+        e
+      end
+
+      let(:path) { '/stall' }
+
+      before { error }
+
+      it { expect(error).to(be_a(HTTPX::TotalRequestTimeoutError)) }
       it { expect(requests.size).to(eq(2)) }
     end
   end
