@@ -163,8 +163,8 @@ module FreightKit
       # Downloads the invoice that the API key's customer received. {ORM::Invoice} lists them.
       #
       # @param tracking_number [String] The load ID, or the carrier's PRO.
-      # @return [DocumentResponse] With a {DocumentNotFoundError} when the shipment is not invoiced yet.
-      def invoice(tracking_number) = document(tracking_number, :INVOICE)
+      # @return [InvoiceResponse] With only the document, and a {DocumentNotFoundError} when the shipment is not invoiced yet.
+      def invoice(tracking_number) = document(tracking_number, :INVOICE, InvoiceResponse)
 
       # Runs a {GraphQLClient::Mutation} as the API key's user, never from {FreightKit.cache}.
       #
@@ -276,9 +276,9 @@ module FreightKit
         DateTime.new(date_time_with_zone: value.in_time_zone(address&.time_zone_name || 'UTC'))
       end
 
-      def document(tracking_number, kind)
+      def document(tracking_number, kind, response_class = DocumentResponse)
         data = find_shipment_data(tracking_number, :shipment_documents)
-        document_response = DocumentResponse.new(request: last_request, response: data)
+        document_response = response_class.new(request: last_request, response: data)
         return document_response.tap { |response| response.error = ShipmentNotFoundError.new } if data.nil?
 
         document = data[:documents].find { |item| item[:kind] == kind.to_s }
