@@ -126,7 +126,7 @@ module FreightKit
         end
       end
 
-      # The API keeps only the local wall-clock time of the pickup hours
+      # The API keeps only the local wall-clock time of the pickup hours. The quote number books the quoted price.
       def build_pickup_request(pickup_from:, pickup_to:, shipment:, **)
         {
           accessorial_list: build_accessorials(shipment),
@@ -136,6 +136,7 @@ module FreightKit
           pickup_date: pickup_from.strftime('%m/%d/%Y'),
           ponum: shipment.po_number,
           ppd_or_col: 'PPD',
+          quote_num: shipment.estimate_reference.presence&.to_i,
           ready_by_time: pickup_from.strftime('%H:%M'),
           sid: shipment.order_number
         }.merge(stop(:consignee, shipment.destination), stop(:shipper, shipment.origin)).compact

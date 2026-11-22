@@ -48,8 +48,15 @@ describe FreightKit::Platforms::RoadVision do
     it { expect(body).to(include(consignee_zip: '78701', shipper_name: 'Acme', shipper_phone: '+12065550100')) }
     it { expect(body[:freight_list]).to(eq([freight])) }
     it { expect(body).to(include(logon: 'user', pass: 'pass', ponum: 'PO1')) }
+    it { expect(body).not_to(have_key(:quote_num)) }
     it { expect(carrier.last_request[:body]).to(include('"CODAmountInCents":0', '"PONUM":"PO1"', '"PPDorCOL":"PPD"')) }
     it { expect(pickup_response).to(have_attributes(error: nil, pickup_number: '42')) }
+
+    context 'with a quote' do
+      let(:shipment) { super().tap { |shipment| shipment.estimate_reference = '14' } }
+
+      it { expect(body).to(include(quote_num: 14)) }
+    end
 
     context 'with an error' do
       let(:response) { json_response(error_info: 'Invalid pickup date', pickup_number: 0) }
