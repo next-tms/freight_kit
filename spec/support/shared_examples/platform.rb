@@ -21,6 +21,10 @@ shared_examples 'a Next TMS platform carrier' do
   it_behaves_like 'a platform carrier', FreightKit::Platforms::NextTMS
 end
 
+shared_examples 'a RoadVision platform carrier' do
+  it_behaves_like 'a platform carrier', FreightKit::Platforms::RoadVision
+end
+
 shared_examples 'a The Great Information Factory platform carrier' do
   it_behaves_like 'a platform carrier', FreightKit::Platforms::TheGreatInformationFactory
 end
