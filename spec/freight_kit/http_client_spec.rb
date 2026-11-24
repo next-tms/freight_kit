@@ -214,7 +214,12 @@ describe FreightKit::HTTPClient do
   end
 
   describe 'TIMEOUTS' do
-    it { expect(described_class::TIMEOUTS).to(eq(connect_timeout: 5, read_timeout: 15, total_request_timeout: 20, write_timeout: 15)) }
+    subject(:timeouts) { described_class::TIMEOUTS }
+
+    it { expect(timeouts[:connect_timeout]).to(eq(5.seconds)) }
+    it { expect(timeouts[:read_timeout]).to(eq(1.minute)) }
+    it { expect(timeouts[:total_request_timeout]).to(eq(65.seconds)) }
+    it { expect(timeouts[:write_timeout]).to(eq(1.minute)) }
   end
 
   describe 'timeouts' do
@@ -232,7 +237,7 @@ describe FreightKit::HTTPClient do
     it { expect { get }.to(raise_error(HTTPX::ReadTimeoutError)) }
 
     context 'with a longer read_timeout' do
-      let(:read_timeout) { 2 }
+      let(:read_timeout) { 2.seconds }
 
       it { expect(get.parsed_response).to(eq('ok' => true)) }
     end
