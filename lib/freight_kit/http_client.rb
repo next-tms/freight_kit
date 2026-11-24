@@ -9,7 +9,7 @@ module FreightKit
   class HTTPClient
     # Seconds. A slow carrier must not hold the caller's threads, so the total covers every retry: one connect plus one
     # read. Callers waiting on slow APIs pass a longer `read_timeout:`, which raises the total to match.
-    TIMEOUTS = { connect_timeout: 5, read_timeout: 15, total_request_timeout: 20, write_timeout: 15 }.freeze
+    TIMEOUTS = { connect_timeout: 5.seconds, read_timeout: 1.minute, total_request_timeout: 65.seconds, write_timeout: 1.minute }.freeze
     USER_AGENT = "freight_kit/#{VERSION} #{HTTPX::Options::USER_AGENT}".freeze
 
     @sessions = Concurrent::Map.new
