@@ -4,6 +4,7 @@ module FreightKit
   # @!attribute accessorials [Hash<Symbol>] Acceessorials requested.
   # @!attribute declared_value_cents [Integer] Declared value in cents.
   # @!attribute destination [FreightKit::Location] Where the package will go.
+  # @!attribute estimate_reference [String] Quote number from {Rate#estimate_reference}, which books the quoted price.
   # @!attribute origin [FreightKit::Location] Where the shipment will originate from.
   # @!attribute order_number [String] Order number (also known as shipper number, SO #).
   # @!attribute packages [Array<FreightKit::Package>] The list of packages that will
@@ -11,7 +12,15 @@ module FreightKit
   # @!attribute po_number [String] Purchase order number (also known as PO #).
   # @!attribute pickup_at [FreightKit::DateTime] Pickup date/time.
   class Shipment < Model
-    attr_accessor :accessorials, :declared_value_cents, :destination, :origin, :order_number, :packages, :po_number, :pro
+    attr_accessor :accessorials,
+                  :declared_value_cents,
+                  :destination,
+                  :estimate_reference,
+                  :order_number,
+                  :origin,
+                  :packages,
+                  :po_number,
+                  :pro
     attr_reader :pickup_at
 
     def hazmat?

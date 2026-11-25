@@ -1,6 +1,7 @@
 module FreightKit
   # Represents the response to calls:
   #   - {FreightKit::Carrier#bol}
+  #   - {FreightKit::Carrier#invoice}, as an {InvoiceResponse}
   #   - {FreightKit::Carrier#pod}
   #   - {FreightKit::Carrier#scanned_bol}
   #

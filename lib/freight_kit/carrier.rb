@@ -433,6 +433,12 @@ module FreightKit
       raise NotImplementedError, "#{name}: #find_tracking_number_from_pickup_number not supported"
     end
 
+    # Asks the carrier for the shipment's invoice: its amounts and lines, and its document.
+    #
+    # @param [String] tracking_number Tracking number.
+    # @return [InvoiceResponse]
+    def invoice(tracking_number) = raise NotImplementedError, "#{name}: #invoice not supported"
+
     # Asks the carrier for the scanned proof of delivery that the carrier would provide after delivery.
     #
     # @param [String] tracking_number Tracking number.

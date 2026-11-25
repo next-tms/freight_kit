@@ -1,6 +1,6 @@
 module FreightKit
   module Carriers
-    class RELogistics < Carrier
+    class RELogistics < Platforms::RoadVision
       class << self
         def check_mailing_addresses
           [
@@ -16,7 +16,11 @@ module FreightKit
         end
 
         def id = '65f1b231-59fa-4432-af2e-e5398b01bac6'
+        def legal_name = 'RE Logistics Corp'
         def name = 'RE Logistics'
+        def scac = 'RELM'
+        def us_dot_number = 3_236_760
+        def us_mc_number = 1_015_860
       end
     end
   end
