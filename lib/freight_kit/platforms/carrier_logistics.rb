@@ -365,7 +365,7 @@ module FreightKit
                      end
 
           location ||= case event
-                       when :delivered then destination
+                       when :delivered, :out_for_delivery then destination
                        when :departed then last_location
                        when :picked_up, :pickup_scheduled then origin
                        end
