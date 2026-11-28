@@ -69,6 +69,7 @@ module FreightKit
           'FRES': { city: 'Fresno', province: 'CA', state: 'CA' },
           'KENT': { city: 'Kent', province: 'WA', state: 'WA' },
           'LA': { city: 'Los Angeles', province: 'CA', state: 'CA' },
+          'MGUL': { city: 'Denver', province: 'CO', state: 'CO' },
           'PDX': { city: 'Portland', province: 'OR', state: 'OR' },
           'SAC': { city: 'Sacramento', province: 'CA', state: 'CA' },
           'SJ': { city: 'San Jose', province: 'CA', state: 'CA' },
