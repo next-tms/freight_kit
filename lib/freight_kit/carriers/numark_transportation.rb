@@ -56,6 +56,12 @@ module FreightKit
         },
         ports: { rates: 10_010, track: 10_010 }
       ).freeze
+      EVENTS = Platforms::TheGreatInformationFactory::EVENTS.deep_merge(
+        locations: {
+          '45': { city: 'Fresno', province: 'CA', state: 'CA' },
+          '85': { city: 'Vernon', province: 'CA', state: 'CA' }
+        }
+      ).freeze
 
       def build_calculated_accessorials(packages)
         longest_dimension = packages.map { |package| [package.length(:in), package.width(:in)].max }.max.ceil
